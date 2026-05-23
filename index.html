@@ -429,41 +429,26 @@
 
     // FUNCIÓN DE AUTOCONFIGURACIÓN OPTIMIZADA POR NEXI
     function verificarParametrosURL() {
-        const parametros = new URLSearchParams(window.location.search);
-        const nubeUrl = parametros.get('nube');
-        const claveUrl = parametros.get('clave');
+    // URLSearchParams es una herramienta nativa que lee enlaces a la perfección
+    const urlParams = new URLSearchParams(window.location.search);
+    const nubeParam = urlParams.get('nube');
+    const claveParam = urlParams.get('clave');
 
-        if (nubeUrl && claveUrl) {
-            // El usuario entró a través del enlace mágico, sobrescribimos su configuración local
-            config.urlNube = decodeURIComponent(nubeUrl);
-            config.claveNube = decodeURIComponent(claveUrl);
-            
-            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-            
-            // --- AJUSTE CLAVE: Desbloquear la interfaz inmediatamente ---
-            document.getElementById('cfg-url-nube').value = config.urlNube;
-            document.getElementById('cfg-clave-nube').value = config.claveNube;
-            
-            const urlInput = document.getElementById('cfg-url-nube');
-            const claveInput = document.getElementById('cfg-clave-nube');
-            const btnConectar = document.getElementById('btn-conectar-nube');
-            const notice = document.getElementById('premium-lock-notice');
-            const container = document.getElementById('premium-inputs-container');
-
-            if (urlInput) urlInput.disabled = false;
-            if (claveInput) claveInput.disabled = false;
-            if (btnConectar) btnConectar.disabled = false;
-            if (notice) notice.style.display = "none";
-            if (container) container.style.opacity = "1";
-            
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
-            // ------------------------------------------------------------
-
-            // Limpiamos la barra de direcciones para ocultar los tokens y dejarla limpia
-            const urlLimpia = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.replaceState({path: urlLimpia}, '', urlLimpia);
-        }
+    if (nubeParam && claveParam) {
+        // Creamos un objeto de configuración limpio
+        config = {
+            nombrePasteleria: config.nombrePasteleria || "Mi Pastelería",
+            moneda: config.moneda || "$",
+            porcentajeIndirectos: config.porcentajeIndirectos || 0,
+            urlNube: nubeParam.trim(),
+            claveNube: claveParam.trim()
+        };
+        
+        // Guardamos de inmediato en el almacenamiento
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        console.log("🚀 Parámetros Premium detectados y guardados correctamente desde la URL.");
     }
+}
 
     function guardarConfiguracion() {
         config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi Pastelería";
