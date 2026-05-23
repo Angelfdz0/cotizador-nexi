@@ -396,52 +396,21 @@
         return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-        function evaluarEstadoVisualPremium() {
-        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
-        const bloquePremium = document.getElementById('seccion-bloque-premium');
-        const flecha = document.getElementById('btn-flecha-config');
-        const titulo = document.getElementById('titulo-configuracion');
-        const cuerpo = document.getElementById('cuerpo-configuracion');
+                function evaluarEstadoVisualPremium() {
+        const banner = document.getElementById('premium-banner-status');
+        if (!banner) return;
 
+        // Validamos únicamente la contraseña maestra
         if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-            // ==========================================
-            // ESCENARIO: EL CLIENTE ES PREMIUM ⭐
-            // ==========================================
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
-            if(bloqueEstandar) bloqueEstandar.classList.add('hidden'); // Oculta WhatsApp e Inputs técnicos
-            if(bloquePremium) bloquePremium.classList.remove('hidden'); // Muestra mensaje de éxito verificado
-            
-            // Habilitamos la flecha visual y le damos la propiedad colapsable al título
-            if(flecha) flecha.style.display = 'block';
-            if(titulo) {
-                titulo.style.cursor = 'pointer';
-                titulo.onclick = togglePanelConfiguracion;
-            }
-            
-            // Colapsamos el panel de forma automática para limpiar la interfaz del cliente premium
-            if(cuerpo) {
-                cuerpo.style.display = 'none';
-                flecha.style.transform = 'rotate(180deg)';
-            }
+            banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
+            banner.style.color = "#065f46";
+            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
+            ocultarConfigSiEsPremium();
         } else {
-            // ==========================================
-            // ESCENARIO: EL CLIENTE ES ESTÁNDAR (LOCAL) 🏢
-            // ==========================================
-            cambiarBannerStatus("☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)", null);
-            if(bloqueEstandar) bloqueEstandar.classList.remove('hidden'); // El botón de WhatsApp queda siempre expuesto
-            if(bloquePremium) bloquePremium.classList.add('hidden');
-            
-            // Deshabilitamos la función desplegable y ocultamos la flecha
-            if(flecha) flecha.style.display = 'none';
-            if(titulo) {
-                titulo.style.cursor = 'default';
-                titulo.onclick = null;
-            }
-            
-            // Forzamos a que el panel siempre permanezca completamente abierto
-            if(cuerpo) {
-                cuerpo.style.display = 'block';
-            }
+            // Si no hay clave correcta, se queda en modo estándar gris
+            banner.style.backgroundColor = "#e2e8f0";
+            banner.style.color = "#4a5568";
+            banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
         }
     }
 
@@ -484,14 +453,22 @@
         if(config.urlNube) { cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true); }
     }
 
-    function guardarConfiguracion() {
+        async function guardarConfiguracion() {
         const nombre = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
         const moneda = document.getElementById('cfg-moneda').value.trim() || "$";
         const indirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        
+        const urlNubeInput = document.getElementById('cfg-url-nube') ? document.getElementById('cfg-url-nube').value.trim() : "";
+        const claveNubeInput = document.getElementById('cfg-clave-nube') ? document.getElementById('cfg-clave-nube').value.trim() : "";
 
+        // Guardamos tus datos básicos
         config.nombrePasteleria = nombre;
         config.moneda = moneda;
         config.porcentajeIndirectos = indirectos;
+        
+        // ¡NUEVO! Guardamos también la clave y la URL para la conexión premium
+        config.claveNube = claveNubeInput;
+        config.urlNube = urlNubeInput;
 
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
@@ -501,10 +478,14 @@
         calcularTodo();
         renderInsumos();
         renderModulos();
+        
         alert("💾 ¡Configuración guardada y actualizada con éxito!");
+        
+        // ¡NUEVO! Aquí activamos el puente de internet para absorber los 100 insumos
+        await descargarDeNube();
     }
 
-    window.onload = async function() {
+            window.onload = async function() {
         cargarConfiguracion(); 
         const localInsumos = localStorage.getItem('respaldo_insumos');
         if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
@@ -512,8 +493,22 @@
         const localPlantillas = localStorage.getItem('respaldo_plantillas');
         if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
 
-        if (config.urlNube && config.claveNube && config.claveNube.trim() === "pass_9821") {
-            cambiarBannerStatus("⏳ Conectando con Google Sheets...", null);
+        // CORRECCIÓN: Sincronizamos los IDs para que el banner cambie de color correctamente
+        const bannerViejo = document.getElementById('cloud-banner');
+        if (bannerViejo) {
+            bannerViejo.id = 'premium-banner-status';
+        }
+
+        // Manda a llamar el evaluador visual inmediatamente al cargar la página
+        evaluarEstadoVisualPremium();
+
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+            const banner = document.getElementById('premium-banner-status');
+            if (banner) {
+                banner.textContent = "⏳ Conectando con Google Sheets...";
+                banner.style.backgroundColor = "#e2e8f0";
+                banner.style.color = "#4a5568";
+            }
             await descargarDeNube();
         }
         renderInsumos();
@@ -787,27 +782,83 @@
     }
     
     // ========================================================
-    //  SOSTÉN DE FUNCIONES PREMIUM (OPCIÓN A - LISTO PARA CONECTAR)
+    //  SOSTÉN DE FUNCIONES PREMIUM (CONEXIÓN EN VIVO CORREGIDA)
     // ========================================================
     async function descargarDeNube() {
+        // COLOCA AQUÍ TU ENLACE LARGO DE GOOGLE APPS SCRIPT:
+        const urlServidor = "https://script.google.com/macros/s/AKfycbz8fNvRZ-uk8DBTJNFdrn5pmluxys9Xv_lyZlR_ir6sr8W0AL4QVBtzEuvgRmD-3own/exec";
+        
         try {
-            // El código se detiene momentáneamente simulando la conexión a Google Sheets
-            console.log("Intentando enlazar base de datos en: " + (config.urlNube || "No configurada"));
+            config.urlNube = urlServidor;
             
-            // Cambiamos el banner superior para confirmarle al cliente que su plan es válido
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (Simulado)", true);
-            ocultarConfigSiEsPremium();
+            // Si la clave no es la correcta, cancelamos el intento de conexión
+            if (!config.claveNube || config.claveNube.trim() !== "pass_9821") {
+                evaluarEstadoVisualPremium();
+                return;
+            }
+
+            console.log("Iniciando petición HTTP a Google Apps Script...");
+            
+            // Forzamos la actualización visual del banner usando el ID nativo de tu HTML
+            const banner = document.getElementById('cloud-banner');
+            if (banner) {
+                banner.id = 'premium-banner-status'; // Corregimos el ID dinámicamente
+            }
+
+            // Llamada real de internet a tu servidor de Google
+            const response = await fetch(urlServidor);
+            const data = await response.json();
+
+            if (data.error) {
+                console.error("Error del servidor Google:", data.error);
+                cambiarBannerStatus("❌ Error en la estructura de Sheets: " + data.error, false);
+                return;
+            }
+
+            if (data.insumos && data.insumos.length > 0) {
+                // Sobrescribimos el inventario local con los 100 insumos frescos de Google Sheets
+                insumos = data.insumos;
+                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+                
+                // Redibujamos la interfaz gráfica con los nuevos datos
+                renderInsumos();
+                renderModulos();
+                calcularTodo();
+                
+                // Actualizamos el banner a verde con el conteo real
+                cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (" + insumos.length + " insumos)", true);
+            } else {
+                cambiarBannerStatus("⚠️ Conectado a la nube, pero la pestaña 'Insumos' está vacía", false);
+            }
+
+            evaluarEstadoVisualPremium();
+
         } catch(e) {
-            console.error("Error en puente de datos:", e);
-            cambiarBannerStatus("❌ Error de sincronización con la nube", false);
+            console.error("Error crítico en puente de datos:", e);
+            cambiarBannerStatus("❌ Error de sincronización: Verifica tu enlace o conexión", false);
+        }
+    }
+
+    // Función auxiliar para actualizar el color y texto de tu banner sin romper IDs
+    function cambiarBannerStatus(mensaje, esPremium) {
+        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
+        if (!banner) return;
+        
+        banner.textContent = mensaje;
+        if (esPremium) {
+            banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
+            banner.style.color = "#065f46";
+        } else {
+            banner.style.backgroundColor = "#fee2e2"; // Rojo error suave
+            banner.style.color = "#991b1b";
         }
     }
 
     function ocultarConfigSiEsPremium() {
-        // Oculta el banner publicitario de WhatsApp de forma automática si ya es premium
-        const seccionComprar = document.getElementById('seccion-comprar-premium');
+        // Usamos el ID exacto de tu tarjeta publicitaria ('card-compra-premium') para ocultarla
+        const seccionComprar = document.getElementById('card-compra-premium');
         if(seccionComprar) {
-            seccionComprar.classList.add('hidden');
+            seccionComprar.style.display = 'none';
         }
     }
 </script>
