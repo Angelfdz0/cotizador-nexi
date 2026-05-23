@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador de Pastelería Profesional</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" />
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        :root {
+            --bg-body: #f8fafc; --text-main: #334155; --bg-card: #ffffff; --border-card: #e2e8f0;
+            --title-color: #1e293b; --border-title: #cbd5e1; --label-color: #475569; --input-bg: #ffffff;
+            --input-border: #cbd5e1; --th-bg: #f1f5f9; --th-text: #1e293b; --td-border: #e2e8f0;
+            --btn-main: #3b82f6; --btn-hover: #2563eb; --instruction-text: #64748b; --result-bg: #f0fdf4;
+            --result-border: #10b981; --mint-bg: #f1f5f9; --mint-border: #cbd5e1; --mint-text: #475569; --mint-amount: #1e293b;
+        }
+        [data-theme="dark"] {
+            --bg-body: #0f172a; --text-main: #f8fafc; --bg-card: #1e293b; --border-card: #334155;
+            --title-color: #3b82f6; --border-title: #334155; --label-color: #94a3b8; --input-bg: #0f172a;
+            --input-border: #475569; --th-bg: #334155; --th-text: #f8fafc; --td-border: #334155;
+            --btn-main: #3b82f6; --btn-hover: #2563eb; --instruction-text: #94a3b8; --result-bg: #14532d;
+            --result-border: #22c55e; --mint-bg: #1e293b; --mint-border: #334155; --mint-text: #cbd5e1; --mint-amount: #f8fafc;
+        }
+        body { background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 60px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { 
+            position: relative; 
+            text-align: center; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: #ffffff; 
+            padding: 35px 25px; 
+            border-radius: 16px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        header h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.5px; color: #ffffff !important; }
+        header p { margin: 12px 0 0 0; font-size: 14.5px; color: #94a3b8; font-weight: 400; letter-spacing: 0.5px; }
+        .theme-toggle-icon { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            cursor: pointer; 
+            background: rgba(255, 255, 255, 0.06); 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            padding: 8px; 
+            border-radius: 50%; 
+            width: 44px; 
+            height: 44px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .theme-toggle-icon:hover { 
+            background: rgba(255, 255, 255, 0.15); 
+            transform: scale(1.08); 
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        .theme-toggle-icon span { color: #ffffff !important; font-size: 22px; }
+        .grid { display: block; }
+        @media (min-width: 768px) { .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; } }
+        .card { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-card); }
+        .card-title { font-size: 18px; color: var(--title-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--border-title); padding-bottom: 8px; }
+        .tabs-container { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-title); padding-bottom: 5px; flex-wrap: wrap; }
+        .tabs { display: flex; gap: 5px; }
+        .tab { background: none; border: none; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--instruction-text); border-radius: 6px 6px 0 0; }
+        .tab.active { background-color: var(--th-bg); color: var(--title-color); border: 1px solid var(--border-title); border-bottom: 1px solid transparent; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--label-color); }
+        input, select { width: 100%; padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); color: var(--text-main); }
+        .table-input { width: 75px; padding: 4px 6px; font-size: 13px; border: 1px solid transparent; background: transparent; border-radius: 4px; color: var(--text-main); font-weight: 500; }
+        .table-input:hover, .table-input:focus { border-color: var(--input-border); background-color: var(--input-bg); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--td-border); }
+        th { background-color: var(--th-bg); color: var(--th-text); }
+        .btn { background-color: var(--btn-main); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.2s ease; }
+        .btn:hover { background-color: var(--btn-hover); }
+        .btn-danger { background-color: #e57373; }
+        .btn-danger:hover { background-color: #d32f2f; }
+        .btn-success { background-color: #4caf50; }
+        .btn-success:hover { background-color: #388e3c; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-small { padding: 4px 8px; font-size: 11px; }
+        .flex-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .result-box { background-color: var(--result-bg); border-left: 4px solid var(--result-border); padding: 12px; margin-top: 15px; border-radius: 0 8px 8px 0; }
+        .result-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+        .highlight { font-weight: bold; color: var(--title-color); font-size: 16px; }
+        .text-right { text-align: right; }
+        .memory-zone { margin-top: 15px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border-title); background-color: var(--input-bg); }
+        .cloud-status { font-size: 12px; font-weight: bold; margin-bottom: 10px; padding: 8px; border-radius: 6px; text-align: center; background-color: #e2e8f0; color: #4a5568;}
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        
+        .premium-lock-box { background-color: rgba(245, 158, 11, 0.06); border: 1px dashed #f59e0b; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .hidden { display: none !important; }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1e293b; color: #94a3b8; text-align: center; padding: 10px; font-size: 12px; border-top: 1px solid #334155; z-index: 1000; }
+        footer a { color: #3b82f6; text-decoration: none; font-weight: bold; }
+        footer a:hover { text-decoration: underline; }
+        
+                /* ESTILOS DE IMPRESIÓN PROFESIONAL PARA EL PDF (OCULTOS EN LA APP) */
+        @media print {
+            body { background: #ffffff !important; color: #1e293b !important; padding: 0; font-size: 12pt; }
+            .container { max-width: 100%; margin: 0; padding: 0; }
+            header { background: none !important; color: #1e293b !important; border-bottom: 3px double #cbd5e1; padding: 10px 0 20px 0; border-radius: 0; box-shadow: none; margin-bottom: 30px; text-align: left; }
+            header h1 { color: #1e293b !important; font-size: 26pt; margin: 0; }
+            header p { color: #64748b !important; font-size: 11pt; margin-top: 5px; }
+            header::before, .theme-toggle-icon, footer, .cloud-status, form, .memory-zone, button, input, select, .tabs-container { display: none !important; }
+            .grid { display: block !important; }
+            .card { background: transparent !important; border: none !important; padding: 0 !important; margin-bottom: 30px !important; box-shadow: none !important; page-break-inside: avoid; }
+            .card-title { font-size: 14pt !important; color: #0f172a !important; border-bottom: 1px solid #94a3b8 !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px; margin-bottom: 15px !important; }
+            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 15px; }
+            th { background-color: #f8fafc !important; color: #0f172a !important; border-bottom: 2px solid #cbd5e1 !important; font-weight: bold; font-size: 10pt; text-transform: uppercase; padding: 8px !important; }
+            td { border-bottom: 1px solid #e2e8f0 !important; padding: 8px !important; color: #334155 !important; font-size: 10.5pt; }
+            .result-box, .result-box[style] { background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-left: 5px solid #3b82f6 !important; border-radius: 6px !important; padding: 15px !important; margin-top: 20px !important; page-break-inside: avoid; }
+            .result-row { margin-bottom: 8px !important; font-size: 10.5pt !important; color: #475569 !important; }
+            .highlight { font-size: 14pt !important; color: #0f172a !important; }
+            /* Formato especial para la sección final de cotización en el PDF */
+            #porciones-totales, #margen-ganancia { display: none; }
+            .card:last-of-type { border: 2px solid #0f172a !important; border-radius: 8px !important; padding: 20px !important; background: #fafafa !important; page-break-inside: avoid; }
+            .card:last-of-type .result-box { background: #ffffff !important; border: 1px solid #0f172a !important; border-left: 5px solid #10b981 !important; }
+            td.text-right, th:last-child, td:last-child { text-align: right !important; }
+            tr[style*="rgba"] { display: none !important; } /* Ocultar filas de insumos eliminados */
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 id="lbl-nombre-pasteleria">Cotizador de Pastelería</h1>
+        <div style="font-size: 9.5pt; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; margin-top: 6px; margin-bottom: 2px; text-align: center;">DESARROLLADO POR NEXI</div>
+        <p>Costos exactos, ganancias reales.</p>
+        <div class="theme-toggle-icon" onclick="toggleTheme()">
+            <span class="material-symbols-outlined" id="icon-render">dark_mode</span>
+        </div>
+    </header>
+
+    <div id="cloud-banner" class="cloud-status">☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)</div>
+
+    <div class="card">
+        <div class="card-title">🛠️ Panel de Configuración del Negocio</div>
+        <div id="bloque-configuracion">
+        <div class="config-grid">
+            <div>
+                <label>Nombre de la Pastelería</label>
+                <input type="text" id="cfg-nombre" placeholder="Mi Pastelería" oninput="guardarConfiguracion()">
+            </div>
+            <div>
+                <label>Símbolo de Moneda</label>
+                <input type="text" id="cfg-moneda" placeholder="$" oninput="guardarConfiguracion()">
+            </div>
+            <div>
+                <label>Gastos Indirectos (%)</label>
+                <input type="number" id="cfg-indirectos" placeholder="Luz, gas, etc. (Recomendado 25% al 30%" min="0" max="100" oninput="guardarConfiguracion()">
+            </div>
+            <div>
+                <label>Respaldos Locales (Estándar)</label>
+                <div style="display: flex; gap: 5px; margin-top: 2px;">
+                    <button class="btn btn-small" onclick="exportarDatos()" style="flex: 1;">📥 Exportar</button>
+                    <button class="btn btn-small btn-success" onclick="document.getElementById('import-file').click()" style="flex: 1;">📤 Importar</button>
+                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importarDatos(event)">
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-title);">
+            <label style="color: var(--title-color); cursor: pointer;" onclick="document.getElementById('cloud-fields').style.display = document.getElementById('cloud-fields').style.display === 'none' ? 'block' : 'none'">🔗 Conexión Automática Google Sheets (Plan Premium) ▼</label>
+            <div id="cloud-fields" style="display: none; margin-top: 10px;">
+                <div id="premium-lock-notice" class="premium-lock-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="color: #d97706;">⭐ Característica Premium Inactiva</strong>
+                            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-main);">Guarda tus datos en la nube de Google de forma automática y accede desde cualquier celular o PC.</p>
+                        </div>
+                        <a href="https://wa.me/522291915418?text=Hola!%20Me%20puedes%20dar%20más%20información%20sobre%20el%20paquete%20premium%20y%20sus%20costos,%20por%20favor?" 
+   target="_blank" 
+   class="btn" 
+   style="background-color: #25d366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
+   <span class="material-symbols-outlined">support_agent</span> Consultar Paquete Premium
+</a>
+                    </div>
+                </div>
+                <div class="flex-row" style="margin-top: 15px; opacity: 0.5;" id="premium-inputs-container">
+                    <div style="flex: 2; min-width: 200px;">
+                        <label>URL de Google Web App Script</label>
+                        <input type="text" id="cfg-url-nube" placeholder="Deshabilitado en Plan Estándar" disabled oninput="guardarConfiguracion()">
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <label>Clave de Acceso Premium</label>
+                        <input type="password" id="cfg-clave-nube" placeholder="••••••••" disabled oninput="guardarConfiguracion()">
+                    </div>
+                    <button type="button" id="btn-conectar-nube" class="btn" disabled onclick="descargarDeNube()" style="margin-bottom: 2px;">🔄 Conectar</button>
+                </div>
+            </div>
+        </div>
+     </div>
+   </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">1. Inventario de Precios</div>
+            <form id="form-insumo" class="flex-row" style="margin-bottom: 15px;">
+                <div style="flex: 2; min-width: 130px;">
+                    <label>Ingrediente / Material</label>
+                    <input type="text" id="insumo-nombre" placeholder="Ej. Queso Cream" required>
+                </div>
+                <div style="flex: 1; min-width: 90px;">
+                    <label>Marca</label>
+                    <input type="text" id="insumo-marca" placeholder="Ej. Prestigio">
+                </div>
+                <div style="flex: 1; min-width: 90px;">
+                    <label>Tamaño</label>
+                    <select id="insumo-tamano">
+                        <option value="Mediano">Mediano</option>
+                        <option value="Chico">Chico</option>
+                        <option value="Grande">Grande</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 80px;">
+                    <label>Cant. Paquete</label>
+                    <input type="number" id="insumo-cantidad" placeholder="1000" min="0.01" step="any" required>
+                </div>
+                <div style="flex: 1; min-width: 80px;">
+                    <label>Unidad</label>
+                    <select id="insumo-unidad" required>
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                        <option value="pza">pza</option>
+                        <option value="kg">kg</option>
+                        <option value="L">L</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 80px;">
+                    <label>Precio</label>
+                    <input type="number" id="insumo-precio" placeholder="120" min="0.01" step="any" required>
+                </div>
+                <button type="submit" class="btn" style="height: 38px;">+</button>
+            </form>
+
+            <div style="max-height: 520px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Insumo</th>
+                            <th>Marca</th>
+                            <th>Tamaño</th>
+                            <th>Paquete</th>
+                            <th>Precio</th>
+                            <th>Costo Base</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-insumos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">2. Composición del Pastel</div>
+            
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'pan')">1. Pan Base</button>
+                    <button class="tab" onclick="switchTab(event, 'relleno')">2. Relleno</button>
+                    <button class="tab" onclick="switchTab(event, 'betun')">3. Betún</button>
+                </div>
+                <button type="button" class="btn btn-danger btn-small" onclick="limpiarComposicionCompleta()" style="padding: 6px 10px; font-size: 12px;">🧹 Limpiar Todo</button>
+            </div>
+
+            <form id="form-receta" class="flex-row" style="margin-bottom: 15px;" autocomplete="off">
+                <div style="flex: 1.2; min-width: 130px;">
+                    <label>🔍 Buscar ingrediente</label>
+                    <input type="text" id="buscador-receta" placeholder="Ej: Mantequilla..." oninput="filtrarInsumosReceta(this.value)">
+                </div>
+                <div style="flex: 1.5; min-width: 150px;">
+                    <label>Seleccionar Insumo</label>
+                    <select id="receta-insumo-select" onchange="actualizarLabelUnidadReceta()" required>
+                        <option value="" disabled selected style="color: #a0aec0; font-style: italic;">🔹 Seleccione un insumo...</option>
+                    </select>
+                </div>
+                <div style="flex: 0.8; min-width: 80px;">
+                    <label>Cant. Usada</label>
+                    <input type="number" id="receta-cantidad" placeholder="200" min="0.01" step="any" required>
+                </div>
+                <div style="flex: 0.6; min-width: 60px;">
+                    <label>Unidad</label>
+                    <select id="receta-unidad">
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                        <option value="pza">pza</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="height: 38px;">+</button>
+            </form>
+
+            <div id="tab-pan" class="tab-content active"><table><thead><tr><th>PAN</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-pan"></tbody></table></div>
+            <div id="tab-relleno" class="tab-content"><table><thead><tr><th>RELLENO</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-relleno"></tbody></table></div>
+            <div id="tab-betun" class="tab-content"><table><thead><tr><th>BETÚN</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-betun"></tbody></table></div>
+
+            <div class="memory-zone">
+                <label style="margin-bottom: 6px; font-weight: bold; color: var(--title-color);">💾 Guardar Receta / Plantilla</label>
+                <div class="flex-row" style="margin-bottom: 10px;">
+                    <div style="flex: 1;"><input type="text" id="nombre-plantilla" placeholder="Ej: Vainilla Cajeta" autocomplete="off"></div>
+                    <button type="button" class="btn" id="btn-guardar-plantilla" onclick="guardarPlantilla()">Guardar Receta</button>
+                </div>
+                <div class="flex-row">
+                    <div style="flex: 1;">
+                        <select id="select-plantillas" onchange="cargarPlantilla(this.value)">
+                            <option value="">-- Cargar Receta Guardada --</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="eliminarPlantillaActual()">Eliminar Receta</button>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-row"><span>Costo Pan:</span><span id="txt-costo-pan">$0.00</span></div>
+                <div class="result-row"><span>Costo Relleno:</span><span id="txt-costo-relleno">$0.00</span></div>
+                <div class="result-row"><span>Costo Betún:</span><span id="txt-costo-betun">$0.00</span></div>
+                <div class="result-row"><span id="lbl-indirectos-porcentaje">Gastos Indirectos (0%):</span><span id="txt-costo-indirectos">$0.00</span></div>
+                <div class="result-row" style="font-weight: bold; border-top: 1px dashed var(--border-title); padding-top: 5px;">
+                    <span>COSTO TOTAL PRODUCCIÓN:</span><span id="costo-produccion-total" class="highlight">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">3. Cotizador Rápido por Porciones</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div class="form-group">
+                <label>¿Para cuántas porciones solicita el cliente?</label>
+                <input type="number" id="porciones-totales" placeholder="Numero de porciones" oninput="calcularTodo()">
+            </div>
+            <div class="form-group">
+                <label>Dificultad del Diseño</label>
+                <select id="margen-ganancia" onchange="calcularTodo()" style="font-size: 13px; font-weight: 500;">
+                    <option value="3" selected>Nivel 1: Tradicional (66.6% Ganancia)</option>
+                    <option value="3.5">Nivel 2: Complejo (71.4% Ganancia)</option>
+                    <option value="4.5">Nivel 3: Laborioso (77.7% Ganancia)</option>
+                </select>
+            </div>
+        </div>
+        <div class="result-box" style="background-color: var(--mint-bg); border-left-color: var(--mint-border); margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
+                <div><label style="color: var(--mint-text);">Costo Rebanada</label><span id="res-costo-porcion" style="font-size: 20px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
+                <div style="border-left: 1px solid var(--mint-border); border-right: 1px solid var(--mint-border);"><label id="lbl-venta-total" style="color: var(--mint-text); font-weight: bold;">PRECIO DE VENTA TOTAL</label><span id="res-precio-venta" style="font-size: 24px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
+                <div><label style="color: var(--mint-text);">Precio Rebanada</label><span id="res-precio-porcion" style="font-size: 20px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Desarrollado con ❤️ por <a href="#" target="_blank">NEXI</a>. Todos los derechos reservados © 2026.
+</footer>
+
+<script>
+    let insumos = [];
+    let modulos = { pan: [], relleno: [], betun: [] };
+    let plantillasRecetas = {};
+    let currentModule = 'pan';
+
+    let config = {
+        nombrePasteleria: "Mi Pastelería",
+        moneda: "$",
+        porcentajeIndirectos: 0,
+        urlNube: "",
+        claveNube: ""
+    };
+
+    function cambiarBannerStatus(texto, exito) {
+        const banner = document.getElementById('cloud-banner');
+        if (!banner) return;
+        banner.textContent = texto;
+        if (exito === true) {
+            banner.style.backgroundColor = "#d1fae5"; 
+            banner.style.color = "#065f46";
+        } else if (exito === false) {
+            banner.style.backgroundColor = "#fee2e2"; 
+            banner.style.color = "#991b1b";
+        } else {
+            banner.style.backgroundColor = "#e2e8f0"; 
+            banner.style.color = "#4a5568";
+        }
+    }
+
+    function generarIdUnico() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function evaluarEstadoPremiumInputs() {
+        const urlInput = document.getElementById('cfg-url-nube');
+        const claveInput = document.getElementById('cfg-clave-nube');
+        const btnConectar = document.getElementById('btn-conectar-nube');
+        const notice = document.getElementById('premium-lock-notice');
+        const container = document.getElementById('premium-inputs-container');
+
+        if (config.urlNube !== "") {
+            urlInput.disabled = false;
+            claveInput.disabled = false;
+            btnConectar.disabled = false;
+            notice.style.display = "none";
+            container.style.opacity = "1";
+        }
+    }
+
+    // FUNCIÓN DE AUTOCONFIGURACIÓN OPTIMIZADA POR NEXI
+    function verificarParametrosURL() {
+        const parametros = new URLSearchParams(window.location.search);
+        const nubeUrl = parametros.get('nube');
+        const claveUrl = parametros.get('clave');
+
+        if (nubeUrl && claveUrl) {
+            // El usuario entró a través del enlace mágico, sobrescribimos su configuración local
+            config.urlNube = decodeURIComponent(nubeUrl);
+            config.claveNube = decodeURIComponent(claveUrl);
+            
+            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+            
+            // --- AJUSTE CLAVE: Desbloquear la interfaz inmediatamente ---
+            document.getElementById('cfg-url-nube').value = config.urlNube;
+            document.getElementById('cfg-clave-nube').value = config.claveNube;
+            
+            const urlInput = document.getElementById('cfg-url-nube');
+            const claveInput = document.getElementById('cfg-clave-nube');
+            const btnConectar = document.getElementById('btn-conectar-nube');
+            const notice = document.getElementById('premium-lock-notice');
+            const container = document.getElementById('premium-inputs-container');
+
+            if (urlInput) urlInput.disabled = false;
+            if (claveInput) claveInput.disabled = false;
+            if (btnConectar) btnConectar.disabled = false;
+            if (notice) notice.style.display = "none";
+            if (container) container.style.opacity = "1";
+            
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+            // ------------------------------------------------------------
+
+            // Limpiamos la barra de direcciones para ocultar los tokens y dejarla limpia
+            const urlLimpia = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: urlLimpia}, '', urlLimpia);
+        }
+    }
+
+    function guardarConfiguracion() {
+        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi Pastelería";
+        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        
+        const urlVal = document.getElementById('cfg-url-nube').value.trim();
+        const claveVal = document.getElementById('cfg-clave-nube').value.trim();
+        if(urlVal) config.urlNube = urlVal;
+        if(claveVal) config.claveNube = claveVal;
+
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+        
+        if(config.urlNube) {
+            cambiarBannerStatus("☁️ Estado: Plan Premium Activo", true);
+        } else {
+            cambiarBannerStatus("☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)", null);
+        }
+        
+        calcularTodo();
+    }
+
+    function cargarConfiguracion() {
+        const localCfg = localStorage.getItem('respaldo_config_pasteleria');
+        if (localCfg) {
+            config = JSON.parse(localCfg);
+            document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+            document.getElementById('cfg-moneda').value = config.moneda;
+            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
+            document.getElementById('cfg-url-nube').value = config.urlNube || "";
+            document.getElementById('cfg-clave-nube').value = config.claveNube || "";
+        }
+        
+        function ocultarConfigSiEsPremium() {
+    // Si ya tienes la URL y la Clave, ocultamos el bloque
+    if (config.urlNube && config.claveNube) {
+        document.getElementById('bloque-configuracion').classList.add('hidden');
+    }
+}
+        
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
+        
+        evaluarEstadoPremiumInputs();
+        if(config.urlNube) {
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+        }
+    }
+
+    async function sincronizarConNube(tipoEnvio) {
+        if(!config.urlNube) return;
+        cambiarBannerStatus("⏳ Sincronizando datos premium con Google Sheets...", null);
+        
+        let cuerpo = { clave: config.claveNube };
+        if(tipoEnvio === "insumos") {
+            cuerpo.tipo = "insumos"; cuerpo.lista = insumos;
+            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+        }
+        if(tipoEnvio === "plantillas") {
+            cuerpo.tipo = "plantillas"; cuerpo.lista = plantillasRecetas;
+            localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        }
+
+        try {
+            let res = await fetch(config.urlNube, { method: "POST", body: JSON.stringify(cuerpo) });
+            if(!res.ok) throw new Error();
+            
+            let textoRespuesta = await res.text();
+            let respuesta;
+            try { respuesta = JSON.parse(textoRespuesta); } catch(e) { throw new Error("no_json"); }
+
+            if(respuesta.status === "error" && respuesta.message === "Clave incorrecta") {
+                cambiarBannerStatus("🔒 Error: Clave Premium de Google Sheets incorrecta.", false);
+                return;
+            }
+            cambiarBannerStatus("✅ Premium: ¡Sincronizado en la nube exitosamente!", true);
+        } catch(e) {
+            cambiarBannerStatus("❌ Error de red. Guardado localmente en el navegador.", false);
+        }
+    }
+
+    async function descargarDeNube() {
+        if(!config.urlNube) return;
+        cambiarBannerStatus("⏳ Descargando datos desde Google Sheets...", null);
+        try {
+            let res = await fetch(config.urlNube, { 
+                method: "POST", 
+                body: JSON.stringify({ tipo: "cargar", clave: config.claveNube }) 
+            });
+            if(!res.ok) throw new Error();
+            
+            let textoRespuesta = await res.text();
+            let datos;
+            try { datos = JSON.parse(textoRespuesta); } catch(e) { throw new Error("no_json"); }
+            
+            if(datos.status === "error" && datos.message === "Clave incorrecta") {
+                cambiarBannerStatus("🔒 Acceso denegado: Clave incorrecta.", false);
+                return;
+            }
+
+            if(datos.status === "success") {
+                if(datos.insumos && datos.insumos.length > 0) {
+                    insumos = datos.insumos.map(insumo => ({
+                        id: String(insumo.id), nombre: insumo.nombre, marca: insumo.marca || '',
+                        tamano: insumo.tamano || 'Mediano', cantidad: parseFloat(insumo.cantidad) || 0,
+                        unidad: insumo.unidad || 'g', precio: parseFloat(insumo.precio) || 0
+                    }));
+                    localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+                }
+                plantillasRecetas = datos.plantillas || {};
+                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                
+                renderInsumos(); actualizarSelectReceta(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
+                cambiarBannerStatus("☁️ Premium Conectado: Base de datos importada correctamente", true);
+            }
+        } catch(e) {
+            cambiarBannerStatus("❌ Error de vinculación. Verifica la URL o la clave.", false);
+        }
+    }
+
+    function cargarRespaldoLocal() {
+        const localInsumos = localStorage.getItem('respaldo_insumos');
+        const localPlantillas = localStorage.getItem('respaldo_plantillas');
+        const recetaActiva = localStorage.getItem('receta_actual_progreso');
+        
+        if (localInsumos) { insumos = JSON.parse(localInsumos); }
+        if (localPlantillas) { plantillasRecetas = JSON.parse(localPlantillas); }
+        if (recetaActiva) { modulos = JSON.parse(recetaActiva); }
+        
+        renderInsumos(); actualizarSelectReceta(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
+    }
+
+    function exportarDatos() {
+        const datosExportar = { config: config, insumos: insumos, plantillasRecetas: plantillasRecetas };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(datosExportar, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `respaldo_${config.nombrePasteleria.replace(/\s+/g, '_')}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importarDatos(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importado = JSON.parse(e.target.result);
+                if (importado.config) { config = importado.config; localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config)); }
+                if (importado.insumos) { insumos = importado.insumos; localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); }
+                if (importado.plantillasRecetas) { plantillasRecetas = importado.plantillasRecetas; localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas)); }
+                alert("🚀 ¡Datos importados con éxito!");
+                location.reload();
+            } catch(err) {
+                alert("❌ Archivo inválido o dañado.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const iconRender = document.getElementById('icon-render');
+        if (currentTheme === 'dark') { document.documentElement.removeAttribute('data-theme'); iconRender.textContent = 'dark_mode'; }
+        else { document.documentElement.setAttribute('data-theme', 'dark'); iconRender.textContent = 'light_mode'; }
+    }
+
+    function switchTab(e, moduloId) {
+        currentModule = moduloId;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        document.getElementById(`tab-${moduloId}`).classList.add('active');
+    }
+
+    function guardarPlantilla() {
+        const nombreInput = document.getElementById('nombre-plantilla');
+        const nombre = nombreInput.value.trim();
+        if (!nombre) { alert('Ponle un nombre a la receta.'); return; }
+        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+        rebuildSelectPlantillas();
+        nombreInput.value = '';
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        sincronizarConNube("plantillas");
+
+        const btn = document.getElementById('btn-guardar-plantilla');
+        const originalText = btn.textContent;
+        btn.innerHTML = "✅ ¡Guardado!";
+        btn.style.backgroundColor = "#22c55e";
+        setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1200);
+    }
+
+    function rebuildSelectPlantillas() {
+        const select = document.getElementById('select-plantillas');
+        select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
+        for(let nombre in plantillasRecetas) {
+            const option = document.createElement('option'); option.value = nombre; option.textContent = nombre; select.appendChild(option);
+        }
+    }
+
+    function cargarPlantilla(nombre) {
+        if (!nombre || !plantillasRecetas[nombre]) return;
+        modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+        guardarProgresoModulo();
+        renderModulos(); calcularTodo();
+    }
+
+    function eliminarPlantillaActual() {
+        const select = document.getElementById('select-plantillas');
+        const nombreReceta = select.value;
+        if (!nombreReceta) { alert("Selecciona primero la receta que deseas eliminar."); return; }
+        if (!confirm(`¿Eliminar receta "${nombreReceta}"?`)) return;
+        
+        delete plantillasRecetas[nombreReceta];
+        rebuildSelectPlantillas();
+        select.value = "";
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        sincronizarConNube("plantillas");
+    }
+
+    function limpiarComposicionCompleta() {
+        if (!confirm("¿Deseas vaciar la composición actual del pastel?")) return;
+        modulos = { pan: [], relleno: [], betun: [] };
+        document.getElementById('nombre-plantilla').value = "";
+        document.getElementById('select-plantillas').value = "";
+        document.getElementById('porciones-totales').value = "";
+        guardarProgresoModulo();
+        renderModulos(); 
+        calcularTodo();
+    }
+
+    function actualizarDatoInsumo(id, campo, valor) {
+        const insumo = insumos.find(i => i.id === id);
+        if (insumo) {
+            if (campo === 'precio' || campo === 'cantidad') { insumo[campo] = parseFloat(valor) || 0; } 
+            else { insumo[campo] = valor; }
+            renderModulos(); calcularTodo();
+            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+            sincronizarConNube("insumos");
+        }
+    }
+
+    function renderInsumos() {
+        const tbody = document.getElementById('tabla-insumos'); tbody.innerHTML = ''; const m = config.moneda;
+        insumos.forEach(insumo => {
+            const cantidadVal = parseFloat(insumo.cantidad) || 1; const precioVal = parseFloat(insumo.precio) || 0;
+            const unidadStr = insumo.unidad || 'g'; const costoUnidad = precioVal / cantidadVal;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${insumo.nombre}</strong></td>
+                <td><input type="text" style="width:75px; border:1px solid transparent; background:transparent;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
+                <td>
+                    <select onchange="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)" style="width:75px; padding:2px; border:1px solid transparent; background:transparent;">
+                        <option value="Chico" ${insumo.tamano === 'Chico' ? 'selected' : ''}>Chico</option>
+                        <option value="Mediano" ${insumo.tamano === 'Mediano' ? 'selected' : ''}>Mediano</option>
+                        <option value="Grande" ${insumo.tamano === 'Grande' ? 'selected' : ''}>Grande</option>
+                        <option value="N/A" ${insumo.tamano === 'N/A' ? 'selected' : ''}>N/A</option>
+                    </select>
+                </td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:2px;">
+                        <input type="number" class="table-input" value="${cantidadVal}" style="width:50px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'cantidad', this.value)">
+                        <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${unidadStr}</span>
+                    </div>
+                </td>
+                <td><input type="number" class="table-input" value="${precioVal}" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
+                <td>${m}${costoUnidad.toFixed(2)}/${unidadStr}</td>
+                <td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarInsumo('${insumo.id}')">×</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function actualizarSelectReceta(listaFiltrada = null, esBusqueda = false) {
+        const select = document.getElementById('receta-insumo-select'); select.innerHTML = ''; const datosA_Renderizar = listaFiltrada || insumos;
+        if (!esBusqueda) {
+            const optInicial = document.createElement('option'); optInicial.value = ""; optInicial.disabled = true; optInicial.selected = true; optInicial.textContent = "🔹 Seleccione un insumo..."; select.appendChild(optInicial);
+        } else if (datosA_Renderizar.length === 0) {
+            const optVacio = document.createElement('option'); optVacio.value = ""; optVacio.disabled = true; optVacio.selected = true; optVacio.textContent = "❌ No se encontraron insumos"; select.appendChild(optVacio); return;
+        } else {
+            const optContador = document.createElement('option'); optContador.value = ""; optContador.disabled = true; optContador.selected = true; optContador.textContent = `📦 (${datosA_Renderizar.length}) Encontrados`; select.appendChild(optContador);
+        }
+        datosA_Renderizar.forEach(insumo => {
+            const option = document.createElement('option'); option.value = insumo.id; const textoMarca = insumo.marca ? ` (${insumo.marca})` : ' (S/M)';
+            option.textContent = `${insumo.nombre}${textoMarca}`; select.appendChild(option);
+        });
+    }
+
+    function actualizarLabelUnidadReceta() {
+        const selectInsumo = document.getElementById('receta-insumo-select'); const selectUnidadReceta = document.getElementById('receta-unidad');
+        const insumo = insumos.find(i => i.id === selectInsumo.value);
+        if(insumo) {
+            if(insumo.unidad === 'kg' || insumo.unidad === 'g') selectUnidadReceta.value = 'g';
+            if(insumo.unidad === 'L' || insumo.unidad === 'ml') selectUnidadReceta.value = 'ml';
+            if(insumo.unidad === 'pza') selectUnidadReceta.value = 'pza';
+        }
+    }
+
+    function filtrarInsumosReceta(textoBusqueda) {
+        const texto = textoBusqueda.toLowerCase().trim(); if (!texto) { actualizarSelectReceta(insumos, false); return; }
+        const filtrados = insumos.filter(insumo => {
+            const nombreCoincide = insumo.nombre.toLowerCase().includes(texto);
+            const marcaCoincide = insumo.marca ? insumo.marca.toLowerCase().includes(texto) : false; return nombreCoincide || marcaCoincide;
+        });
+        actualizarSelectReceta(filtrados, true);
+    }
+
+    function calcularCostoModulo(key) {
+        let total = 0;
+        modulos[key].forEach(item => {
+            const insumo = insumos.find(i => i.id === item.insumoId);
+            if (insumo) {
+                let cantidadPaqueteBase = insumo.cantidad;
+                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantidadPaqueteBase = insumo.cantidad * 1000;
+                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantidadPaqueteBase = insumo.cantidad * 1000;
+                total += (insumo.precio / cantidadPaqueteBase) * item.cantidadUsada;
+            }
+        });
+        return total;
+    }
+
+    function renderModulos() {
+        const m = config.moneda;
+        ['pan', 'relleno', 'betun'].forEach(key => {
+            const tbody = document.getElementById(`tabla-${key}`); tbody.innerHTML = '';
+            modulos[key].forEach((item, index) => {
+                const insumo = insumos.find(i => i.id === item.insumoId);
+                if (!insumo) {
+                    const tr = document.createElement('tr'); tr.style.backgroundColor = "rgba(229,115,115,0.1)";
+                    tr.innerHTML = `<td style="color:#e57373;">⚠️ Insumo Eliminado</td><td>${item.cantidadUsada} unidades</td><td>${m}0.00</td><td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                    tbody.appendChild(tr); return;
+                }
+                let cantidadPaqueteBase = insumo.cantidad;
+                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantidadPaqueteBase = insumo.cantidad * 1000;
+                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantidadPaqueteBase = insumo.cantidad * 1000;
+
+                const costoParcial = (insumo.precio / cantidadPaqueteBase) * item.cantidadUsada;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada || 'g'}</td><td>${m}${costoParcial.toFixed(2)}</td><td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                tbody.appendChild(tr);
+            });
+        });
+    }
+
+    function guardarProgresoModulo() { localStorage.setItem('receta_actual_progreso', JSON.stringify(modulos)); }
+
+    function calcularTodo() {
+        const costoPan = calcularCostoModulo('pan'); const costoRelleno = calcularCostoModulo('relleno'); const costoBetun = calcularCostoModulo('betun');
+        const subtotal = costoPan + costoRelleno + costoBetun; const porcentajeId = config.porcentajeIndirectos / 100;
+        const indirectos = subtotal * porcentajeId; const totalProduc = subtotal + indirectos; const m = config.moneda;
+        
+        document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
+        document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
+        document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
+        document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
+        document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
+        
+        const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
+        const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
+        
+        let costPorPor = inputPorciones > 0 ? Math.ceil(totalProduc / inputPorciones) : 0; 
+        let preVentTot = Math.ceil(totalProduc * multiplicador); 
+        let prePorPorCli = inputPorciones > 0 ? Math.ceil(preVentTot / inputPorciones) : 0;
+
+        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor.toFixed(0)}`; 
+        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot.toFixed(0)}`; 
+        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli.toFixed(0)}`;
+    }
+
+    document.getElementById('form-insumo').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombreInput = document.getElementById('insumo-nombre').value.trim();
+        const marcaInput = document.getElementById('insumo-marca').value.trim();
+
+        const existeDuplicado = insumos.some(i => i.nombre.toLowerCase() === nombreInput.toLowerCase() && (i.marca || '').toLowerCase() === marcaInput.toLowerCase());
+        if(existeDuplicado) { alert(`⚠️ El ingrediente "${nombreInput}" ya está registrado.`); return; }
+
+        insumos.push({ 
+            id: generarIdUnico(), nombre: nombreInput, marca: marcaInput,
+            tamano: document.getElementById('insumo-tamano').value,
+            cantidad: parseFloat(document.getElementById('insumo-cantidad').value), 
+            unidad: document.getElementById('insumo-unidad').value,
+            precio: parseFloat(document.getElementById('insumo-precio').value) 
+        });
+        this.reset(); document.getElementById('insumo-tamano').value = "Mediano"; document.getElementById('insumo-unidad').value = "g"; 
+        
+        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+        renderInsumos(); actualizarSelectReceta(); calcularTodo(); sincronizarConNube("insumos");
+    });
+
+    document.getElementById('form-receta').addEventListener('submit', function(e) {
+        e.preventDefault(); const selectElement = document.getElementById('receta-insumo-select');
+        if(!selectElement.value) { alert("Por favor, selecciona un ingrediente válido."); return; }
+
+        modulos[currentModule].push({ insumoId: selectElement.value, cantidadUsada: parseFloat(document.getElementById('receta-cantidad').value), unidadUsada: document.getElementById('receta-unidad').value });
+        this.reset(); document.getElementById('buscador-receta').value = ""; actualizarSelectReceta(insumos, false); 
+        guardarProgresoModulo(); renderModulos(); calcularTodo();
+    });
+
+    function eliminarInsumo(id) {
+        if(!confirm("¿Eliminar este insumo?")) return; const idTexto = String(id);
+        insumos = insumos.filter(i => String(i.id) !== idTexto);
+        for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== idTexto); }
+        for(let n in plantillasRecetas) {
+            for(let key in plantillasRecetas[n]) { plantillasRecetas[n][key] = plantillasRecetas[n][key].filter(r => String(r.insumoId) !== idTexto); }
+        }
+        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        guardarProgresoModulo(); renderInsumos(); actualizarSelectReceta(); renderModulos(); calcularTodo();
+        sincronizarConNube("insumos"); sincronizarConNube("plantillas"); 
+    }
+
+    function eliminarDeModulo(moduloKey, index) { modulos[moduloKey].splice(index, 1); guardarProgresoModulo(); renderModulos(); calcularTodo(); }
+
+        window.onload = async function() { // Añadimos 'async' aquí
+        verificarParametrosURL();
+        cargarConfiguracion(); 
+        
+        if(config.urlNube) { 
+            // 'await' pausa el código hasta que la nube responda
+            await descargarDeNube();
+            ocultarConfigSiEsPremium();
+        } else {
+            cargarRespaldoLocal();
+        }
+        
+        // Esto garantiza que el renderizado ocurra DESPUÉS de la descarga
+        renderInsumos();
+        actualizarSelectReceta();
+        renderModulos();
+        calcularTodo();
+    };
+    
+</script>
+</body>
+</html>
