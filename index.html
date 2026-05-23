@@ -155,46 +155,59 @@
 
     <div id="cloud-banner" class="cloud-status">☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)</div>
 
-    <div class="card" id="tarjeta-configuracion">
-    <div class="card-title" id="titulo-configuracion">🛠️ Panel de Configuración del Negocio</div>
+   <div class="card" id="tarjeta-configuracion">
+    <div class="card-title" id="titulo-configuracion" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
+        <span>🛠️ Panel de Configuración del Negocio</span>
+        <span class="material-symbols-outlined" id="btn-flecha-config" style="transition: transform 0.3s; cursor: pointer; display: none;" onclick="togglePanelConfiguracion()">expand_less</span>
+    </div>
     
-    <div id="bloque-configuracion">
+    <div id="cuerpo-configuracion" style="transition: all 0.3s ease;">
         <div class="form-group">
             <label>Nombre de la Pastelería:</label>
             <input type="text" id="cfg-nombre" placeholder="Mi pastelería">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-top: 10px;">
             <label>Moneda:</label>
             <input type="text" id="cfg-moneda" placeholder="$">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-top: 10px;">
             <label>Gastos Indirectos Adicionales (%):</label>
             <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)" min="0" max="100">
         </div>
 
-        <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
-            <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ ¿Te gustaría respaldar tus recetas y precios en tiempo real?</p>
-            <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium%20del%20Cotizador" 
-               target="_blank" 
-               class="btn" 
-               style="background-color: #25d366; display: inline-block; text-decoration: none; width: auto; padding: 8px 15px; font-size: 0.9rem;">
-               💬 Solicitar Versión Premium (Sincronizada)
-            </a>
+        <div id="seccion-bloque-estandar">
+            <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ ¿Te gustaría respaldar tus recetas y precios en tiempo real?</p>
+                <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium%20del%20Cotizador" 
+                   target="_blank" 
+                   class="btn" 
+                   style="background-color: #25d366; color: white; display: inline-block; text-decoration: none; width: auto; padding: 8px 15px; font-size: 0.9rem; border-radius: 5px; font-weight: 600;">
+                   💬 Solicitar Versión Premium (Sincronizada)
+                </a>
+            </div>
+
+            <div id="campos-tecnicos-nube">
+                <div class="form-group">
+                    <label>URL de la Nube (Google Apps Script):</label>
+                    <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Clave de Acceso Nube:</label>
+                    <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
+                </div>
+            </div>
         </div>
 
-        <div id="campos-tecnicos-nube">
-    <div class="form-group">
-        <label>URL de la Nube (Google Apps Script):</label>
-        <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
-    </div>
-    <div class="form-group">
-        <label>Clave de Acceso Nube:</label>
-        <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
-    </div>
-</div>
+        <div id="seccion-bloque-premium" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #15803d; font-weight: bold; margin-bottom: 5px;">
+                <span class="material-symbols-outlined">verified</span>
+                <span>¡Suscripción Premium Activa!</span>
+            </div>
+            <p style="margin: 0; font-size: 12px; color: #166534;">Tus recetas y precios se encuentran sincronizados de forma segura en la nube de Google Sheets.</p>
+            <button class="btn btn-warning btn-small" onclick="desactivarLicenciaPremium()" style="margin-top: 10px; font-size: 11px; padding: 4px 10px;">🔒 Desvincular Cuenta</button>
+        </div>
 
-
-        <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 10px;">💾 Guardar Configuración</button>
+        <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 15px; width: 100%;">💾 Guardar Configuración</button>
     </div>
 </div>
 
@@ -383,13 +396,79 @@
         return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-    function evaluarEstadoPremiumInputs() {
-        const urlInput = document.getElementById('cfg-url-nube');
-        const claveInput = document.getElementById('cfg-clave-nube');
-        if(urlInput && claveInput) {
-            urlInput.disabled = !config.urlNube;
-            claveInput.disabled = !config.claveNube;
+        function evaluarEstadoVisualPremium() {
+        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+        const bloquePremium = document.getElementById('seccion-bloque-premium');
+        const flecha = document.getElementById('btn-flecha-config');
+        const titulo = document.getElementById('titulo-configuracion');
+        const cuerpo = document.getElementById('cuerpo-configuracion');
+
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+            // ==========================================
+            // ESCENARIO: EL CLIENTE ES PREMIUM ⭐
+            // ==========================================
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+            if(bloqueEstandar) bloqueEstandar.classList.add('hidden'); // Oculta WhatsApp e Inputs técnicos
+            if(bloquePremium) bloquePremium.classList.remove('hidden'); // Muestra mensaje de éxito verificado
+            
+            // Habilitamos la flecha visual y le damos la propiedad colapsable al título
+            if(flecha) flecha.style.display = 'block';
+            if(titulo) {
+                titulo.style.cursor = 'pointer';
+                titulo.onclick = togglePanelConfiguracion;
+            }
+            
+            // Colapsamos el panel de forma automática para limpiar la interfaz del cliente premium
+            if(cuerpo) {
+                cuerpo.style.display = 'none';
+                flecha.style.transform = 'rotate(180deg)';
+            }
+        } else {
+            // ==========================================
+            // ESCENARIO: EL CLIENTE ES ESTÁNDAR (LOCAL) 🏢
+            // ==========================================
+            cambiarBannerStatus("☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)", null);
+            if(bloqueEstandar) bloqueEstandar.classList.remove('hidden'); // El botón de WhatsApp queda siempre expuesto
+            if(bloquePremium) bloquePremium.classList.add('hidden');
+            
+            // Deshabilitamos la función desplegable y ocultamos la flecha
+            if(flecha) flecha.style.display = 'none';
+            if(titulo) {
+                titulo.style.cursor = 'default';
+                titulo.onclick = null;
+            }
+            
+            // Forzamos a que el panel siempre permanezca completamente abierto
+            if(cuerpo) {
+                cuerpo.style.display = 'block';
+            }
         }
+    }
+
+    // Función auxiliar para abrir/cerrar el panel (Solo activa en modo Premium)
+    function togglePanelConfiguracion() {
+        const cuerpo = document.getElementById('cuerpo-configuracion');
+        const flecha = document.getElementById('btn-flecha-config');
+        if (cuerpo.style.display === 'none') {
+            cuerpo.style.display = 'block';
+            flecha.style.transform = 'rotate(0deg)';
+        } else {
+            cuerpo.style.display = 'none';
+            flecha.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Permite al cliente revertir la licencia desde el botón si lo desea
+    function desactivarLicenciaPremium() {
+        if(!confirm("¿Deseas desvincular la base de datos en la nube y volver al modo local?")) return;
+        config.urlNube = "";
+        config.claveNube = "";
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        
+        document.getElementById('cfg-url-nube').value = "";
+        document.getElementById('cfg-clave-nube').value = "";
+        
+        evaluarEstadoVisualPremium();
     }
 
     function cargarConfiguracion() {
