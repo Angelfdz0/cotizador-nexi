@@ -491,36 +491,47 @@
     }
 
             window.onload = async function() {
-        cargarConfiguracion(); 
-        const localInsumos = localStorage.getItem('respaldo_insumos');
-        if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
+    cargarConfiguracion(); 
+    
+    // ... (tu código de carga de localstorage sigue igual)
+    const localInsumos = localStorage.getItem('respaldo_insumos');
+    if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
+    
+    const localPlantillas = localStorage.getItem('respaldo_plantillas');
+    if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+
+    const bannerViejo = document.getElementById('cloud-banner');
+    if (bannerViejo) {
+        bannerViejo.id = 'premium-banner-status';
+    }
+
+    evaluarEstadoVisualPremium();
+
+    // --- AQUÍ ESTÁ EL AJUSTE PARA OCULTAR EL BOTÓN ---
+    if (config.claveNube && config.claveNube.trim() === "pass_9821") {
         
-        const localPlantillas = localStorage.getItem('respaldo_plantillas');
-        if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
-
-        // CORRECCIÓN: Sincronizamos los IDs para que el banner cambie de color correctamente
-        const bannerViejo = document.getElementById('cloud-banner');
-        if (bannerViejo) {
-            bannerViejo.id = 'premium-banner-status';
+        // 1. Ocultamos el botón de compra inmediatamente
+        const bannerPublicidad = document.getElementById('seccion-comprar-premium');
+        if (bannerPublicidad) {
+            bannerPublicidad.style.display = 'none';
         }
 
-        // Manda a llamar el evaluador visual inmediatamente al cargar la página
-        evaluarEstadoVisualPremium();
-
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-            const banner = document.getElementById('premium-banner-status');
-            if (banner) {
-                banner.textContent = "⏳ Conectando con Google Sheets...";
-                banner.style.backgroundColor = "#e2e8f0";
-                banner.style.color = "#4a5568";
-            }
-            await descargarDeNube();
+        // 2. Indicamos la conexión
+        const banner = document.getElementById('premium-banner-status');
+        if (banner) {
+            banner.textContent = "⏳ Conectando con Google Sheets...";
+            banner.style.backgroundColor = "#e2e8f0";
+            banner.style.color = "#4a5568";
         }
-        renderInsumos();
-        renderModulos();
-        rebuildSelectPlantillas();
-        calcularTodo();
-    };
+        await descargarDeNube();
+    }
+    // ---------------------------------------------------
+
+    renderInsumos();
+    renderModulos();
+    rebuildSelectPlantillas();
+    calcularTodo();
+};
 
     function renderInsumos() {
         const tbody = document.getElementById('tabla-insumos');
@@ -861,7 +872,7 @@
 
     function ocultarConfigSiEsPremium() {
         // Usamos el ID exacto de tu tarjeta publicitaria ('card-compra-premium') para ocultarla
-        const seccionComprar = document.getElementById('card-compra-premium');
+        const seccionComprar = document.getElementById('seccion-compra-premium');
         if(seccionComprar) {
             seccionComprar.style.display = 'none';
         }
