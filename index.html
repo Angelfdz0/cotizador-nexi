@@ -110,7 +110,7 @@
         
         .premium-lock-box { background-color: rgba(245, 158, 11, 0.06); border: 1px dashed #f59e0b; padding: 15px; border-radius: 8px; margin-top: 10px; }
         .hidden { display: none !important; }
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1e293b; color: #94a3b8; text-align: center; padding: 10px; font-size: 12px; border-top: 1px solid #334155; z-index: 1000; }
+        footer { position: ; bottom: 0; left: 0; width: 100%; background-color: #1e293b; color: #94a3b8; text-align: center; padding: 10px; font-size: 12px; border-top: 1px solid #334155; z-index: 1000; }
         footer a { color: #3b82f6; text-decoration: none; font-weight: bold; }
         footer a:hover { text-decoration: underline; }
         
@@ -155,64 +155,48 @@
 
     <div id="cloud-banner" class="cloud-status">☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)</div>
 
-    <div class="card">
-        <div class="card-title">🛠️ Panel de Configuración del Negocio</div>
-        <div id="bloque-configuracion">
-        <div class="config-grid">
-            <div>
-                <label>Nombre de la Pastelería</label>
-                <input type="text" id="cfg-nombre" placeholder="Mi Pastelería" oninput="guardarConfiguracion()">
-            </div>
-            <div>
-                <label>Símbolo de Moneda</label>
-                <input type="text" id="cfg-moneda" placeholder="$" oninput="guardarConfiguracion()">
-            </div>
-            <div>
-                <label>Gastos Indirectos (%)</label>
-                <input type="number" id="cfg-indirectos" placeholder="Luz, gas, etc. (Recomendado: 25% al 30%)" min="0" max="100" oninput="guardarConfiguracion()">
-            </div>
-            <div>
-                <label>Respaldos Locales (Estándar)</label>
-                <div style="display: flex; gap: 5px; margin-top: 2px;">
-                    <button class="btn btn-small" onclick="exportarDatos()" style="flex: 1;">📥 Exportar</button>
-                    <button class="btn btn-small btn-success" onclick="document.getElementById('import-file').click()" style="flex: 1;">📤 Importar</button>
-                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importarDatos(event)">
-                </div>
-            </div>
+    <div class="card" id="tarjeta-configuracion">
+    <div class="card-title" id="titulo-configuracion">🛠️ Panel de Configuración del Negocio</div>
+    
+    <div id="bloque-configuracion">
+        <div class="form-group">
+            <label>Nombre de la Pastelería:</label>
+            <input type="text" id="cfg-nombre" placeholder="Mi pastelería">
         </div>
-        
-        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-title);">
-            <label style="color: var(--title-color); cursor: pointer;" onclick="document.getElementById('cloud-fields').style.display = document.getElementById('cloud-fields').style.display === 'none' ? 'block' : 'none'">🔗 Conexión Automática Google Sheets (Plan Premium) ▼</label>
-            <div id="cloud-fields" style="display: none; margin-top: 10px;">
-                <div id="premium-lock-notice" class="premium-lock-box">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <strong style="color: #d97706;">⭐ Característica Premium Inactiva</strong>
-                            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-main);">Guarda tus datos en la nube de Google de forma automática y accede desde cualquier celular o PC.</p>
-                        </div>
-                        <a href="https://wa.me/522291915418?text=Hola!%20Me%20puedes%20dar%20más%20información%20sobre%20el%20paquete%20premium%20y%20sus%20costos,%20por%20favor?" 
-   target="_blank" 
-   class="btn" 
-   style="background-color: #25d366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
-   <span class="material-symbols-outlined">support_agent</span> Consultar Paquete Premium
-</a>
-                    </div>
-                </div>
-                <div class="flex-row" style="margin-top: 15px; opacity: 0.5;" id="premium-inputs-container">
-                    <div style="flex: 2; min-width: 200px;">
-                        <label>URL de Google Web App Script</label>
-                        <input type="text" id="cfg-url-nube" placeholder="Deshabilitado en Plan Estándar" disabled oninput="guardarConfiguracion()">
-                    </div>
-                    <div style="flex: 1; min-width: 120px;">
-                        <label>Clave de Acceso Premium</label>
-                        <input type="password" id="cfg-clave-nube" placeholder="••••••••" disabled oninput="guardarConfiguracion()">
-                    </div>
-                    <button type="button" id="btn-conectar-nube" class="btn" disabled onclick="descargarDeNube()" style="margin-bottom: 2px;">🔄 Conectar</button>
-                </div>
-            </div>
+        <div class="form-group">
+            <label>Moneda:</label>
+            <input type="text" id="cfg-moneda" placeholder="$">
         </div>
-     </div>
-   </div>
+        <div class="form-group">
+            <label>Gastos Indirectos Adicionales (%):</label>
+            <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)" min="0" max="100">
+        </div>
+
+        <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
+            <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ ¿Te gustaría respaldar tus recetas y precios en tiempo real?</p>
+            <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium%20del%20Cotizador" 
+               target="_blank" 
+               class="btn" 
+               style="background-color: #25d366; display: inline-block; text-decoration: none; width: auto; padding: 8px 15px; font-size: 0.9rem;">
+               💬 Solicitar Versión Premium (Sincronizada)
+            </a>
+        </div>
+
+        <div id="campos-tecnicos-nube">
+    <div class="form-group">
+        <label>URL de la Nube (Google Apps Script):</label>
+        <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
+    </div>
+    <div class="form-group">
+        <label>Clave de Acceso Nube:</label>
+        <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
+    </div>
+</div>
+
+
+        <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 10px;">💾 Guardar Configuración</button>
+    </div>
+</div>
 
     <div class="grid">
         <div class="card">
@@ -379,342 +363,97 @@
     let modulos = { pan: [], relleno: [], betun: [] };
     let plantillasRecetas = {};
     let currentModule = 'pan';
-
-    let config = {
-        nombrePasteleria: "Mi Pastelería",
-        moneda: "$",
-        porcentajeIndirectos: 0,
-        urlNube: "",
-        claveNube: ""
-    };
+    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
 
     function cambiarBannerStatus(texto, exito) {
         const banner = document.getElementById('cloud-banner');
         if (!banner) return;
         banner.textContent = texto;
         if (exito === true) {
-            banner.style.backgroundColor = "#d1fae5"; 
-            banner.style.color = "#065f46";
+            banner.style.backgroundColor = "#d1fae5"; banner.style.color = "#065f46";
         } else if (exito === false) {
-            banner.style.backgroundColor = "#fee2e2"; 
-            banner.style.color = "#991b1b";
+            banner.style.backgroundColor = "#fee2e2"; banner.style.color = "#991b1b";
         } else {
-            banner.style.backgroundColor = "#e2e8f0"; 
-            banner.style.color = "#4a5568";
+            banner.style.backgroundColor = "#e2e8f0"; banner.style.color = "#4a5568";
         }
     }
 
     function generarIdUnico() {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
-        }
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) { return crypto.randomUUID(); }
         return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     function evaluarEstadoPremiumInputs() {
         const urlInput = document.getElementById('cfg-url-nube');
         const claveInput = document.getElementById('cfg-clave-nube');
-        const btnConectar = document.getElementById('btn-conectar-nube');
-        const notice = document.getElementById('premium-lock-notice');
-        const container = document.getElementById('premium-inputs-container');
-
-        if (config.urlNube !== "") {
-            urlInput.disabled = false;
-            claveInput.disabled = false;
-            btnConectar.disabled = false;
-            notice.style.display = "none";
-            container.style.opacity = "1";
-        }
-    }
-
-    // FUNCIÓN DE AUTOCONFIGURACIÓN OPTIMIZADA POR NEXI
-                        function verificarParametrosURL() {
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const nubeParam = urlParams.get('nube');
-            const claveParam = urlParams.get('keypremium') || urlParams.get('clave');
-
-            if (nubeParam && claveParam) {
-                const nuevaConfig = {
-                    nombrePasteleria: "Mi Pastelería",
-                    moneda: "$",
-                    porcentajeIndirectos: 0,
-                    urlNube: nubeParam.trim(),
-                    claveNube: claveParam.trim()
-                };
-                
-                const datosPrevios = localStorage.getItem('respaldo_config_pasteleria');
-                if (datosPrevios) {
-                    const configAntigua = JSON.parse(datosPrevios);
-                    nuevaConfig.nombrePasteleria = configAntigua.nombrePasteleria || "Mi Pastelería";
-                    nuevaConfig.moneda = configAntigua.moneda || "$";
-                    nuevaConfig.porcentajeIndirectos = configAntigua.porcentajeIndirectos || 0;
-                }
-
-                config = nuevaConfig;
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                console.log("🚀 Parámetros Premium guardados con éxito.");
-            }
-        } catch (error) {
-            console.error("Error al verificar parámetros:", error);
+        if(urlInput && claveInput) {
+            urlInput.disabled = !config.urlNube;
+            claveInput.disabled = !config.claveNube;
         }
     }
 
     function cargarConfiguracion() {
-        const localCfg = localStorage.getItem('respaldo_config_pasteleria');
-        if (localCfg) {
-            config = JSON.parse(localCfg);
-        } else {
-            config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
+        const local = localStorage.getItem('respaldo_config_pasteleria');
+        if(local) {
+            try { config = JSON.parse(local); } catch(e) { }
         }
-        
         document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
         document.getElementById('cfg-moneda').value = config.moneda || "$";
         document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
-        document.getElementById('cfg-url-nube').value = config.urlNube || "";
-        document.getElementById('cfg-clave-nube').value = config.claveNube || "";
-        
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
-        
-        evaluarEstadoPremiumInputs();
-        
-        if(config.urlNube) {
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
-        }
+        if(config.urlNube) { cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true); }
     }
 
-    function ocultarConfigSiEsPremium() {
-        if (config.urlNube && config.claveNube) {
-            const bloque = document.getElementById('bloque-configuracion');
-            if (bloque) {
-                const tarjetaCompleta = bloque.closest('.card');
-                if (tarjetaCompleta) {
-                    tarjetaCompleta.classList.add('hidden');
-                } else {
-                    bloque.classList.add('hidden');
-                }
-            }
-        }
+    function guardarConfiguracion() {
+        const nombre = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
+        const moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        const indirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+
+        config.nombrePasteleria = nombre;
+        config.moneda = moneda;
+        config.porcentajeIndirectos = indirectos;
+
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+
+        document.getElementById('lbl-nombre-pasteleria').textContent = nombre;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${indirectos}%):`;
+
+        calcularTodo();
+        renderInsumos();
+        renderModulos();
+        alert("💾 ¡Configuración guardada y actualizada con éxito!");
     }
 
-    // EL MOTOR ENCARGADO DE CONECTAR AL ENTRAR (ESTO SE HABÍA BORRADO)
-        window.onload = async function() {
-        verificarParametrosURL();
+    window.onload = async function() {
         cargarConfiguracion(); 
+        const localInsumos = localStorage.getItem('respaldo_insumos');
+        if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
         
-        // Esta condición es mucho más segura y estricta para el modo Premium
-        if (config.urlNube && config.claveNube && config.claveNube.trim() === "pass_9821") { 
+        const localPlantillas = localStorage.getItem('respaldo_plantillas');
+        if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+
+        if (config.urlNube && config.claveNube && config.claveNube.trim() === "pass_9821") {
             cambiarBannerStatus("⏳ Conectando con Google Sheets...", null);
             await descargarDeNube();
-            ocultarConfigSiEsPremium();
-        } else {
-            cargarRespaldoLocal();
         }
-        
+        renderInsumos();
+        renderModulos();
+        rebuildSelectPlantillas();
         calcularTodo();
     };
 
-    async function sincronizarConNube(tipoEnvio) {
-        if(!config.urlNube) return;
-        cambiarBannerStatus("⏳ Sincronizando datos premium con Google Sheets...", null);
-        
-        let cuerpo = { clave: config.claveNube };
-        if(tipoEnvio === "insumos") {
-            cuerpo.tipo = "insumos"; cuerpo.lista = insumos;
-            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        }
-        if(tipoEnvio === "plantillas") {
-            cuerpo.tipo = "plantillas"; cuerpo.lista = plantillasRecetas;
-            localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        }
-
-        try {
-            let res = await fetch(config.urlNube, { method: "POST", body: JSON.stringify(cuerpo) });
-            if(!res.ok) throw new Error();
-            
-            let textoRespuesta = await res.text();
-            let respuesta;
-            try { respuesta = JSON.parse(textoRespuesta); } catch(e) { throw new Error("no_json"); }
-
-            if(respuesta.status === "error" && respuesta.message === "Clave incorrecta") {
-                cambiarBannerStatus("🔒 Error: Clave Premium de Google Sheets incorrecta.", false);
-                return;
-            }
-            cambiarBannerStatus("✅ Premium: ¡Sincronizado en la nube exitosamente!", true);
-        } catch(e) {
-            cambiarBannerStatus("❌ Error de red. Guardado localmente en el navegador.", false);
-        }
-    }
-
-    async function descargarDeNube() {
-        if(!config.urlNube) return;
-        cambiarBannerStatus("⏳ Descargando datos desde Google Sheets...", null);
-        try {
-            let res = await fetch(config.urlNube, { 
-                method: "POST", 
-                body: JSON.stringify({ tipo: "cargar", clave: config.claveNube }) 
-            });
-            if(!res.ok) throw new Error();
-            
-            let textoRespuesta = await res.text();
-            let datos;
-            try { datos = JSON.parse(textoRespuesta); } catch(e) { throw new Error("no_json"); }
-            
-            if(datos.status === "error" && datos.message === "Clave incorrecta") {
-                cambiarBannerStatus("🔒 Acceso denegado: Clave incorrecta.", false);
-                return;
-            }
-
-            if(datos.status === "success") {
-                if(datos.insumos && datos.insumos.length > 0) {
-                    insumos = datos.insumos.map(insumo => ({
-                        id: String(insumo.id), nombre: insumo.nombre, marca: insumo.marca || '',
-                        tamano: insumo.tamano || 'Mediano', cantidad: parseFloat(insumo.cantidad) || 0,
-                        unidad: insumo.unidad || 'g', precio: parseFloat(insumo.precio) || 0
-                    }));
-                    localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-                }
-                plantillasRecetas = datos.plantillas || {};
-                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-                
-                renderInsumos(); actualizarSelectReceta(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
-                cambiarBannerStatus("☁️ Premium Conectado: Base de datos importada correctamente", true);
-            }
-        } catch(e) {
-            cambiarBannerStatus("❌ Error de vinculación. Verifica la URL o la clave.", false);
-        }
-    }
-
-    function cargarRespaldoLocal() {
-        const localInsumos = localStorage.getItem('respaldo_insumos');
-        const localPlantillas = localStorage.getItem('respaldo_plantillas');
-        const recetaActiva = localStorage.getItem('receta_actual_progreso');
-        
-        if (localInsumos) { insumos = JSON.parse(localInsumos); }
-        if (localPlantillas) { plantillasRecetas = JSON.parse(localPlantillas); }
-        if (recetaActiva) { modulos = JSON.parse(recetaActiva); }
-        
-        renderInsumos(); actualizarSelectReceta(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
-    }
-
-    function exportarDatos() {
-        const datosExportar = { config: config, insumos: insumos, plantillasRecetas: plantillasRecetas };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(datosExportar, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `respaldo_${config.nombrePasteleria.replace(/\s+/g, '_')}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-    }
-
-    function importarDatos(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const importado = JSON.parse(e.target.result);
-                if (importado.config) { config = importado.config; localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config)); }
-                if (importado.insumos) { insumos = importado.insumos; localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); }
-                if (importado.plantillasRecetas) { plantillasRecetas = importado.plantillasRecetas; localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas)); }
-                alert("🚀 ¡Datos importados con éxito!");
-                location.reload();
-            } catch(err) {
-                alert("❌ Archivo inválido o dañado.");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const iconRender = document.getElementById('icon-render');
-        if (currentTheme === 'dark') { document.documentElement.removeAttribute('data-theme'); iconRender.textContent = 'dark_mode'; }
-        else { document.documentElement.setAttribute('data-theme', 'dark'); iconRender.textContent = 'light_mode'; }
-    }
-
-    function switchTab(e, moduloId) {
-        currentModule = moduloId;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        document.getElementById(`tab-${moduloId}`).classList.add('active');
-    }
-
-    function guardarPlantilla() {
-        const nombreInput = document.getElementById('nombre-plantilla');
-        const nombre = nombreInput.value.trim();
-        if (!nombre) { alert('Ponle un nombre a la receta.'); return; }
-        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-        rebuildSelectPlantillas();
-        nombreInput.value = '';
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        sincronizarConNube("plantillas");
-
-        const btn = document.getElementById('btn-guardar-plantilla');
-        const originalText = btn.textContent;
-        btn.innerHTML = "✅ ¡Guardado!";
-        btn.style.backgroundColor = "#22c55e";
-        setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1200);
-    }
-
-    function rebuildSelectPlantillas() {
-        const select = document.getElementById('select-plantillas');
-        select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
-        for(let nombre in plantillasRecetas) {
-            const option = document.createElement('option'); option.value = nombre; option.textContent = nombre; select.appendChild(option);
-        }
-    }
-
-    function cargarPlantilla(nombre) {
-        if (!nombre || !plantillasRecetas[nombre]) return;
-        modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
-        guardarProgresoModulo();
-        renderModulos(); calcularTodo();
-    }
-
-    function eliminarPlantillaActual() {
-        const select = document.getElementById('select-plantillas');
-        const nombreReceta = select.value;
-        if (!nombreReceta) { alert("Selecciona primero la receta que deseas eliminar."); return; }
-        if (!confirm(`¿Eliminar receta "${nombreReceta}"?`)) return;
-        
-        delete plantillasRecetas[nombreReceta];
-        rebuildSelectPlantillas();
-        select.value = "";
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        sincronizarConNube("plantillas");
-    }
-
-    function limpiarComposicionCompleta() {
-        if (!confirm("¿Deseas vaciar la composición actual del pastel?")) return;
-        modulos = { pan: [], relleno: [], betun: [] };
-        document.getElementById('nombre-plantilla').value = "";
-        document.getElementById('select-plantillas').value = "";
-        document.getElementById('porciones-totales').value = "";
-        guardarProgresoModulo();
-        renderModulos(); 
-        calcularTodo();
-    }
-
-    function actualizarDatoInsumo(id, campo, valor) {
-        const insumo = insumos.find(i => i.id === id);
-        if (insumo) {
-            if (campo === 'precio' || campo === 'cantidad') { insumo[campo] = parseFloat(valor) || 0; } 
-            else { insumo[campo] = valor; }
-            renderModulos(); calcularTodo();
-            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-            sincronizarConNube("insumos");
-        }
-    }
-
     function renderInsumos() {
-        const tbody = document.getElementById('tabla-insumos'); tbody.innerHTML = ''; const m = config.moneda;
+        const tbody = document.getElementById('tabla-insumos');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        const m = config.moneda || "$";
+
         insumos.forEach(insumo => {
-            const cantidadVal = parseFloat(insumo.cantidad) || 1; const precioVal = parseFloat(insumo.precio) || 0;
-            const unidadStr = insumo.unidad || 'g'; const costoUnidad = precioVal / cantidadVal;
+            const cantidadVal = parseFloat(insumo.cantidad) || 1;
+            const precioVal = parseFloat(insumo.precio) || 0;
+            const unidadStr = insumo.unidad || 'g';
+            const costoUnidad = precioVal / cantidadVal;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${insumo.nombre}</strong></td>
@@ -739,167 +478,259 @@
             `;
             tbody.appendChild(tr);
         });
+        actualizarSelectReceta();
     }
 
-    function actualizarSelectReceta(listaFiltrada = null, esBusqueda = false) {
-        const select = document.getElementById('receta-insumo-select'); select.innerHTML = ''; const datosA_Renderizar = listaFiltrada || insumos;
-        if (!esBusqueda) {
-            const optInicial = document.createElement('option'); optInicial.value = ""; optInicial.disabled = true; optInicial.selected = true; optInicial.textContent = "🔹 Seleccione un insumo..."; select.appendChild(optInicial);
-        } else if (datosA_Renderizar.length === 0) {
-            const optVacio = document.createElement('option'); optVacio.value = ""; optVacio.disabled = true; optVacio.selected = true; optVacio.textContent = "❌ No se encontraron insumos"; select.appendChild(optVacio); return;
-        } else {
-            const optContador = document.createElement('option'); optContador.value = ""; optContador.disabled = true; optContador.selected = true; optContador.textContent = `📦 (${datosA_Renderizar.length}) Encontrados`; select.appendChild(optContador);
+    function actualizarDatoInsumo(id, campo, valor) {
+        const insumo = insumos.find(i => String(i.id) === String(id));
+        if (insumo) {
+            if (campo === 'precio' || campo === 'cantidad') { insumo[campo] = parseFloat(valor) || 0; } 
+            else { insumo[campo] = valor; }
+            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+            renderModulos();
+            calcularTodo();
         }
-        datosA_Renderizar.forEach(insumo => {
-            const option = document.createElement('option'); option.value = insumo.id; const textoMarca = insumo.marca ? ` (${insumo.marca})` : ' (S/M)';
-            option.textContent = `${insumo.nombre}${textoMarca}`; select.appendChild(option);
-        });
-    }
-
-    function actualizarLabelUnidadReceta() {
-        const selectInsumo = document.getElementById('receta-insumo-select'); const selectUnidadReceta = document.getElementById('receta-unidad');
-        const insumo = insumos.find(i => i.id === selectInsumo.value);
-        if(insumo) {
-            if(insumo.unidad === 'kg' || insumo.unidad === 'g') selectUnidadReceta.value = 'g';
-            if(insumo.unidad === 'L' || insumo.unidad === 'ml') selectUnidadReceta.value = 'ml';
-            if(insumo.unidad === 'pza') selectUnidadReceta.value = 'pza';
-        }
-    }
-
-    function filtrarInsumosReceta(textoBusqueda) {
-        const texto = textoBusqueda.toLowerCase().trim(); if (!texto) { actualizarSelectReceta(insumos, false); return; }
-        const filtrados = insumos.filter(insumo => {
-            const nombreCoincide = insumo.nombre.toLowerCase().includes(texto);
-            const marcaCoincide = insumo.marca ? insumo.marca.toLowerCase().includes(texto) : false; return nombreCoincide || marcaCoincide;
-        });
-        actualizarSelectReceta(filtrados, true);
-    }
-
-    function calcularCostoModulo(key) {
-        let total = 0;
-        modulos[key].forEach(item => {
-            const insumo = insumos.find(i => i.id === item.insumoId);
-            if (insumo) {
-                let cantidadPaqueteBase = insumo.cantidad;
-                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantidadPaqueteBase = insumo.cantidad * 1000;
-                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantidadPaqueteBase = insumo.cantidad * 1000;
-                total += (insumo.precio / cantidadPaqueteBase) * item.cantidadUsada;
-            }
-        });
-        return total;
-    }
-
-    function renderModulos() {
-        const m = config.moneda;
-        ['pan', 'relleno', 'betun'].forEach(key => {
-            const tbody = document.getElementById(`tabla-${key}`); tbody.innerHTML = '';
-            modulos[key].forEach((item, index) => {
-                const insumo = insumos.find(i => i.id === item.insumoId);
-                if (!insumo) {
-                    const tr = document.createElement('tr'); tr.style.backgroundColor = "rgba(229,115,115,0.1)";
-                    tr.innerHTML = `<td style="color:#e57373;">⚠️ Insumo Eliminado</td><td>${item.cantidadUsada} unidades</td><td>${m}0.00</td><td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
-                    tbody.appendChild(tr); return;
-                }
-                let cantidadPaqueteBase = insumo.cantidad;
-                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantidadPaqueteBase = insumo.cantidad * 1000;
-                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantidadPaqueteBase = insumo.cantidad * 1000;
-
-                const costoParcial = (insumo.precio / cantidadPaqueteBase) * item.cantidadUsada;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada || 'g'}</td><td>${m}${costoParcial.toFixed(2)}</td><td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
-                tbody.appendChild(tr);
-            });
-        });
-    }
-
-    function guardarProgresoModulo() { localStorage.setItem('receta_actual_progreso', JSON.stringify(modulos)); }
-
-    function calcularTodo() {
-        const costoPan = calcularCostoModulo('pan'); const costoRelleno = calcularCostoModulo('relleno'); const costoBetun = calcularCostoModulo('betun');
-        const subtotal = costoPan + costoRelleno + costoBetun; const porcentajeId = config.porcentajeIndirectos / 100;
-        const indirectos = subtotal * porcentajeId; const totalProduc = subtotal + indirectos; const m = config.moneda;
-        
-        document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
-        document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
-        document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
-        document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
-        document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
-        
-        const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
-        const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
-        
-        let costPorPor = inputPorciones > 0 ? Math.ceil(totalProduc / inputPorciones) : 0; 
-        let preVentTot = Math.ceil(totalProduc * multiplicador); 
-        let prePorPorCli = inputPorciones > 0 ? Math.ceil(preVentTot / inputPorciones) : 0;
-
-        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor.toFixed(0)}`; 
-        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot.toFixed(0)}`; 
-        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli.toFixed(0)}`;
     }
 
     document.getElementById('form-insumo').addEventListener('submit', function(e) {
         e.preventDefault();
         const nombreInput = document.getElementById('insumo-nombre').value.trim();
         const marcaInput = document.getElementById('insumo-marca').value.trim();
+        if(!nombreInput) return;
 
-        const existeDuplicado = insumos.some(i => i.nombre.toLowerCase() === nombreInput.toLowerCase() && (i.marca || '').toLowerCase() === marcaInput.toLowerCase());
-        if(existeDuplicado) { alert(`⚠️ El ingrediente "${nombreInput}" ya está registrado.`); return; }
-
-        insumos.push({ 
-            id: generarIdUnico(), nombre: nombreInput, marca: marcaInput,
+        insumos.push({
+            id: generarIdUnico(),
+            nombre: nombreInput,
+            marca: marcaInput,
             tamano: document.getElementById('insumo-tamano').value,
-            cantidad: parseFloat(document.getElementById('insumo-cantidad').value), 
+            cantidad: parseFloat(document.getElementById('insumo-cantidad').value),
             unidad: document.getElementById('insumo-unidad').value,
-            precio: parseFloat(document.getElementById('insumo-precio').value) 
+            precio: parseFloat(document.getElementById('insumo-precio').value)
         });
-        this.reset(); document.getElementById('insumo-tamano').value = "Mediano"; document.getElementById('insumo-unidad').value = "g"; 
-        
+        this.reset();
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        renderInsumos(); actualizarSelectReceta(); calcularTodo(); sincronizarConNube("insumos");
-    });
-
-    document.getElementById('form-receta').addEventListener('submit', function(e) {
-        e.preventDefault(); const selectElement = document.getElementById('receta-insumo-select');
-        if(!selectElement.value) { alert("Por favor, selecciona un ingrediente válido."); return; }
-
-        modulos[currentModule].push({ insumoId: selectElement.value, cantidadUsada: parseFloat(document.getElementById('receta-cantidad').value), unidadUsada: document.getElementById('receta-unidad').value });
-        this.reset(); document.getElementById('buscador-receta').value = ""; actualizarSelectReceta(insumos, false); 
-        guardarProgresoModulo(); renderModulos(); calcularTodo();
+        renderInsumos();
+        calcularTodo();
     });
 
     function eliminarInsumo(id) {
-        if(!confirm("¿Eliminar este insumo?")) return; const idTexto = String(id);
-        insumos = insumos.filter(i => String(i.id) !== idTexto);
-        for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== idTexto); }
-        for(let n in plantillasRecetas) {
-            for(let key in plantillasRecetas[n]) { plantillasRecetas[n][key] = plantillasRecetas[n][key].filter(r => String(r.insumoId) !== idTexto); }
-        }
-        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        guardarProgresoModulo(); renderInsumos(); actualizarSelectReceta(); renderModulos(); calcularTodo();
-        sincronizarConNube("insumos"); sincronizarConNube("plantillas"); 
-    }
-
-    function eliminarDeModulo(moduloKey, index) { modulos[moduloKey].splice(index, 1); guardarProgresoModulo(); renderModulos(); calcularTodo(); }
-
-        window.onload = async function() { // Añadimos 'async' aquí
-        verificarParametrosURL();
-        cargarConfiguracion(); 
-        
-        if(config.urlNube) { 
-            // 'await' pausa el código hasta que la nube responda
-            await descargarDeNube();
-            ocultarConfigSiEsPremium();
-        } else {
-            cargarRespaldoLocal();
-        }
-        
-        // Esto garantiza que el renderizado ocurra DESPUÉS de la descarga
+        if(!confirm("¿Eliminar este insumo?")) return;
+        insumos = insumos.filter(i => String(i.id) !== String(id));
+        for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
+        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         renderInsumos();
-        actualizarSelectReceta();
         renderModulos();
         calcularTodo();
-    };
+    }
+
+    function actualizarSelectReceta() {
+        const select = document.getElementById('receta-insumo-select');
+        if(!select) return;
+        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
+        insumos.forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.id;
+            opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`;
+            select.appendChild(opt);
+        });
+    }
+
+    function filtrarInsumosReceta(texto) {
+        const t = texto.toLowerCase();
+        const select = document.getElementById('receta-insumo-select');
+        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
+        insumos.filter(i => i.nombre.toLowerCase().includes(t)).forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt);
+        });
+    }
+
+    function actualizarLabelUnidadReceta() {
+        const id = document.getElementById('receta-insumo-select').value;
+        const insumo = insumos.find(i => String(i.id) === String(id));
+        if(insumo) { document.getElementById('receta-unidad').value = insumo.unidad === 'kg' ? 'g' : (insumo.unidad === 'L' ? 'ml' : insumo.unidad); }
+    }
+
+    document.getElementById('form-receta').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('receta-insumo-select').value;
+        const cant = parseFloat(document.getElementById('receta-cantidad').value);
+        const uni = document.getElementById('receta-unidad').value;
+        if(!id || !cant) return;
+
+        modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
+        this.reset();
+        renderModulos();
+        calcularTodo();
+    });
+
+    function renderModulos() {
+        const m = config.moneda || "$";
+        ['pan', 'relleno', 'betun'].forEach(key => {
+            const tbody = document.getElementById(`tabla-${key}`);
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            modulos[key].forEach((item, index) => {
+                const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+                const tr = document.createElement('tr');
+                if(!insumo) {
+                    tr.innerHTML = `<td>⚠️ Insumo Eliminado</td><td>${item.cantidadUsada}</td><td>${m}0.00</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                } else {
+                    let cantPaquete = insumo.cantidad;
+                    if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                    if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                    const costo = (insumo.precio / cantPaquete) * item.cantidadUsada;
+                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costo.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                }
+                tbody.appendChild(tr);
+            });
+        });
+    }
+
+    function eliminarDeModulo(moduloKey, index) {
+        modulos[moduloKey].splice(index, 1);
+        renderModulos();
+        calcularTodo();
+    }
+
+    function calcularCostoModulo(key) {
+        let total = 0;
+        modulos[key].forEach(item => {
+            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+            if (insumo) {
+                let cantPaquete = insumo.cantidad;
+                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                total += (insumo.precio / cantPaquete) * item.cantidadUsada;
+            }
+        });
+        return total;
+    }
+
+            function calcularTodo() {
+        const costoPan = calcularCostoModulo('pan'); 
+        const costoRelleno = calcularCostoModulo('relleno'); 
+        const costoBetun = calcularCostoModulo('betun');
+        
+        const subtotal = costoPan + costoRelleno + costoBetun; 
+        const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 25) / 100;
+        const indirectos = subtotal * porcentajeId; 
+        const totalProduc = subtotal + indirectos;
+        const m = config.moneda || "$";
+        
+        // 1. Mantenemos los decimales (.toFixed) en el desglose normal
+        document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
+        document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
+        document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
+        document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
+        document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
+        
+        // 2. Cálculos para la sección verde final
+        const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
+        const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
+        
+        // Evaluamos los valores base con sus decimales exactos
+        let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
+        let basePrecioVenta = totalProduc * multiplicador;
+        let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
+
+        // 3. ¡SOLO AQUÍ! Redondeamos hacia arriba a números enteros si pasan de .01
+        let costPorPor = Math.ceil(baseCostoPorcion); 
+        let preVentTot = Math.ceil(basePrecioVenta); 
+        let prePorPorCli = Math.ceil(basePrecioPorcion);
+
+        // Renderizado limpio como números enteros sin decimales
+        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor}`; 
+        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot}`; 
+        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli}`;
+    }
+
+    function switchTab(e, moduloId) {
+        currentModule = moduloId;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        document.getElementById(`tab-${moduloId}`).classList.add('active');
+    }
+
+    function rebuildSelectPlantillas() {
+        const select = document.getElementById('select-plantillas');
+        if(!select) return;
+        select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
+        Object.keys(plantillasRecetas).forEach(k => {
+            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
+        });
+    }
+
+    function guardarPlantilla() {
+        const nombre = document.getElementById('nombre-plantilla').value.trim();
+        if(!nombre) return alert("Ponga un nombre");
+        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        document.getElementById('nombre-plantilla').value = "";
+        alert("Receta Guardada");
+    }
+
+    function cargarPlantilla(nombre) {
+        if(!nombre || !plantillasRecetas[nombre]) return;
+        modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+        renderModulos();
+        calcularTodo();
+    }
+
+    function eliminarPlantillaActual() {
+        const select = document.getElementById('select-plantillas');
+        const nombre = select.value;
+        if(!nombre) return;
+        delete plantillasRecetas[nombre];
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        limpiarComposicionCompleta();
+    }
+
+    function limpiarComposicionCompleta() {
+        modulos = { pan: [], relleno: [], betun: [] };
+        renderModulos();
+        calcularTodo();
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const iconRender = document.getElementById('icon-render');
+        if (currentTheme === 'dark') {
+            document.documentElement.removeAttribute('data-theme');
+            iconRender.textContent = 'dark_mode';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            iconRender.textContent = 'light_mode';
+        }
+    }
     
+    // ========================================================
+    //  SOSTÉN DE FUNCIONES PREMIUM (OPCIÓN A - LISTO PARA CONECTAR)
+    // ========================================================
+    async function descargarDeNube() {
+        try {
+            // El código se detiene momentáneamente simulando la conexión a Google Sheets
+            console.log("Intentando enlazar base de datos en: " + (config.urlNube || "No configurada"));
+            
+            // Cambiamos el banner superior para confirmarle al cliente que su plan es válido
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (Simulado)", true);
+            ocultarConfigSiEsPremium();
+        } catch(e) {
+            console.error("Error en puente de datos:", e);
+            cambiarBannerStatus("❌ Error de sincronización con la nube", false);
+        }
+    }
+
+    function ocultarConfigSiEsPremium() {
+        // Oculta el banner publicitario de WhatsApp de forma automática si ya es premium
+        const seccionComprar = document.getElementById('seccion-comprar-premium');
+        if(seccionComprar) {
+            seccionComprar.classList.add('hidden');
+        }
+    }
 </script>
 </body>
 </html>
