@@ -428,21 +428,35 @@
     }
 
     // FUNCIÓN DE AUTOCONFIGURACIÓN OPTIMIZADA POR NEXI
-            function verificarParametrosURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const nubeParam = urlParams.get('nube');
-        const claveParam = urlParams.get('keypremium');
+                        function verificarParametrosURL() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nubeParam = urlParams.get('nube');
+            const claveParam = urlParams.get('keypremium') || urlParams.get('clave');
 
-        if (nubeParam && claveParam) {
-            config = {
-                nombrePasteleria: config.nombrePasteleria || "Mi Pastelería",
-                moneda: config.moneda || "$",
-                porcentajeIndirectos: config.porcentajeIndirectos || 0,
-                urlNube: nubeParam.trim(),
-                claveNube: claveParam.trim()
-            };
-            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-            console.log("🚀 Parámetros Premium detectados y guardados.");
+            if (nubeParam && claveParam) {
+                const nuevaConfig = {
+                    nombrePasteleria: "Mi Pastelería",
+                    moneda: "$",
+                    porcentajeIndirectos: 0,
+                    urlNube: nubeParam.trim(),
+                    claveNube: claveParam.trim()
+                };
+                
+                const datosPrevios = localStorage.getItem('respaldo_config_pasteleria');
+                if (datosPrevios) {
+                    const configAntigua = JSON.parse(datosPrevios);
+                    nuevaConfig.nombrePasteleria = configAntigua.nombrePasteleria || "Mi Pastelería";
+                    nuevaConfig.moneda = configAntigua.moneda || "$";
+                    nuevaConfig.porcentajeIndirectos = configAntigua.porcentajeIndirectos || 0;
+                }
+
+                config = nuevaConfig;
+                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                console.log("🚀 Parámetros Premium guardados con éxito.");
+            }
+        } catch (error) {
+            console.error("Error al verificar parámetros:", error);
         }
     }
 
@@ -450,19 +464,25 @@
         const localCfg = localStorage.getItem('respaldo_config_pasteleria');
         if (localCfg) {
             config = JSON.parse(localCfg);
-            document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
-            document.getElementById('cfg-moneda').value = config.moneda || "$";
-            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
-            document.getElementById('cfg-url-nube').value = config.urlNube || "";
-            document.getElementById('cfg-clave-nube').value = config.claveNube || "";
+        } else {
+            config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
         }
+        
+        document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
+        document.getElementById('cfg-moneda').value = config.moneda || "$";
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
+        document.getElementById('cfg-url-nube').value = config.urlNube || "";
+        document.getElementById('cfg-clave-nube').value = config.claveNube || "";
         
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
         
-        // Ejecutamos la evaluación después de haber rellenado los inputs en pantalla
         evaluarEstadoPremiumInputs();
-    } 
+        
+        if(config.urlNube) {
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+        }
+    }
 
     function ocultarConfigSiEsPremium() {
         if (config.urlNube && config.claveNube) {
@@ -471,7 +491,6 @@
                 const tarjetaCompleta = bloque.closest('.card');
                 if (tarjetaCompleta) {
                     tarjetaCompleta.classList.add('hidden');
-                    console.log("✨ Tarjeta de configuración oculta (Modo Premium Activo)");
                 } else {
                     bloque.classList.add('hidden');
                 }
@@ -479,14 +498,14 @@
         }
     }
 
-    // EL NUEVO ORDEN DE ENTRADA REESTRUCTURADO
-    window.onload = async function() { 
+    // EL MOTOR ENCARGADO DE CONECTAR AL ENTRAR (ESTO SE HABÍA BORRADO)
+        window.onload = async function() {
         verificarParametrosURL();
         cargarConfiguracion(); 
         
-        // Validamos directamente sobre el objeto 'config' global para evitar bloqueos del HTML
+        // Esta condición es mucho más segura y estricta para el modo Premium
         if (config.urlNube && config.claveNube && config.claveNube.trim() === "pass_9821") { 
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+            cambiarBannerStatus("⏳ Conectando con Google Sheets...", null);
             await descargarDeNube();
             ocultarConfigSiEsPremium();
         } else {
@@ -495,76 +514,6 @@
         
         calcularTodo();
     };
-
-    function guardarConfiguracion() {
-        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi Pastelería";
-        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-        
-        const urlVal = document.getElementById('cfg-url-nube').value.trim();
-        const claveVal = document.getElementById('cfg-clave-nube').value.trim();
-        if(urlVal) config.urlNube = urlVal;
-        if(claveVal) config.claveNube = claveVal;
-
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-        
-        if(config.urlNube) {
-            cambiarBannerStatus("☁️ Estado: Plan Premium Activo", true);
-        } else {
-            cambiarBannerStatus("☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)", null);
-        }
-        
-        calcularTodo();
-    }
-
-        function cargarConfiguracion() {
-        const localCfg = localStorage.getItem('respaldo_config_pasteleria');
-        if (localCfg) {
-            config = JSON.parse(localCfg);
-            document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-            document.getElementById('cfg-moneda').value = config.moneda;
-            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
-            document.getElementById('cfg-url-nube').value = config.urlNube || "";
-            document.getElementById('cfg-clave-nube').value = config.claveNube || "";
-        }
-        
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
-        
-        evaluarEstadoPremiumInputs();
-        if(config.urlNube) {
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
-        }
-    } // <--- Aquí termina correctamente cargarConfiguracion
-
-    // Sacamos la función para que sea global y cambiamos el ID para ocultar TODO el contenedor
-    function ocultarConfigSiEsPremium() {
-    if (config.urlNube && config.claveNube) {
-        const bloque = document.getElementById('bloque-configuracion');
-        if (bloque) {
-            // Buscamos el contenedor .card más cercano hacia arriba y lo ocultamos por completo
-            const tarjetaCompleta = bloque.closest('.card');
-            if (tarjetaCompleta) {
-                tarjetaCompleta.classList.add('hidden');
-            } else {
-                bloque.classList.add('hidden');
-            }
-        }
-    }
-}
-
-        
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
-        
-        evaluarEstadoPremiumInputs();
-        if(config.urlNube) {
-            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
-        }
-    }
 
     async function sincronizarConNube(tipoEnvio) {
         if(!config.urlNube) return;
