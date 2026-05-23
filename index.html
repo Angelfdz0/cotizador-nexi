@@ -138,6 +138,9 @@
             td.text-right, th:last-child, td:last-child { text-align: right !important; }
             tr[style*="rgba"] { display: none !important; } /* Ocultar filas de insumos eliminados */
         }
+        
+        .premium-oculto {
+    display: none !important;
 
     </style>
 </head>
@@ -191,9 +194,11 @@
                     <label>URL de la Nube (Google Apps Script):</label>
                     <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
                 </div>
+                <div id="campo-config-clave">
                 <div class="form-group" style="margin-top: 10px;">
                     <label>Clave de Acceso Nube:</label>
                     <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
+                </div>
                 </div>
             </div>
         </div>
@@ -860,6 +865,11 @@
         if(seccionComprar) {
             seccionComprar.style.display = 'none';
         }
+        const campoUrl = document.getElementById('campos-tecnicos-nube');
+        const campoClave = document.getElementById('campo-config-clave');
+        
+        if(campoUrl) campoUrl.style.display = 'none';
+        if(campoClave) campoClave.style.display = 'none';
     }
 </script>
 </body>
