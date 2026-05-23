@@ -169,7 +169,7 @@
             </div>
             <div>
                 <label>Gastos Indirectos (%)</label>
-                <input type="number" id="cfg-indirectos" placeholder="Luz, gas, etc. (Recomendado 25% al 30%" min="0" max="100" oninput="guardarConfiguracion()">
+                <input type="number" id="cfg-indirectos" placeholder="Luz, gas, etc. (Recomendado: 25% al 30%)" min="0" max="100" oninput="guardarConfiguracion()">
             </div>
             <div>
                 <label>Respaldos Locales (Estándar)</label>
@@ -489,7 +489,7 @@
         calcularTodo();
     }
 
-    function cargarConfiguracion() {
+        function cargarConfiguracion() {
         const localCfg = localStorage.getItem('respaldo_config_pasteleria');
         if (localCfg) {
             config = JSON.parse(localCfg);
@@ -500,12 +500,31 @@
             document.getElementById('cfg-clave-nube').value = config.claveNube || "";
         }
         
-        function ocultarConfigSiEsPremium() {
-    // Si ya tienes la URL y la Clave, ocultamos el bloque
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
+        
+        evaluarEstadoPremiumInputs();
+        if(config.urlNube) {
+            cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true);
+        }
+    } // <--- Aquí termina correctamente cargarConfiguracion
+
+    // Sacamos la función para que sea global y cambiamos el ID para ocultar TODO el contenedor
+    function ocultarConfigSiEsPremium() {
     if (config.urlNube && config.claveNube) {
-        document.getElementById('bloque-configuracion').classList.add('hidden');
+        const bloque = document.getElementById('bloque-configuracion');
+        if (bloque) {
+            // Buscamos el contenedor .card más cercano hacia arriba y lo ocultamos por completo
+            const tarjetaCompleta = bloque.closest('.card');
+            if (tarjetaCompleta) {
+                tarjetaCompleta.classList.add('hidden');
+            } else {
+                bloque.classList.add('hidden');
+            }
+        }
     }
 }
+
         
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
