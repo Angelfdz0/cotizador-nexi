@@ -230,12 +230,7 @@
                 </div>
                 <div style="flex: 1; min-width: 90px;">
                     <label>Tamaño</label>
-                    <select id="insumo-tamano">
-                        <option value="Mediano">Mediano</option>
-                        <option value="Chico">Chico</option>
-                        <option value="Grande">Grande</option>
-                        <option value="N/A">N/A</option>
-                    </select>
+                    <input type="text" id="insumo-tamano" placeholder="Ej: Kilo, Lata, Caja">
                 </div>
                 <div style="flex: 1; min-width: 80px;">
                     <label>Cant. Paquete</label>
@@ -533,7 +528,7 @@
     calcularTodo();
 };
 
-    function renderInsumos() {
+        function renderInsumos() {
         const tbody = document.getElementById('tabla-insumos');
         if(!tbody) return;
         tbody.innerHTML = '';
@@ -544,17 +539,15 @@
             const precioVal = parseFloat(insumo.precio) || 0;
             const unidadStr = insumo.unidad || 'g';
             const costoUnidad = precioVal / cantidadVal;
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${insumo.nombre}</strong></td>
                 <td><input type="text" style="width:75px; border:1px solid transparent; background:transparent;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
                 <td>
-                    <select onchange="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)" style="width:75px; padding:2px; border:1px solid transparent; background:transparent;">
-                        <option value="Chico" ${insumo.tamano === 'Chico' ? 'selected' : ''}>Chico</option>
-                        <option value="Mediano" ${insumo.tamano === 'Mediano' ? 'selected' : ''}>Mediano</option>
-                        <option value="Grande" ${insumo.tamano === 'Grande' ? 'selected' : ''}>Grande</option>
-                        <option value="N/A" ${insumo.tamano === 'N/A' ? 'selected' : ''}>N/A</option>
-                    </select>
+                    <input type="text" style="width:80px; padding:2px; border:1px solid #ddd; border-radius:4px;" 
+                           value="${insumo.tamano || 'N/A'}" 
+                           oninput="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)">
                 </td>
                 <td>
                     <div style="display:flex; align-items:center; gap:2px;">
