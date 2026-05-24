@@ -250,7 +250,7 @@
                     <label>Precio</label>
                     <input type="number" id="insumo-precio" placeholder="120" min="0.01" step="any" required>
                 </div>
-                <button type="submit" class="btn" style="height: 38px;">+</button>
+                <button type="button" class="btn" style="height: 38px;" onclick="agregarNuevoInsumoNube()">+</button>
             </form>
 
             <div style="max-height: 520px; overflow-y: auto;">
@@ -396,23 +396,37 @@
         return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-                function evaluarEstadoVisualPremium() {
-        const banner = document.getElementById('premium-banner-status');
-        if (!banner) return;
+      function evaluarEstadoVisualPremium() {
+    // Buscamos el banner con cualquiera de los dos IDs que pueda tener en tu app
+    const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
+    if (!banner) return;
 
-        // Validamos únicamente la contraseña maestra
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-            banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
-            banner.style.color = "#065f46";
-            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
-            ocultarConfigSiEsPremium();
-        } else {
-            // Si no hay clave correcta, se queda en modo estándar gris
-            banner.style.backgroundColor = "#e2e8f0";
-            banner.style.color = "#4a5568";
-            banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
-        }
+    if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+        banner.id = 'premium-banner-status';
+        banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
+        banner.style.color = "#065f46";
+        banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
+        
+        // Bloqueamos la vista premium para que no se abra de nuevo el panel
+        ocultarConfigSiEsPremium();
+        
+        // Mostramos el bloque de felicitación premium y ocultamos el bloque estándar
+        const bloquePremium = document.getElementById('seccion-bloque-premium');
+        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+        if(bloquePremium) bloquePremium.classList.remove('hidden');
+        if(bloqueEstandar) bloqueEstandar.classList.add('hidden');
+    } else {
+        banner.id = 'cloud-banner';
+        banner.style.backgroundColor = "#e2e8f0";
+        banner.style.color = "#4a5568";
+        banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
+        
+        const bloquePremium = document.getElementById('seccion-bloque-premium');
+        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+        if(bloquePremium) bloquePremium.classList.add('hidden');
+        if(bloqueEstandar) bloqueEstandar.classList.remove('hidden');
     }
+}
 
     // Función auxiliar para abrir/cerrar el panel (Solo activa en modo Premium)
     function togglePanelConfiguracion() {
@@ -563,6 +577,74 @@
         });
         actualizarSelectReceta();
     }
+    
+        // NUEVA FUNCIÓN PARA AGREGAR INSUMOS LOCALMENTE Y EN GOOGLE SHEETS
+    async function agregarNuevoInsumoNube() {
+        const nombreInput = document.getElementById('insumo-nombre').value.trim();
+        const marcaInput = document.getElementById('insumo-marca').value.trim();
+        const tamanoInput = document.getElementById('insumo-tamano').value.trim();
+        const cantidadInput = parseFloat(document.getElementById('insumo-cantidad').value);
+        const unidadInput = document.getElementById('insumo-unidad').value;
+        const precioInput = parseFloat(document.getElementById('insumo-precio').value);
+
+        // Validaciones básicas de campos requeridos
+        if (!nombreInput || isNaN(cantidadInput) || isNaN(precioInput)) {
+            alert("Por favor rellena los campos obligatorios (Nombre, Cantidad y Precio).");
+            return;
+        }
+
+        // Estructura idéntica a tus objetos de insumo actuales
+        const nuevoInsumo = {
+            id: Date.now().toString(), // Genera un ID único basado en tiempo
+            nombre: nombreInput,
+            marca: marcaInput || "S/M",
+            tamano: tamanoInput || "N/A",
+            cantidad: cantidadInput,
+            unidad: unidadInput,
+            precio: precioInput
+        };
+
+        // 1. Guardado local inmediato para no perder velocidad visual
+        insumos.push(nuevoInsumo);
+        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+        
+        // Refrescamos toda tu interfaz con tus funciones nativas
+        renderModulos();
+        calcularTodo();
+
+        // Limpiamos los inputs del formulario
+        document.getElementById('insumo-nombre').value = '';
+        document.getElementById('insumo-marca').value = '';
+        document.getElementById('insumo-tamano').value = '';
+        document.getElementById('insumo-cantidad').value = '';
+        document.getElementById('insumo-precio').value = '';
+
+        // 2. Envío de datos a tu Google Sheets en segundo plano si está activo el Premium
+        if (config.claveNube && config.claveNube.trim() === "pass_9821" && config.urlScript) {
+            cambiarBannerStatus("⏳ Guardando nuevo insumo en Google Sheets...", true);
+            
+            try {
+                const respuesta = await fetch(config.urlScript, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify(nuevoInsumo)
+                });
+                
+                const resultado = await respuesta.json();
+                
+                if (resultado.status === "success") {
+                    cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
+                } else {
+                    console.error("Error devuelto por Apps Script:", resultado.message);
+                    alert("Se guardó en el navegador, pero Google Sheets rechazó el dato: " + resultado.message);
+                }
+            } catch(e) {
+                console.error("Error de red al conectar con Google Sheets:", e);
+                alert("Error de conexión: El insumo se guardó de forma local en tu computadora, pero no se pudo reflejar en la nube. Revisa tu internet.");
+                cambiarBannerStatus("⚠️ Conectado (Guardado local, pendiente de sincronización)", true);
+            }
+        }
+    }
 
     function actualizarDatoInsumo(id, campo, valor) {
         const insumo = insumos.find(i => String(i.id) === String(id));
@@ -574,27 +656,6 @@
             calcularTodo();
         }
     }
-
-    document.getElementById('form-insumo').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const nombreInput = document.getElementById('insumo-nombre').value.trim();
-        const marcaInput = document.getElementById('insumo-marca').value.trim();
-        if(!nombreInput) return;
-
-        insumos.push({
-            id: generarIdUnico(),
-            nombre: nombreInput,
-            marca: marcaInput,
-            tamano: document.getElementById('insumo-tamano').value,
-            cantidad: parseFloat(document.getElementById('insumo-cantidad').value),
-            unidad: document.getElementById('insumo-unidad').value,
-            precio: parseFloat(document.getElementById('insumo-precio').value)
-        });
-        this.reset();
-        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        renderInsumos();
-        calcularTodo();
-    });
 
     function eliminarInsumo(id) {
         if(!confirm("¿Eliminar este insumo?")) return;
