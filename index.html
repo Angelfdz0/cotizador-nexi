@@ -25,52 +25,16 @@
         body { background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 60px; }
         .container { max-width: 1100px; margin: 0 auto; }
         header { 
-            position: relative; 
-            text-align: center; 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            color: #ffffff; 
-            padding: 35px 25px; 
-            border-radius: 16px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            overflow: hidden;
+            position: relative; text-align: center; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: #ffffff; padding: 35px 25px; border-radius: 16px; margin-bottom: 25px; 
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15); border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden;
         }
-        header::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 60%);
-            pointer-events: none;
-        }
-        header h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.5px; color: #ffffff !important; }
-        header p { margin: 12px 0 0 0; font-size: 14.5px; color: #94a3b8; font-weight: 400; letter-spacing: 0.5px; }
+        header h1 { margin: 0; font-size: 30px; font-weight: 700; color: #ffffff !important; }
+        header p { margin: 12px 0 0 0; font-size: 14.5px; color: #94a3b8; }
         .theme-toggle-icon { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            cursor: pointer; 
-            background: rgba(255, 255, 255, 0.06); 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            padding: 8px; 
-            border-radius: 50%; 
-            width: 44px; 
-            height: 44px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .theme-toggle-icon:hover { 
-            background: rgba(255, 255, 255, 0.15); 
-            transform: scale(1.08); 
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            position: absolute; top: 20px; right: 20px; cursor: pointer; background: rgba(255, 255, 255, 0.06); 
+            border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px; border-radius: 50%; width: 44px; height: 44px; 
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
         .theme-toggle-icon span { color: #ffffff !important; font-size: 22px; }
         .grid { display: block; }
@@ -85,19 +49,16 @@
         .tab-content.active { display: block; }
         label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--label-color); }
         input, select { width: 100%; padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); color: var(--text-main); }
-        .table-input { width: 75px; padding: 4px 6px; font-size: 13px; border: 1px solid transparent; background: transparent; border-radius: 4px; color: var(--text-main); font-weight: 500; }
+        .table-input { width: 75px; padding: 4px 6px; font-size: 13px; border: 1px solid transparent; background: transparent; color: var(--text-main); }
         .table-input:hover, .table-input:focus { border-color: var(--input-border); background-color: var(--input-bg); }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--td-border); }
         th { background-color: var(--th-bg); color: var(--th-text); }
-        .btn { background-color: var(--btn-main); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.2s ease; }
+        .btn { background-color: var(--btn-main); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn:hover { background-color: var(--btn-hover); }
         .btn-danger { background-color: #e57373; }
         .btn-danger:hover { background-color: #d32f2f; }
-        .btn-success { background-color: #4caf50; }
-        .btn-success:hover { background-color: #388e3c; }
         .btn-warning { background-color: #f59e0b; color: white; }
-        .btn-warning:hover { background-color: #d97706; }
         .btn-small { padding: 4px 8px; font-size: 11px; }
         .flex-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .result-box { background-color: var(--result-bg); border-left: 4px solid var(--result-border); padding: 12px; margin-top: 15px; border-radius: 0 8px 8px 0; }
@@ -106,42 +67,9 @@
         .text-right { text-align: right; }
         .memory-zone { margin-top: 15px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border-title); background-color: var(--input-bg); }
         .cloud-status { font-size: 12px; font-weight: bold; margin-bottom: 10px; padding: 8px; border-radius: 6px; text-align: center; background-color: #e2e8f0; color: #4a5568;}
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        
-        .premium-lock-box { background-color: rgba(245, 158, 11, 0.06); border: 1px dashed #f59e0b; padding: 15px; border-radius: 8px; margin-top: 10px; }
         .hidden { display: none !important; }
-        footer { position: ; bottom: 0; left: 0; width: 100%; background-color: transparent; color: #94a3b8; text-align: center; padding: 10px; font-size: 12px; border-top: 1px solid transparent; z-index: 1000; }
+        footer { color: #94a3b8; text-align: center; padding: 20px; font-size: 12px; }
         footer a { color: #3b82f6; text-decoration: none; font-weight: bold; }
-        footer a:hover { text-decoration: underline; }
-        
-                /* ESTILOS DE IMPRESIÓN PROFESIONAL PARA EL PDF (OCULTOS EN LA APP) */
-        @media print {
-            body { background: #ffffff !important; color: #1e293b !important; padding: 0; font-size: 12pt; }
-            .container { max-width: 100%; margin: 0; padding: 0; }
-            header { background: none !important; color: #1e293b !important; border-bottom: 3px double #cbd5e1; padding: 10px 0 20px 0; border-radius: 0; box-shadow: none; margin-bottom: 30px; text-align: left; }
-            header h1 { color: #1e293b !important; font-size: 26pt; margin: 0; }
-            header p { color: #64748b !important; font-size: 11pt; margin-top: 5px; }
-            header::before, .theme-toggle-icon, footer, .cloud-status, form, .memory-zone, button, input, select, .tabs-container { display: none !important; }
-            .grid { display: block !important; }
-            .card { background: transparent !important; border: none !important; padding: 0 !important; margin-bottom: 30px !important; box-shadow: none !important; page-break-inside: avoid; }
-            .card-title { font-size: 14pt !important; color: #0f172a !important; border-bottom: 1px solid #94a3b8 !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 5px; margin-bottom: 15px !important; }
-            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 15px; }
-            th { background-color: #f8fafc !important; color: #0f172a !important; border-bottom: 2px solid #cbd5e1 !important; font-weight: bold; font-size: 10pt; text-transform: uppercase; padding: 8px !important; }
-            td { border-bottom: 1px solid #e2e8f0 !important; padding: 8px !important; color: #334155 !important; font-size: 10.5pt; }
-            .result-box, .result-box[style] { background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-left: 5px solid #3b82f6 !important; border-radius: 6px !important; padding: 15px !important; margin-top: 20px !important; page-break-inside: avoid; }
-            .result-row { margin-bottom: 8px !important; font-size: 10.5pt !important; color: #475569 !important; }
-            .highlight { font-size: 14pt !important; color: #0f172a !important; }
-            /* Formato especial para la sección final de cotización en el PDF */
-            #porciones-totales, #margen-ganancia { display: none; }
-            .card:last-of-type { border: 2px solid #0f172a !important; border-radius: 8px !important; padding: 20px !important; background: #fafafa !important; page-break-inside: avoid; }
-            .card:last-of-type .result-box { background: #ffffff !important; border: 1px solid #0f172a !important; border-left: 5px solid #10b981 !important; }
-            td.text-right, th:last-child, td:last-child { text-align: right !important; }
-            tr[style*="rgba"] { display: none !important; } /* Ocultar filas de insumos eliminados */
-        }
-        
-        .premium-oculto {
-    display: none !important;
-
     </style>
 </head>
 <body>
@@ -149,7 +77,7 @@
 <div class="container">
     <header>
         <h1 id="lbl-nombre-pasteleria">Cotizador de Pastelería</h1>
-        <div style="font-size: 9.5pt; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; margin-top: 6px; margin-bottom: 2px; text-align: center;">DESARROLLADO POR NEXI</div>
+        <div style="font-size: 9.5pt; color: #3b82f6; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; margin-top: 6px; text-align: center;">DESARROLLADO POR NEXI</div>
         <p>Costos exactos, ganancias reales.</p>
         <div class="theme-toggle-icon" onclick="toggleTheme()">
             <span class="material-symbols-outlined" id="icon-render">dark_mode</span>
@@ -159,12 +87,8 @@
     <div id="cloud-banner" class="cloud-status">☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)</div>
 
    <div class="card" id="tarjeta-configuracion">
-    <div class="card-title" id="titulo-configuracion" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
-        <span>🛠️ Panel de Configuración del Negocio</span>
-        <span class="material-symbols-outlined" id="btn-flecha-config" style="transition: transform 0.3s; cursor: pointer; display: none;" onclick="togglePanelConfiguracion()">expand_less</span>
-    </div>
-    
-    <div id="cuerpo-configuracion" style="transition: all 0.3s ease;">
+    <div class="card-title">🛠️ Panel de Configuración del Negocio</div>
+    <div>
         <div class="form-group">
             <label>Nombre de la Pastelería:</label>
             <input type="text" id="cfg-nombre" placeholder="Mi pastelería">
@@ -175,41 +99,37 @@
         </div>
         <div class="form-group" style="margin-top: 10px;">
             <label>Gastos Indirectos Adicionales (%):</label>
-            <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)" min="0" max="100">
+            <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)">
         </div>
 
         <div id="seccion-bloque-estandar">
-            <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
+            <div style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
                 <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ ¿Te gustaría respaldar tus recetas y precios en tiempo real?</p>
-                <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium%20del%20Cotizador" 
-                   target="_blank" 
-                   class="btn" 
-                   style="background-color: #25d366; color: white; display: inline-block; text-decoration: none; width: auto; padding: 8px 15px; font-size: 0.9rem; border-radius: 5px; font-weight: 600;">
+                <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium" 
+                   target="_blank" class="btn" style="background-color: #25d366; color: white; display: inline-block; text-decoration: none;">
                    💬 Solicitar Versión Premium (Sincronizada)
                 </a>
             </div>
 
             <div id="campos-tecnicos-nube">
                 <div class="form-group">
-                    <label>URL de la Nube (Google Apps Script):</label>
+                    <label>URL de la Nube (Entregado por NEXI):</label>
                     <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
                 </div>
-                <div id="campo-config-clave">
                 <div class="form-group" style="margin-top: 10px;">
-                    <label>Clave de Acceso Nube:</label>
+                    <label>Clave de Acceso Premium:</label>
                     <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
                 </div>
+                <div class="form-group" style="margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                    <label style="color: #1e293b;">🆔 ID de tu Google Sheets Personal:</label>
+                    <input type="text" id="cfg-id-sheets" placeholder="Pega aquí el texto largo de tu hoja">
                 </div>
             </div>
         </div>
 
         <div id="seccion-bloque-premium" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; text-align: center;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #15803d; font-weight: bold; margin-bottom: 5px;">
-                <span class="material-symbols-outlined">verified</span>
-                <span>¡Suscripción Premium Activa!</span>
-            </div>
-            <p style="margin: 0; font-size: 12px; color: #166534;">Tus recetas y precios se encuentran sincronizados de forma segura en la nube de Google Sheets.</p>
-            <button class="btn btn-warning btn-small" onclick="desactivarLicenciaPremium()" style="margin-top: 10px; font-size: 11px; padding: 4px 10px;">🔒 Desvincular Cuenta</button>
+            <div style="color: #15803d; font-weight: bold;">✓ ¡Suscripción Premium Activa!</div>
+            <button class="btn btn-warning btn-small" onclick="desactivarLicenciaPremium()" style="margin-top: 10px;">🔒 Desvincular Cuenta</button>
         </div>
 
         <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 15px; width: 100%;">💾 Guardar Configuración</button>
@@ -222,7 +142,7 @@
             <form id="form-insumo" class="flex-row" style="margin-bottom: 15px;">
                 <div style="flex: 2; min-width: 130px;">
                     <label>Ingrediente / Material</label>
-                    <input type="text" id="insumo-nombre" placeholder="Ej. Queso Cream" required>
+                    <input type="text" id="insumo-nombre" placeholder="Ej. Queso" required>
                 </div>
                 <div style="flex: 1; min-width: 90px;">
                     <label>Marca</label>
@@ -230,7 +150,7 @@
                 </div>
                 <div style="flex: 1; min-width: 90px;">
                     <label>Tamaño</label>
-                    <input type="text" id="insumo-tamano" placeholder="Ej: Kilo, Lata, Caja">
+                    <input type="text" id="insumo-tamano" placeholder="Ej: Kilo">
                 </div>
                 <div style="flex: 1; min-width: 80px;">
                     <label>Cant. Paquete</label>
@@ -256,15 +176,7 @@
             <div style="max-height: 520px; overflow-y: auto;">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Insumo</th>
-                            <th>Marca</th>
-                            <th>Tamaño</th>
-                            <th>Paquete</th>
-                            <th>Precio</th>
-                            <th>Costo Base</th>
-                            <th></th>
-                        </tr>
+                        <tr><th>Insumo</th><th>Marca</th><th>Tamaño</th><th>Paquete</th><th>Precio</th><th>Costo Base</th><th></th></tr>
                     </thead>
                     <tbody id="tabla-insumos"></tbody>
                 </table>
@@ -280,18 +192,18 @@
                     <button class="tab" onclick="switchTab(event, 'relleno')">2. Relleno</button>
                     <button class="tab" onclick="switchTab(event, 'betun')">3. Betún</button>
                 </div>
-                <button type="button" class="btn btn-danger btn-small" onclick="limpiarComposicionCompleta()" style="padding: 6px 10px; font-size: 12px;">🧹 Limpiar Todo</button>
+                <button type="button" class="btn btn-danger btn-small" onclick="limpiarComposicionCompleta()">🧹 Limpiar Todo</button>
             </div>
 
             <form id="form-receta" class="flex-row" style="margin-bottom: 15px;" autocomplete="off">
                 <div style="flex: 1.2; min-width: 130px;">
                     <label>🔍 Buscar ingrediente</label>
-                    <input type="text" id="buscador-receta" placeholder="Ej: Mantequilla..." oninput="filtrarInsumosReceta(this.value)">
+                    <input type="text" id="buscador-receta" placeholder="Ej: Harina..." oninput="filtrarInsumosReceta(this.value)">
                 </div>
                 <div style="flex: 1.5; min-width: 150px;">
                     <label>Seleccionar Insumo</label>
                     <select id="receta-insumo-select" onchange="actualizarLabelUnidadReceta()" required>
-                        <option value="" disabled selected style="color: #a0aec0; font-style: italic;">🔹 Seleccione un insumo...</option>
+                        <option value="" disabled selected>🔹 Seleccione un insumo...</option>
                     </select>
                 </div>
                 <div style="flex: 0.8; min-width: 80px;">
@@ -301,9 +213,7 @@
                 <div style="flex: 0.6; min-width: 60px;">
                     <label>Unidad</label>
                     <select id="receta-unidad">
-                        <option value="g">g</option>
-                        <option value="ml">ml</option>
-                        <option value="pza">pza</option>
+                        <option value="g">g</option><option value="ml">ml</option><option value="pza">pza</option>
                     </select>
                 </div>
                 <button type="submit" class="btn" style="height: 38px;">+</button>
@@ -316,8 +226,8 @@
             <div class="memory-zone">
                 <label style="margin-bottom: 6px; font-weight: bold; color: var(--title-color);">💾 Guardar Receta / Plantilla</label>
                 <div class="flex-row" style="margin-bottom: 10px;">
-                    <div style="flex: 1;"><input type="text" id="nombre-plantilla" placeholder="Ej: Vainilla Cajeta" autocomplete="off"></div>
-                    <button type="button" class="btn" id="btn-guardar-plantilla" onclick="guardarPlantilla()">Guardar Receta</button>
+                    <div style="flex: 1;"><input type="text" id="nombre-plantilla" placeholder="Ej: Tres Leches" autocomplete="off"></div>
+                    <button type="button" class="btn" id="btn-guardar-plantilla" onclick="guardarPlantillaNube()">Guardar Receta</button>
                 </div>
                 <div class="flex-row">
                     <div style="flex: 1;">
@@ -350,7 +260,7 @@
             </div>
             <div class="form-group">
                 <label>Dificultad del Diseño</label>
-                <select id="margen-ganancia" onchange="calcularTodo()" style="font-size: 13px; font-weight: 500;">
+                <select id="margen-ganancia" onchange="calcularTodo()">
                     <option value="3" selected>Nivel 1: Tradicional (66.6% Ganancia)</option>
                     <option value="3.5">Nivel 2: Complejo (71.4% Ganancia)</option>
                     <option value="4.5">Nivel 3: Laborioso (77.7% Ganancia)</option>
@@ -359,218 +269,110 @@
         </div>
         <div class="result-box" style="background-color: var(--mint-bg); border-left-color: var(--mint-border); margin-bottom: 15px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
-                <div><label style="color: var(--mint-text);">Costo Rebanada</label><span id="res-costo-porcion" style="font-size: 20px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
-                <div style="border-left: 1px solid var(--mint-border); border-right: 1px solid var(--mint-border);"><label id="lbl-venta-total" style="color: var(--mint-text); font-weight: bold;">PRECIO DE VENTA TOTAL</label><span id="res-precio-venta" style="font-size: 24px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
-                <div><label style="color: var(--mint-text);">Precio Rebanada</label><span id="res-precio-porcion" style="font-size: 20px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
+                <div><label style="color: var(--mint-text);">Costo Rebanada</label><span id="res-costo-porcion">$0.00</span></div>
+                <div><label style="color: var(--mint-text); font-weight: bold;">PRECIO DE VENTA TOTAL</label><span id="res-precio-venta" style="font-size: 24px; font-weight: bold;">$0.00</span></div>
+                <div><label style="color: var(--mint-text);">Precio Rebanada</label><span id="res-precio-porcion">$0.00</span></div>
             </div>
         </div>
     </div>
 </div>
 
-<footer>
-    Desarrollado con ❤️ por <a href="#" target="_blank">NEXI</a>. Todos los derechos reservados © 2026.
-</footer>
+<footer>Desarrollado con ❤️ por <a href="#">NEXI</a>. Todos los derechos reservados © 2026.</footer>
 
 <script>
     let insumos = [];
     let modulos = { pan: [], relleno: [], betun: [] };
     let plantillasRecetas = {};
     let currentModule = 'pan';
-    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
+    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "", idSheets: "" };
 
-    function cambiarBannerStatus(texto, exito) {
+    function evaluarEstadoVisualPremium() {
         const banner = document.getElementById('cloud-banner');
         if (!banner) return;
-        banner.textContent = texto;
-        if (exito === true) {
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
             banner.style.backgroundColor = "#d1fae5"; banner.style.color = "#065f46";
-        } else if (exito === false) {
-            banner.style.backgroundColor = "#fee2e2"; banner.style.color = "#991b1b";
+            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
+            document.getElementById('seccion-bloque-premium').classList.remove('hidden');
+            document.getElementById('seccion-bloque-estandar').classList.add('hidden');
         } else {
             banner.style.backgroundColor = "#e2e8f0"; banner.style.color = "#4a5568";
+            banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
+            document.getElementById('seccion-bloque-premium').classList.add('hidden');
+            document.getElementById('seccion-bloque-estandar').classList.remove('hidden');
         }
     }
 
-    function generarIdUnico() {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) { return crypto.randomUUID(); }
-        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
-      function evaluarEstadoVisualPremium() {
-    // Buscamos el banner con cualquiera de los dos IDs que pueda tener en tu app
-    const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
-    if (!banner) return;
-
-    if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-        banner.id = 'premium-banner-status';
-        banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
-        banner.style.color = "#065f46";
-        banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
-        
-        // Bloqueamos la vista premium para que no se abra de nuevo el panel
-        ocultarConfigSiEsPremium();
-        
-        // Mostramos el bloque de felicitación premium y ocultamos el bloque estándar
-        const bloquePremium = document.getElementById('seccion-bloque-premium');
-        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
-        if(bloquePremium) bloquePremium.classList.remove('hidden');
-        if(bloqueEstandar) bloqueEstandar.classList.add('hidden');
-    } else {
-        banner.id = 'cloud-banner';
-        banner.style.backgroundColor = "#e2e8f0";
-        banner.style.color = "#4a5568";
-        banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
-        
-        const bloquePremium = document.getElementById('seccion-bloque-premium');
-        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
-        if(bloquePremium) bloquePremium.classList.add('hidden');
-        if(bloqueEstandar) bloqueEstandar.classList.remove('hidden');
-    }
-}
-
-    // Función auxiliar para abrir/cerrar el panel (Solo activa en modo Premium)
-    function togglePanelConfiguracion() {
-        const cuerpo = document.getElementById('cuerpo-configuracion');
-        const flecha = document.getElementById('btn-flecha-config');
-        if (cuerpo.style.display === 'none') {
-            cuerpo.style.display = 'block';
-            flecha.style.transform = 'rotate(0deg)';
-        } else {
-            cuerpo.style.display = 'none';
-            flecha.style.transform = 'rotate(180deg)';
-        }
-    }
-
-    // Permite al cliente revertir la licencia desde el botón si lo desea
     function desactivarLicenciaPremium() {
-        if(!confirm("¿Deseas desvincular la base de datos en la nube y volver al modo local?")) return;
-        config.urlNube = "";
-        config.claveNube = "";
+        if(!confirm("¿Deseas desvincular la nube y volver al modo local?")) return;
+        config.urlNube = ""; config.claveNube = ""; config.idSheets = "";
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        
-        document.getElementById('cfg-url-nube').value = "";
-        document.getElementById('cfg-clave-nube').value = "";
-        
-        evaluarEstadoVisualPremium();
+        location.reload();
     }
 
     function cargarConfiguracion() {
         const local = localStorage.getItem('respaldo_config_pasteleria');
-        if(local) {
-            try { config = JSON.parse(local); } catch(e) { }
-        }
+        if(local) { try { config = JSON.parse(local); } catch(e) { } }
         document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
         document.getElementById('cfg-moneda').value = config.moneda || "$";
-        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
+        document.getElementById('cfg-url-nube').value = config.urlNube || "";
+        document.getElementById('cfg-clave-nube').value = config.claveNube || "";
+        document.getElementById('cfg-id-sheets').value = config.idSheets || "";
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
-        if(config.urlNube) { cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado", true); }
     }
 
-        async function guardarConfiguracion() {
-        const nombre = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
-        const moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-        const indirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-        
-        const urlNubeInput = document.getElementById('cfg-url-nube') ? document.getElementById('cfg-url-nube').value.trim() : "";
-        const claveNubeInput = document.getElementById('cfg-clave-nube') ? document.getElementById('cfg-clave-nube').value.trim() : "";
-
-        // Guardamos tus datos básicos
-        config.nombrePasteleria = nombre;
-        config.moneda = moneda;
-        config.porcentajeIndirectos = indirectos;
-        
-        // ¡NUEVO! Guardamos también la clave y la URL para la conexión premium
-        config.claveNube = claveNubeInput;
-        config.urlNube = urlNubeInput;
+    async function guardarConfiguracion() {
+        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
+        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        config.claveNube = document.getElementById('cfg-clave-nube').value.trim();
+        config.urlNube = document.getElementById('cfg-url-nube').value.trim();
+        config.idSheets = document.getElementById('cfg-id-sheets').value.trim();
 
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
-        document.getElementById('lbl-nombre-pasteleria').textContent = nombre;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${indirectos}%):`;
+        // SUBIR CONFIGURACIÓN A LA PESTAÑA 'Configuracion'
+        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
+            cambiarBannerStatus("⏳ Sincronizando configuración con Google Sheets...", true);
+            try {
+                await fetch(config.urlNube, {
+                    method: 'POST', mode: 'cors',
+                    body: JSON.stringify({
+                        spreadsheetId: config.idSheets, accion: "guardarConfig",
+                        nombrePasteleria: config.nombrePasteleria, moneda: config.moneda, porcentajeIndirectos: config.porcentajeIndirectos
+                    })
+                });
+            } catch(e) { console.log("Guardado local correcto, fallo subir configuración."); }
+        }
 
-        calcularTodo();
-        renderInsumos();
-        renderModulos();
-        
-        alert("💾 ¡Configuración guardada y actualizada con éxito!");
-        
-        // ¡NUEVO! Aquí activamos el puente de internet para absorber los 100 insumos
+        alert("💾 ¡Configuración guardada!");
         await descargarDeNube();
     }
 
-            window.onload = async function() {
-    cargarConfiguracion(); 
-    
-    // ... (tu código de carga de localstorage sigue igual)
-    const localInsumos = localStorage.getItem('respaldo_insumos');
-    if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
-    
-    const localPlantillas = localStorage.getItem('respaldo_plantillas');
-    if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+    window.onload = async function() {
+        cargarConfiguracion(); 
+        if(localStorage.getItem('respaldo_insumos')) { insumos = JSON.parse(localStorage.getItem('respaldo_insumos')); }
+        if(localStorage.getItem('respaldo_plantillas')) { plantillasRecetas = JSON.parse(localStorage.getItem('respaldo_plantillas')); }
 
-    const bannerViejo = document.getElementById('cloud-banner');
-    if (bannerViejo) {
-        bannerViejo.id = 'premium-banner-status';
-    }
+        evaluarEstadoVisualPremium();
+        if (config.claveNube === "pass_9821") { await descargarDeNube(); }
 
-    evaluarEstadoVisualPremium();
+        renderInsumos(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
+    };
 
-    // --- AQUÍ ESTÁ EL AJUSTE PARA OCULTAR EL BOTÓN ---
-    if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-        
-        // 1. Ocultamos el botón de compra inmediatamente
-        const bannerPublicidad = document.getElementById('seccion-comprar-premium');
-        if (bannerPublicidad) {
-            bannerPublicidad.style.display = 'none';
-        }
-
-        // 2. Indicamos la conexión
-        const banner = document.getElementById('premium-banner-status');
-        if (banner) {
-            banner.textContent = "⏳ Conectando con Google Sheets...";
-            banner.style.backgroundColor = "#e2e8f0";
-            banner.style.color = "#4a5568";
-        }
-        await descargarDeNube();
-    }
-    // ---------------------------------------------------
-
-    renderInsumos();
-    renderModulos();
-    rebuildSelectPlantillas();
-    calcularTodo();
-};
-
-        function renderInsumos() {
-        const tbody = document.getElementById('tabla-insumos');
-        if(!tbody) return;
-        tbody.innerHTML = '';
+    function renderInsumos() {
+        const tbody = document.getElementById('tabla-insumos'); if(!tbody) return; tbody.innerHTML = '';
         const m = config.moneda || "$";
-
         insumos.forEach(insumo => {
-            const cantidadVal = parseFloat(insumo.cantidad) || 1;
-            const precioVal = parseFloat(insumo.precio) || 0;
-            const unidadStr = insumo.unidad || 'g';
-            const costoUnidad = precioVal / cantidadVal;
-            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${insumo.nombre}</strong></td>
-                <td><input type="text" style="width:75px; border:1px solid transparent; background:transparent;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
-                <td>
-                    <input type="text" style="width:80px; padding:2px; border:1px solid #ddd; border-radius:4px;" 
-                           value="${insumo.tamano || 'N/A'}" 
-                           oninput="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)">
-                </td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:2px;">
-                        <input type="number" class="table-input" value="${cantidadVal}" style="width:50px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'cantidad', this.value)">
-                        <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${insumo.unidad}</span>
-                    </div>
-                </td>
-                <td><input type="number" class="table-input" value="${precioVal}" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
-                <td>${m}${costoUnidad.toFixed(2)}/${unidadStr}</td>
+                <td>${insumo.marca||'S/M'}</td><td>${insumo.tamano||'N/A'}</td>
+                <td>${insumo.cantidad} ${insumo.unidad}</td><td>${m}${insumo.precio}</td>
+                <td>${m}${(insumo.precio/insumo.cantidad).toFixed(2)}/${insumo.unidad}</td>
                 <td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarInsumo('${insumo.id}')">×</button></td>
             `;
             tbody.appendChild(tr);
@@ -578,364 +380,154 @@
         actualizarSelectReceta();
     }
     
-        // NUEVA FUNCIÓN PARA AGREGAR INSUMOS LOCALMENTE Y EN GOOGLE SHEETS
     async function agregarNuevoInsumoNube() {
-        const nombreInput = document.getElementById('insumo-nombre').value.trim();
-        const marcaInput = document.getElementById('insumo-marca').value.trim();
-        const tamanoInput = document.getElementById('insumo-tamano').value.trim();
-        const cantidadInput = parseFloat(document.getElementById('insumo-cantidad').value);
-        const unidadInput = document.getElementById('insumo-unidad').value;
-        const precioInput = parseFloat(document.getElementById('insumo-precio').value);
+        const nom = document.getElementById('insumo-nombre').value.trim();
+        const cant = parseFloat(document.getElementById('insumo-cantidad').value);
+        const pre = parseFloat(document.getElementById('insumo-precio').value);
+        if (!nom || isNaN(cant) || isNaN(pre)) return alert("Rellene los campos obligatorios.");
 
-        // Validaciones básicas de campos requeridos
-        if (!nombreInput || isNaN(cantidadInput) || isNaN(precioInput)) {
-            alert("Por favor rellena los campos obligatorios (Nombre, Cantidad y Precio).");
-            return;
-        }
-
-        // Estructura idéntica a tus objetos de insumo actuales
-        const nuevoInsumo = {
-            id: Date.now().toString(), // Genera un ID único basado en tiempo
-            nombre: nombreInput,
-            marca: marcaInput || "S/M",
-            tamano: tamanoInput || "N/A",
-            cantidad: cantidadInput,
-            unidad: unidadInput,
-            precio: precioInput
+        const nuevo = {
+            id: Date.now().toString(), nombre: nom, marca: document.getElementById('insumo-marca').value.trim()||"S/M",
+            tamano: document.getElementById('insumo-tamano').value.trim()||"N/A", cantidad: cant,
+            unidad: document.getElementById('insumo-unidad').value, precio: pre
         };
 
-        // 1. Guardado local inmediato para no perder velocidad visual
-        insumos.push(nuevoInsumo);
+        insumos.push(nuevo);
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        
-        // Refrescamos toda tu interfaz con tus funciones nativas
-        renderModulos();
-        calcularTodo();
+        renderInsumos(); calcularTodo();
+        document.getElementById('form-insumo').reset();
 
-        // Limpiamos los inputs del formulario
-        document.getElementById('insumo-nombre').value = '';
-        document.getElementById('insumo-marca').value = '';
-        document.getElementById('insumo-tamano').value = '';
-        document.getElementById('insumo-cantidad').value = '';
-        document.getElementById('insumo-precio').value = '';
-
-        // 2. Envío de datos a tu Google Sheets en segundo plano si está activo el Premium
-        if (config.claveNube && config.claveNube.trim() === "pass_9821" && config.urlScript) {
-            cambiarBannerStatus("⏳ Guardando nuevo insumo en Google Sheets...", true);
-            
+        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
             try {
-                const respuesta = await fetch(config.urlScript, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify(nuevoInsumo)
-                });
-                
-                const resultado = await respuesta.json();
-                
-                if (resultado.status === "success") {
-                    cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
-                } else {
-                    console.error("Error devuelto por Apps Script:", resultado.message);
-                    alert("Se guardó en el navegador, pero Google Sheets rechazó el dato: " + resultado.message);
-                }
-            } catch(e) {
-                console.error("Error de red al conectar con Google Sheets:", e);
-                alert("Error de conexión: El insumo se guardó de forma local en tu computadora, pero no se pudo reflejar en la nube. Revisa tu internet.");
-                cambiarBannerStatus("⚠️ Conectado (Guardado local, pendiente de sincronización)", true);
-            }
+                nuevo.spreadsheetId = config.idSheets; nuevo.accion = "guardarInsumo";
+                await fetch(config.urlNube, { method: 'POST', mode: 'cors', body: JSON.stringify(nuevo) });
+                evaluarEstadoVisualPremium();
+            } catch(e) { cambiarBannerStatus("⚠️ Guardado local (Pendiente de subir)", true); }
         }
     }
 
-    function actualizarDatoInsumo(id, campo, valor) {
-        const insumo = insumos.find(i => String(i.id) === String(id));
-        if (insumo) {
-            if (campo === 'precio' || campo === 'cantidad') { insumo[campo] = parseFloat(valor) || 0; } 
-            else { insumo[campo] = valor; }
-            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-            renderModulos();
-            calcularTodo();
-        }
-    }
-
-    function eliminarInsumo(id) {
-        if(!confirm("¿Eliminar este insumo?")) return;
-        insumos = insumos.filter(i => String(i.id) !== String(id));
-        for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
-        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        renderInsumos();
-        renderModulos();
-        calcularTodo();
-    }
-
-    function actualizarSelectReceta() {
-        const select = document.getElementById('receta-insumo-select');
-        if(!select) return;
-        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
-        insumos.forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i.id;
-            opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`;
-            select.appendChild(opt);
-        });
-    }
-
-    function filtrarInsumosReceta(texto) {
-        const t = texto.toLowerCase();
-        const select = document.getElementById('receta-insumo-select');
-        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
-        insumos.filter(i => i.nombre.toLowerCase().includes(t)).forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt);
-        });
-    }
-
-    function actualizarLabelUnidadReceta() {
-        const id = document.getElementById('receta-insumo-select').value;
-        const insumo = insumos.find(i => String(i.id) === String(id));
-        if(insumo) { document.getElementById('receta-unidad').value = insumo.unidad === 'kg' ? 'g' : (insumo.unidad === 'L' ? 'ml' : insumo.unidad); }
-    }
-
-    document.getElementById('form-receta').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('receta-insumo-select').value;
-        const cant = parseFloat(document.getElementById('receta-cantidad').value);
-        const uni = document.getElementById('receta-unidad').value;
-        if(!id || !cant) return;
-
-        modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
-        this.reset();
-        renderModulos();
-        calcularTodo();
-    });
-
-    function renderModulos() {
-        const m = config.moneda || "$";
-        ['pan', 'relleno', 'betun'].forEach(key => {
-            const tbody = document.getElementById(`tabla-${key}`);
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            modulos[key].forEach((item, index) => {
-                const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
-                const tr = document.createElement('tr');
-                if(!insumo) {
-                    tr.innerHTML = `<td>⚠️ Insumo Eliminado</td><td>${item.cantidadUsada}</td><td>${m}0.00</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
-                } else {
-                    let cantPaquete = insumo.cantidad;
-                    if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
-                    if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-                    const costo = (insumo.precio / cantPaquete) * item.cantidadUsada;
-                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costo.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
-                }
-                tbody.appendChild(tr);
-            });
-        });
-    }
-
-    function eliminarDeModulo(moduloKey, index) {
-        modulos[moduloKey].splice(index, 1);
-        renderModulos();
-        calcularTodo();
-    }
-
-    function calcularCostoModulo(key) {
-        let total = 0;
-        modulos[key].forEach(item => {
-            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
-            if (insumo) {
-                let cantPaquete = insumo.cantidad;
-                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
-                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-                total += (insumo.precio / cantPaquete) * item.cantidadUsada;
-            }
-        });
-        return total;
-    }
-
-            function calcularTodo() {
-        const costoPan = calcularCostoModulo('pan'); 
-        const costoRelleno = calcularCostoModulo('relleno'); 
-        const costoBetun = calcularCostoModulo('betun');
-        
-        const subtotal = costoPan + costoRelleno + costoBetun; 
-        const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 25) / 100;
-        const indirectos = subtotal * porcentajeId; 
-        const totalProduc = subtotal + indirectos;
-        const m = config.moneda || "$";
-        
-        // 1. Mantenemos los decimales (.toFixed) en el desglose normal
-        document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
-        document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
-        document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
-        document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
-        document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
-        
-        // 2. Cálculos para la sección verde final
-        const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
-        const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
-        
-        // Evaluamos los valores base con sus decimales exactos
-        let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
-        let basePrecioVenta = totalProduc * multiplicador;
-        let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
-
-        // 3. ¡SOLO AQUÍ! Redondeamos hacia arriba a números enteros si pasan de .01
-        let costPorPor = Math.ceil(baseCostoPorcion); 
-        let preVentTot = Math.ceil(basePrecioVenta); 
-        let prePorPorCli = Math.ceil(basePrecioPorcion);
-
-        // Renderizado limpio como números enteros sin decimales
-        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor}`; 
-        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot}`; 
-        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli}`;
-    }
-
-    function switchTab(e, moduloId) {
-        currentModule = moduloId;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        document.getElementById(`tab-${moduloId}`).classList.add('active');
-    }
-
-    function rebuildSelectPlantillas() {
-        const select = document.getElementById('select-plantillas');
-        if(!select) return;
-        select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
-        Object.keys(plantillasRecetas).forEach(k => {
-            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
-        });
-    }
-
-    function guardarPlantilla() {
+    async function guardarPlantillaNube() {
         const nombre = document.getElementById('nombre-plantilla').value.trim();
-        if(!nombre) return alert("Ponga un nombre");
+        if(!nombre) return alert("Escriba un nombre para la receta.");
+        
         plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
         localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
         rebuildSelectPlantillas();
         document.getElementById('nombre-plantilla').value = "";
-        alert("Receta Guardada");
-    }
 
-    function cargarPlantilla(nombre) {
-        if(!nombre || !plantillasRecetas[nombre]) return;
-        modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
-        renderModulos();
-        calcularTodo();
-    }
-
-    function eliminarPlantillaActual() {
-        const select = document.getElementById('select-plantillas');
-        const nombre = select.value;
-        if(!nombre) return;
-        delete plantillasRecetas[nombre];
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        rebuildSelectPlantillas();
-        limpiarComposicionCompleta();
-    }
-
-    function limpiarComposicionCompleta() {
-        modulos = { pan: [], relleno: [], betun: [] };
-        renderModulos();
-        calcularTodo();
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const iconRender = document.getElementById('icon-render');
-        if (currentTheme === 'dark') {
-            document.documentElement.removeAttribute('data-theme');
-            iconRender.textContent = 'dark_mode';
+        // SUBIR RECETA A LA PESTAÑA 'Plantillas'
+        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
+            cambiarBannerStatus("⏳ Subiendo receta a tu pestaña Plantillas...", true);
+            try {
+                await fetch(config.urlNube, {
+                    method: 'POST', mode: 'cors',
+                    body: JSON.stringify({
+                        spreadsheetId: config.idSheets, accion: "guardarPlantilla",
+                        nombreReceta: nombre, estructuraJson: JSON.stringify(modulos)
+                    })
+                });
+                evaluarEstadoVisualPremium();
+            } catch(e) { alert("Guardada de forma local. No se subió a la nube por red."); }
         } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            iconRender.textContent = 'light_mode';
+            alert("¡Receta guardada de forma local!");
         }
     }
-    
-    // ========================================================
-    //  SOSTÉN DE FUNCIONES PREMIUM (CONEXIÓN EN VIVO CORREGIDA)
-    // ========================================================
+
     async function descargarDeNube() {
-        // COLOCA AQUÍ TU ENLACE LARGO DE GOOGLE APPS SCRIPT:
-        const urlServidor = "https://script.google.com/macros/s/AKfycbz8fNvRZ-uk8DBTJNFdrn5pmluxys9Xv_lyZlR_ir6sr8W0AL4QVBtzEuvgRmD-3own/exec";
-        
+        if (!config.urlNube || !config.idSheets || config.claveNube !== "pass_9821") return;
         try {
-            config.urlNube = urlServidor;
-            
-            // Si la clave no es la correcta, cancelamos el intento de conexión
-            if (!config.claveNube || config.claveNube.trim() !== "pass_9821") {
-                evaluarEstadoVisualPremium();
-                return;
-            }
-
-            console.log("Iniciando petición HTTP a Google Apps Script...");
-            
-            // Forzamos la actualización visual del banner usando el ID nativo de tu HTML
-            const banner = document.getElementById('cloud-banner');
-            if (banner) {
-                banner.id = 'premium-banner-status'; // Corregimos el ID dinámicamente
-            }
-
-            // Llamada real de internet a tu servidor de Google
-            const response = await fetch(urlServidor);
+            cambiarBannerStatus("⏳ Sincronizando todas las pestañas...", true);
+            const response = await fetch(`${config.urlNube}?spreadsheetId=${config.idSheets}`);
             const data = await response.json();
 
-            if (data.error) {
-                console.error("Error del servidor Google:", data.error);
-                cambiarBannerStatus("❌ Error en la estructura de Sheets: " + data.error, false);
-                return;
+            if (data.status === "error") { cambiarBannerStatus("❌ " + data.message, false); return; }
+
+            // Actualizar Insumos
+            if (data.insumos) { insumos = data.insumos; localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); }
+            
+            // Actualizar Configuración desde Sheets
+            if (data.configuracion && data.configuracion.moneda) {
+                config.nombrePasteleria = data.configuracion.nombrePasteleria || config.nombrePasteleria;
+                config.moneda = data.configuracion.moneda || config.moneda;
+                config.porcentajeIndirectos = parseFloat(data.configuracion.porcentajeIndirectos) || 0;
+                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                
+                document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+                document.getElementById('cfg-moneda').value = config.configmoneda || config.moneda;
+                document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
+                document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
             }
 
-            if (data.insumos && data.insumos.length > 0) {
-                // Sobrescribimos el inventario local con los 100 insumos frescos de Google Sheets
-                insumos = data.insumos;
-                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-                
-                // Redibujamos la interfaz gráfica con los nuevos datos
-                renderInsumos();
-                renderModulos();
-                calcularTodo();
-                
-                // Actualizamos el banner a verde con el conteo real
-                cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (" + insumos.length + " insumos)", true);
-            } else {
-                cambiarBannerStatus("⚠️ Conectado a la nube, pero la pestaña 'Insumos' está vacía", false);
+            // Actualizar Recetas Guardadas desde Sheets
+            if (data.plantillas) {
+                plantillasRecetas = data.plantillas;
+                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                rebuildSelectPlantillas();
             }
 
-            evaluarEstadoVisualPremium();
-
-        } catch(e) {
-            console.error("Error crítico en puente de datos:", e);
-            cambiarBannerStatus("❌ Error de sincronización: Verifica tu enlace o conexión", false);
-        }
+            renderInsumos(); renderModulos(); calcularTodo();
+            cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
+        } catch(e) { cambiarBannerStatus("❌ Error al conectar a las 3 pestañas", false); }
     }
 
-    // Función auxiliar para actualizar el color y texto de tu banner sin romper IDs
-    function cambiarBannerStatus(mensaje, esPremium) {
-        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
-        if (!banner) return;
-        
-        banner.textContent = mensaje;
-        if (esPremium) {
-            banner.style.backgroundColor = "#d1fae5"; // Verde premium suave
-            banner.style.color = "#065f46";
-        } else {
-            banner.style.backgroundColor = "#fee2e2"; // Rojo error suave
-            banner.style.color = "#991b1b";
-        }
+    function eliminarInsumo(id) {
+        insumos = insumos.filter(i => String(i.id) !== String(id));
+        localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+        renderInsumos(); renderModulos(); calcularTodo();
     }
-
-    function ocultarConfigSiEsPremium() {
-        // Usamos el ID exacto de tu tarjeta publicitaria ('card-compra-premium') para ocultarla
-        const seccionComprar = document.getElementById('seccion-compra-premium');
-        if(seccionComprar) {
-            seccionComprar.style.display = 'none';
-        }
-        const campoUrl = document.getElementById('campos-tecnicos-nube');
-        const campoClave = document.getElementById('campo-config-clave');
-        
-        if(campoUrl) campoUrl.style.display = 'none';
-        if(campoClave) campoClave.style.display = 'none';
+    function actualizarSelectReceta() {
+        const select = document.getElementById('receta-insumo-select'); if(!select) return;
+        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
+        insumos.forEach(i => { const opt = document.createElement('option'); opt.value = i.id; opt.textContent = `${i.nombre} (${i.marca})`; select.appendChild(opt); });
     }
+    function filtrarInsumosReceta(texto) {
+        const select = document.getElementById('receta-insumo-select'); select.innerHTML = '';
+        insumos.filter(i => i.nombre.toLowerCase().includes(texto.toLowerCase())).forEach(i => { const opt = document.createElement('option'); opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt); });
+    }
+    function actualizarLabelUnidadReceta() {
+        const id = document.getElementById('receta-insumo-select').value;
+        const ins = insumos.find(i => String(i.id) === String(id));
+        if(ins) document.getElementById('receta-unidad').value = ins.unidad === 'kg' ? 'g' : (ins.unidad === 'L' ? 'ml' : ins.unidad);
+    }
+    document.getElementById('form-receta').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('receta-insumo-select').value;
+        const cant = parseFloat(document.getElementById('receta-cantidad').value);
+        if(!id || !cant) return;
+        modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: document.getElementById('receta-unidad').value });
+        renderModulos(); calcularTodo();
+    });
+    function renderModulos() {
+        const m = config.moneda || "$";
+        ['pan', 'relleno', 'betun'].forEach(key => {
+            const tbody = document.getElementById(`tabla-${key}`); if(!tbody) return; tbody.innerHTML = '';
+            modulos[key].forEach((item, idx) => {
+                const ins = insumos.find(i => String(i.id) === String(item.insumoId));
+                if(ins){
+                    let pack = ins.cantidad; if(ins.parent==='kg'&&item.unidadUsada==='g'||ins.unidad==='L'&&item.unidadUsada==='ml') pack*=1000;
+                    const c = (ins.precio / pack) * item.cantidadUsada;
+                    tbody.innerHTML += `<tr><td>${ins.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${c.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="modulos['${key}'].splice(${idx},1); renderModulos(); calcularTodo();">×</button></td></tr>`;
+                }
+            });
+        });
+    }
+    function calcularCostoModulo(key) {
+        let t = 0; modulos[key].forEach(item => { const ins = insumos.find(i => String(i.id) === String(item.insumoId)); if(ins) { let p = ins.cantidad; if(ins.unidad==='kg'&&item.unidadUsada==='g'||ins.unidad==='L'&&item.unidadUsada==='ml') p*=1000; t += (ins.precio/p)*item.cantidadUsada; } }); return t;
+    }
+    function calcularTodo() {
+        const cp = calcularCostoModulo('pan'), cr = calcularCostoModulo('relleno'), cb = calcularCostoModulo('betun');
+        const sub = cp+cr+cb, ind = sub * ((config.porcentajeIndirectos||0]/100), tot = sub+ind, m = config.moneda||"$";
+        document.getElementById('txt-costo-pan').textContent = m+cp.toFixed(2); document.getElementById('txt-costo-relleno').textContent = m+cr.toFixed(2); document.getElementById('txt-costo-betun').textContent = m+cb.toFixed(2); document.getElementById('txt-costo-indirectos').textContent = m+ind.toFixed(2); document.getElementById('costo-produccion-total').textContent = m+tot.toFixed(2);
+        const p = parseFloat(document.getElementById('porciones-totales').value)||0, mult = parseFloat(document.getElementById('margen-ganancia').value)||3;
+        document.getElementById('res-costo-porcion').textContent = m+Math.ceil(p>0?tot/p:0); document.getElementById('res-precio-venta').textContent = m+Math.ceil(tot*mult); document.getElementById('res-precio-porcion').textContent = m+Math.ceil(p>0?(tot*mult)/p:0);
+    }
+    function switchTab(e, id) { currentModule = id; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(`tab-${id}`).classList.add('active'); }
+    function rebuildSelectPlantillas() { const s = document.getElementById('select-plantillas'); s.innerHTML = '<option value="">-- Cargar Receta --</option>'; Object.keys(plantillasRecetas).forEach(k=>{ s.innerHTML += `<option value="${k}">${k}</option>`; }); }
+    function cargarPlantilla(n) { if(n && plantillasRecetas[n]) { modulos = JSON.parse(JSON.stringify(plantillasRecetas[n])); renderModulos(); calcularTodo(); } }
+    function eliminarPlantillaActual() { const n = document.getElementById('select-plantillas').value; if(n) { delete plantillasRecetas[n]; localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas)); rebuildSelectPlantillas(); limpiarComposicionCompleta(); } }
+    function limpiarComposicionCompleta() { modulos = { pan: [], relleno: [], betun: [] }; renderModulos(); calcularTodo(); }
+    function toggleTheme() { const t = document.documentElement.getAttribute('data-theme')==='dark'?'':'dark'; if(t) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); document.getElementById('icon-render').textContent = t?'light_mode':'dark_mode'; }
+    function cambiarBannerStatus(m, p) { const b = document.getElementById('cloud-banner'); if(!b) return; b.textContent = m; b.style.backgroundColor = p?"#d1fae5":"#fee2e2"; b.style.color = p?"#065f46":"#991b1b"; }
 </script>
 </body>
 </html>
