@@ -491,8 +491,9 @@
             return;
         }
 
+        const nuevoId = Date.now().toString();
         const nuevoInsumo = {
-            id: Date.now().toString(),
+            id: nuevoId,
             nombre: nombreInput,
             marca: marcaInput || "S/M",
             tamano: tamanoInput || "N/A",
@@ -501,6 +502,7 @@
             precio: precioInput
         };
 
+        // Guardamos primero de forma local para no frenar la experiencia de usuario
         insumos.push(nuevoInsumo);
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         
@@ -508,6 +510,7 @@
         renderModulos();
         calcularTodo();
 
+        // Limpiamos el formulario
         document.getElementById('insumo-nombre').value = '';
         document.getElementById('insumo-marca').value = '';
         document.getElementById('insumo-tamano').value = '';
@@ -517,11 +520,27 @@
         if (config.claveNube && config.claveNube.trim() === "pass_9821" && config.urlNube) {
             cambiarBannerStatus("⏳ Guardando nuevo insumo en Google Sheets...", true);
             
+            const inputIdSheets = document.getElementById('cfg-id-sheets') || document.getElementById('cfg-id-sheet');
+            const idSheets = inputIdSheets ? inputIdSheets.value.trim() : (config.idSheets || "");
+
+            // CORRECCIÓN CRÍTICA: Empaquetamos la petición POST exactamente como tu doPost(e) la requiere
+            const datosParaNube = {
+                spreadsheetId: idSheets,
+                accion: "guardarInsumo",
+                id: nuevoId,
+                nombre: nuevoInsumo.nombre,
+                marca: nuevoInsumo.marca,
+                tamano: nuevoInsumo.tamano,
+                cantidad: nuevoInsumo.cantidad,
+                unidad: nuevoInsumo.unidad,
+                precio: nuevoInsumo.precio
+            };
+
             try {
                 const respuesta = await fetch(config.urlNube, {
                     method: 'POST',
                     mode: 'cors',
-                    body: JSON.stringify(nuevoInsumo)
+                    body: JSON.stringify(datosParaNube)
                 });
                 
                 const resultado = await respuesta.json();
@@ -534,7 +553,7 @@
                 }
             } catch(e) {
                 console.error("Error de red al conectar con Google Sheets:", e);
-                alert("Error de conexión: El insumo se guardó localmente, pero no se pudo reflejar en la nube. Revisa tu internet.");
+                alert("Error de conexión: El insumo se guardó localmente, pero no se pudo reflejar en la nube.");
                 cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
             }
         }
@@ -695,15 +714,48 @@
         });
     }
 
-    function guardarPlantilla() {
-        const nombre = document.getElementById('nombre-plantilla').value.trim();
-        if(!nombre) return alert("Ponga un nombre");
-        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        rebuildSelectPlantillas();
-        document.getElementById('nombre-plantilla').value = "";
-        alert("Receta Guardada");
+    async function guardarPlantillaNube() {
+    const nombre = document.getElementById('nombre-plantilla').value.trim();
+    if (!nombre) return alert("Por favor, ingresa un nombre para la receta.");
+    
+    // 1. Guardar localmente
+    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+    rebuildSelectPlantillas();
+    document.getElementById('nombre-plantilla').value = "";
+
+    // 2. Si es Premium, intentar sincronizar con Google
+    if (config.claveNube === "pass_9821" && config.urlNube) {
+        cambiarBannerStatus("⏳ Guardando receta en la nube...", true);
+        
+        const idSheets = document.getElementById('cfg-id-sheets').value.trim();
+        const datosParaNube = {
+            spreadsheetId: idSheets,
+            accion: "guardarPlantilla",
+            nombreReceta: nombre,
+            estructuraJson: JSON.stringify(modulos)
+        };
+
+        try {
+            const respuesta = await fetch(config.urlNube, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify(datosParaNube)
+            });
+            const resultado = await respuesta.json();
+            
+            if (resultado.status === "success") {
+                cambiarBannerStatus("☁️ Receta guardada en Google Sheets", true);
+            } else {
+                alert("Error al guardar en la nube: " + resultado.message);
+            }
+        } catch(e) {
+            alert("Error de conexión con la nube.");
+        }
+    } else {
+        alert("Receta guardada localmente.");
     }
+}
 
     function cargarPlantilla(nombre) {
         if(!nombre || !plantillasRecetas[nombre]) return;
@@ -741,11 +793,21 @@
     }
     
     async function descargarDeNube() {
-        // Obtenemos dinámicamente la URL ingresada por el usuario en lugar de usar una fija si existe
-        const urlServidor = config.urlNube || document.getElementById('cfg-url-nube').value.trim();
+        // 1. Obtenemos la URL de la nube y limpiamos espacios
+        const urlServidor = (config.urlNube || document.getElementById('cfg-url-nube').value).trim();
         
+        // 2. Extraemos el ID de Google Sheets que el usuario ingresó en la interfaz web
+        // Buscamos el input del ID. Si no existe en tu HTML, lo tomamos de una propiedad (ej: config.idSheets)
+        const inputIdSheets = document.getElementById('cfg-id-sheets') || document.getElementById('cfg-id-sheet');
+        const idSheets = inputIdSheets ? inputIdSheets.value.trim() : (config.idSheets || "");
+
         if (!urlServidor) {
             cambiarBannerStatus("❌ Error: Falta la URL de la nube", false);
+            evaluarEstadoVisualPremium();
+            return;
+        }
+        if (!idSheets) {
+            cambiarBannerStatus("❌ Error: Falta el ID de Google Sheets", false);
             evaluarEstadoVisualPremium();
             return;
         }
@@ -763,26 +825,57 @@
                 banner.textContent = "⏳ Conectando con Google Sheets...";
             }
 
-            const response = await fetch(urlServidor);
+            // CORRECCIÓN CRÍTICA: Le pasamos el parámetro 'spreadsheetId' tal como lo pide tu doGet(e)
+            // Agregamos un timestamp para evitar que el navegador guarde la respuesta en caché
+            const urlConParametros = `${urlServidor}?spreadsheetId=${encodeURIComponent(idSheets)}&_=${Date.now()}`;
+            
+            const response = await fetch(urlConParametros, {
+                method: 'GET',
+                mode: 'cors'
+            });
             const data = await response.json();
 
-            if (data.error) {
-                console.error("Error del servidor Google:", data.error);
-                cambiarBannerStatus("❌ Error en la estructura de Sheets: " + data.error, false);
+            // Si el backend de Google responde con el objeto de error que programaste
+            if (data.status === "error") {
+                console.error("Error del servidor Google:", data.message);
+                cambiarBannerStatus("❌ " + data.message, false);
                 return;
             }
 
-            if (data.insumos && data.insumos.length > 0) {
+            if (data.insumos) {
+                // Sincronizamos los insumos que vienen de la nube
                 insumos = data.insumos;
                 localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+                
+                // Si la nube trae datos de configuración del negocio, los adoptamos
+                if (data.configuracion && data.configuracion.nombrePasteleria) {
+                    config.nombrePasteleria = data.configuracion.nombrePasteleria;
+                    config.moneda = data.configuracion.moneda || "$";
+                    config.porcentajeIndirectos = parseFloat(data.configuracion.porcentajeIndirectos) || 0;
+                    localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                    
+                    // Actualizamos los campos visuales de la configuración
+                    document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+                    document.getElementById('cfg-moneda').value = config.moneda;
+                    document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
+                    document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+                    document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+                }
+
+                // Si la nube trae recetas pre-guardadas, las sincronizamos
+                if (data.plantillas) {
+                    plantillasRecetas = data.plantillas;
+                    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                    rebuildSelectPlantillas();
+                }
                 
                 renderInsumos();
                 renderModulos();
                 calcularTodo();
                 
-                cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (" + insumos.length + " insumos)", true);
+                cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
             } else {
-                cambiarBannerStatus("⚠️ Conectado a la nube, pero la pestaña 'Insumos' está vacía", false);
+                cambiarBannerStatus("⚠️ Conectado a la nube, pero la estructura de datos es incorrecta", false);
             }
 
             evaluarEstadoVisualPremium();
