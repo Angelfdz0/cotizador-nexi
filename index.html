@@ -552,7 +552,7 @@
                 <td>
                     <div style="display:flex; align-items:center; gap:2px;">
                         <input type="number" class="table-input" value="${cantidadVal}" style="width:50px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'cantidad', this.value)">
-                        <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${unidadStr}</span>
+                        <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${insumo.unidad}</span>
                     </div>
                 </td>
                 <td><input type="number" class="table-input" value="${precioVal}" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
