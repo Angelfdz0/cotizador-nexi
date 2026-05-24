@@ -380,12 +380,14 @@
         
         const urlNubeInput = document.getElementById('cfg-url-nube') ? document.getElementById('cfg-url-nube').value.trim() : "";
         const claveNubeInput = document.getElementById('cfg-clave-nube') ? document.getElementById('cfg-clave-nube').value.trim() : "";
+        const idSheets = document.getElementById('cfg-id-sheets').value.trim();
 
         config.nombrePasteleria = nombre;
         config.moneda = moneda;
         config.porcentajeIndirectos = indirectos;
         config.claveNube = claveNubeInput;
         config.urlNube = urlNubeInput;
+        config.idSheets = idSheets;
 
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
