@@ -284,95 +284,193 @@
     let modulos = { pan: [], relleno: [], betun: [] };
     let plantillasRecetas = {};
     let currentModule = 'pan';
-    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "", idSheets: "" };
+    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
 
-    function evaluarEstadoVisualPremium() {
-        const banner = document.getElementById('cloud-banner');
+    function cambiarBannerStatus(texto, exito) {
+        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
         if (!banner) return;
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+        banner.textContent = texto;
+        if (exito === true) {
             banner.style.backgroundColor = "#d1fae5"; banner.style.color = "#065f46";
-            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
-            document.getElementById('seccion-bloque-premium').classList.remove('hidden');
-            document.getElementById('seccion-bloque-estandar').classList.add('hidden');
+        } else if (exito === false) {
+            banner.style.backgroundColor = "#fee2e2"; banner.style.color = "#991b1b";
         } else {
             banner.style.backgroundColor = "#e2e8f0"; banner.style.color = "#4a5568";
+        }
+    }
+
+    function generarIdUnico() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) { return crypto.randomUUID(); }
+        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function evaluarEstadoVisualPremium() {
+        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
+        if (!banner) return;
+
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+            banner.id = 'premium-banner-status';
+            banner.style.backgroundColor = "#d1fae5"; 
+            banner.style.color = "#065f46";
+            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
+            
+            ocultarConfigSiEsPremium();
+            
+            const bloquePremium = document.getElementById('seccion-bloque-premium');
+            const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+            if(bloquePremium) bloquePremium.classList.remove('hidden');
+            if(bloqueEstandar) bloqueEstandar.classList.add('hidden');
+        } else {
+            banner.id = 'cloud-banner';
+            banner.style.backgroundColor = "#e2e8f0";
+            banner.style.color = "#4a5568";
             banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
-            document.getElementById('seccion-bloque-premium').classList.add('hidden');
-            document.getElementById('seccion-bloque-estandar').classList.remove('hidden');
+            
+            const bloquePremium = document.getElementById('seccion-bloque-premium');
+            const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+            if(bloquePremium) bloquePremium.classList.add('hidden');
+            if(bloqueEstandar) bloqueEstandar.classList.remove('hidden');
+        }
+    }
+
+    function togglePanelConfiguracion() {
+        const cuerpo = document.getElementById('cuerpo-configuracion');
+        const flecha = document.getElementById('btn-flecha-config');
+        if (cuerpo.style.display === 'none') {
+            cuerpo.style.display = 'block';
+            flecha.style.transform = 'rotate(0deg)';
+        } else {
+            cuerpo.style.display = 'none';
+            flecha.style.transform = 'rotate(180deg)';
         }
     }
 
     function desactivarLicenciaPremium() {
-        if(!confirm("¿Deseas desvincular la nube y volver al modo local?")) return;
-        config.urlNube = ""; config.claveNube = ""; config.idSheets = "";
+        if(!confirm("¿Deseas desvincular la base de datos en la nube y volver al modo local?")) return;
+        config.urlNube = "";
+        config.claveNube = "";
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        location.reload();
+        
+        document.getElementById('cfg-url-nube').value = "";
+        document.getElementById('cfg-clave-nube').value = "";
+        
+        window.location.reload();
     }
 
     function cargarConfiguracion() {
         const local = localStorage.getItem('respaldo_config_pasteleria');
-        if(local) { try { config = JSON.parse(local); } catch(e) { } }
+        if(local) {
+            try { config = JSON.parse(local); } catch(e) { }
+        }
         document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
         document.getElementById('cfg-moneda').value = config.moneda || "$";
-        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
-        document.getElementById('cfg-url-nube').value = config.urlNube || "";
-        document.getElementById('cfg-clave-nube').value = config.claveNube || "";
-        document.getElementById('cfg-id-sheets').value = config.idSheets || "";
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
+        
+        if(document.getElementById('cfg-url-nube')) document.getElementById('cfg-url-nube').value = config.urlNube || "";
+        if(document.getElementById('cfg-clave-nube')) document.getElementById('cfg-clave-nube').value = config.claveNube || "";
+
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
     }
 
     async function guardarConfiguracion() {
-        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
-        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-        config.claveNube = document.getElementById('cfg-clave-nube').value.trim();
-        config.urlNube = document.getElementById('cfg-url-nube').value.trim();
-        config.idSheets = document.getElementById('cfg-id-sheets').value.trim();
+        const nombre = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
+        const moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        const indirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        
+        const urlNubeInput = document.getElementById('cfg-url-nube') ? document.getElementById('cfg-url-nube').value.trim() : "";
+        const claveNubeInput = document.getElementById('cfg-clave-nube') ? document.getElementById('cfg-clave-nube').value.trim() : "";
+
+        config.nombrePasteleria = nombre;
+        config.moneda = moneda;
+        config.porcentajeIndirectos = indirectos;
+        config.claveNube = claveNubeInput;
+        config.urlNube = urlNubeInput;
 
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
-        // SUBIR CONFIGURACIÓN A LA PESTAÑA 'Configuracion'
-        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
-            cambiarBannerStatus("⏳ Sincronizando configuración con Google Sheets...", true);
-            try {
-                await fetch(config.urlNube, {
-                    method: 'POST', mode: 'cors',
-                    body: JSON.stringify({
-                        spreadsheetId: config.idSheets, accion: "guardarConfig",
-                        nombrePasteleria: config.nombrePasteleria, moneda: config.moneda, porcentajeIndirectos: config.porcentajeIndirectos
-                    })
-                });
-            } catch(e) { console.log("Guardado local correcto, fallo subir configuración."); }
+        document.getElementById('lbl-nombre-pasteleria').textContent = nombre;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${indirectos}%):`;
+
+        calcularTodo();
+        renderInsumos();
+        renderModulos();
+        
+        alert("💾 ¡Configuración guardada y actualizada con éxito!");
+        
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+            await descargarDeNube();
+        } else {
+            evaluarEstadoVisualPremium();
         }
-
-        alert("💾 ¡Configuración guardada!");
-        await descargarDeNube();
     }
 
     window.onload = async function() {
         cargarConfiguracion(); 
-        if(localStorage.getItem('respaldo_insumos')) { insumos = JSON.parse(localStorage.getItem('respaldo_insumos')); }
-        if(localStorage.getItem('respaldo_plantillas')) { plantillasRecetas = JSON.parse(localStorage.getItem('respaldo_plantillas')); }
+        
+        const localInsumos = localStorage.getItem('respaldo_insumos');
+        if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
+        
+        const localPlantillas = localStorage.getItem('respaldo_plantillas');
+        if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+
+        const bannerViejo = document.getElementById('cloud-banner');
+        if (bannerViejo) {
+            bannerViejo.id = 'premium-banner-status';
+        }
 
         evaluarEstadoVisualPremium();
-        if (config.claveNube === "pass_9821") { await descargarDeNube(); }
 
-        renderInsumos(); renderModulos(); rebuildSelectPlantillas(); calcularTodo();
+        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+            const bannerPublicidad = document.getElementById('seccion-comprar-premium');
+            if (bannerPublicidad) {
+                bannerPublicidad.style.display = 'none';
+            }
+
+            const banner = document.getElementById('premium-banner-status');
+            if (banner) {
+                banner.textContent = "⏳ Conectando con Google Sheets...";
+                banner.style.backgroundColor = "#e2e8f0";
+                banner.style.color = "#4a5568";
+            }
+            await descargarDeNube();
+        }
+
+        renderInsumos();
+        renderModulos();
+        rebuildSelectPlantillas();
+        calcularTodo();
     };
 
     function renderInsumos() {
-        const tbody = document.getElementById('tabla-insumos'); if(!tbody) return; tbody.innerHTML = '';
+        const tbody = document.getElementById('tabla-insumos');
+        if(!tbody) return;
+        tbody.innerHTML = '';
         const m = config.moneda || "$";
+
         insumos.forEach(insumo => {
+            const cantidadVal = parseFloat(insumo.cantidad) || 1;
+            const precioVal = parseFloat(insumo.precio) || 0;
+            const unidadStr = insumo.unidad || 'g';
+            const costoUnidad = precioVal / cantidadVal;
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${insumo.nombre}</strong></td>
-                <td>${insumo.marca||'S/M'}</td><td>${insumo.tamano||'N/A'}</td>
-                <td>${insumo.cantidad} ${insumo.unidad}</td><td>${m}${insumo.precio}</td>
-                <td>${m}${(insumo.precio/insumo.cantidad).toFixed(2)}/${insumo.unidad}</td>
+                <td><input type="text" style="width:75px; border:1px solid transparent; background:transparent;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
+                <td>
+                    <input type="text" style="width:80px; padding:2px; border:1px solid #ddd; border-radius:4px;" 
+                           value="${insumo.tamano || 'N/A'}" 
+                           oninput="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)">
+                </td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:2px;">
+                        <input type="number" class="table-input" value="${cantidadVal}" style="width:50px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'cantidad', this.value)">
+                        <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${insumo.unidad}</span>
+                    </div>
+                </td>
+                <td><input type="number" class="table-input" value="${precioVal}" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
+                <td>${m}${costoUnidad.toFixed(2)}/${unidadStr}</td>
                 <td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarInsumo('${insumo.id}')">×</button></td>
             `;
             tbody.appendChild(tr);
@@ -381,153 +479,331 @@
     }
     
     async function agregarNuevoInsumoNube() {
-        const nom = document.getElementById('insumo-nombre').value.trim();
-        const cant = parseFloat(document.getElementById('insumo-cantidad').value);
-        const pre = parseFloat(document.getElementById('insumo-precio').value);
-        if (!nom || isNaN(cant) || isNaN(pre)) return alert("Rellene los campos obligatorios.");
+        const nombreInput = document.getElementById('insumo-nombre').value.trim();
+        const marcaInput = document.getElementById('insumo-marca').value.trim();
+        const tamanoInput = document.getElementById('insumo-tamano').value.trim();
+        const cantidadInput = parseFloat(document.getElementById('insumo-cantidad').value);
+        const unidadInput = document.getElementById('insumo-unidad').value;
+        const precioInput = parseFloat(document.getElementById('insumo-precio').value);
 
-        const nuevo = {
-            id: Date.now().toString(), nombre: nom, marca: document.getElementById('insumo-marca').value.trim()||"S/M",
-            tamano: document.getElementById('insumo-tamano').value.trim()||"N/A", cantidad: cant,
-            unidad: document.getElementById('insumo-unidad').value, precio: pre
+        if (!nombreInput || isNaN(cantidadInput) || isNaN(precioInput)) {
+            alert("Por favor rellena los campos obligatorios (Nombre, Cantidad y Precio).");
+            return;
+        }
+
+        const nuevoInsumo = {
+            id: Date.now().toString(),
+            nombre: nombreInput,
+            marca: marcaInput || "S/M",
+            tamano: tamanoInput || "N/A",
+            cantidad: cantidadInput,
+            unidad: unidadInput,
+            precio: precioInput
         };
 
-        insumos.push(nuevo);
+        insumos.push(nuevoInsumo);
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        renderInsumos(); calcularTodo();
-        document.getElementById('form-insumo').reset();
-
-        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
-            try {
-                nuevo.spreadsheetId = config.idSheets; nuevo.accion = "guardarInsumo";
-                await fetch(config.urlNube, { method: 'POST', mode: 'cors', body: JSON.stringify(nuevo) });
-                evaluarEstadoVisualPremium();
-            } catch(e) { cambiarBannerStatus("⚠️ Guardado local (Pendiente de subir)", true); }
-        }
-    }
-
-    async function guardarPlantillaNube() {
-        const nombre = document.getElementById('nombre-plantilla').value.trim();
-        if(!nombre) return alert("Escriba un nombre para la receta.");
         
-        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        rebuildSelectPlantillas();
-        document.getElementById('nombre-plantilla').value = "";
+        renderInsumos();
+        renderModulos();
+        calcularTodo();
 
-        // SUBIR RECETA A LA PESTAÑA 'Plantillas'
-        if (config.claveNube === "pass_9821" && config.urlNube && config.idSheets) {
-            cambiarBannerStatus("⏳ Subiendo receta a tu pestaña Plantillas...", true);
+        document.getElementById('insumo-nombre').value = '';
+        document.getElementById('insumo-marca').value = '';
+        document.getElementById('insumo-tamano').value = '';
+        document.getElementById('insumo-cantidad').value = '';
+        document.getElementById('insumo-precio').value = '';
+
+        if (config.claveNube && config.claveNube.trim() === "pass_9821" && config.urlNube) {
+            cambiarBannerStatus("⏳ Guardando nuevo insumo en Google Sheets...", true);
+            
             try {
-                await fetch(config.urlNube, {
-                    method: 'POST', mode: 'cors',
-                    body: JSON.stringify({
-                        spreadsheetId: config.idSheets, accion: "guardarPlantilla",
-                        nombreReceta: nombre, estructuraJson: JSON.stringify(modulos)
-                    })
+                const respuesta = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify(nuevoInsumo)
                 });
-                evaluarEstadoVisualPremium();
-            } catch(e) { alert("Guardada de forma local. No se subió a la nube por red."); }
-        } else {
-            alert("¡Receta guardada de forma local!");
+                
+                const resultado = await respuesta.json();
+                
+                if (resultado.status === "success") {
+                    cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
+                } else {
+                    console.error("Error devuelto por Apps Script:", resultado.message);
+                    alert("Se guardó en el navegador, pero Google Sheets rechazó el dato: " + resultado.message);
+                }
+            } catch(e) {
+                console.error("Error de red al conectar con Google Sheets:", e);
+                alert("Error de conexión: El insumo se guardó localmente, pero no se pudo reflejar en la nube. Revisa tu internet.");
+                cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
+            }
         }
     }
 
-    async function descargarDeNube() {
-        if (!config.urlNube || !config.idSheets || config.claveNube !== "pass_9821") return;
-        try {
-            cambiarBannerStatus("⏳ Sincronizando todas las pestañas...", true);
-            const response = await fetch(`${config.urlNube}?spreadsheetId=${config.idSheets}`);
-            const data = await response.json();
-
-            if (data.status === "error") { cambiarBannerStatus("❌ " + data.message, false); return; }
-
-            // Actualizar Insumos
-            if (data.insumos) { insumos = data.insumos; localStorage.setItem('respaldo_insumos', JSON.stringify(insumos)); }
-            
-            // Actualizar Configuración desde Sheets
-            if (data.configuracion && data.configuracion.moneda) {
-                config.nombrePasteleria = data.configuracion.nombrePasteleria || config.nombrePasteleria;
-                config.moneda = data.configuracion.moneda || config.moneda;
-                config.porcentajeIndirectos = parseFloat(data.configuracion.porcentajeIndirectos) || 0;
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                
-                document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-                document.getElementById('cfg-moneda').value = config.configmoneda || config.moneda;
-                document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
-                document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-            }
-
-            // Actualizar Recetas Guardadas desde Sheets
-            if (data.plantillas) {
-                plantillasRecetas = data.plantillas;
-                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-                rebuildSelectPlantillas();
-            }
-
-            renderInsumos(); renderModulos(); calcularTodo();
-            cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
-        } catch(e) { cambiarBannerStatus("❌ Error al conectar a las 3 pestañas", false); }
+    function actualizarDatoInsumo(id, campo, valor) {
+        const insumo = insumos.find(i => String(i.id) === String(id));
+        if (insumo) {
+            if (campo === 'precio' || campo === 'cantidad') { insumo[campo] = parseFloat(valor) || 0; } 
+            else { insumo[campo] = valor; }
+            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+            renderModulos();
+            calcularTodo();
+        }
     }
 
     function eliminarInsumo(id) {
+        if(!confirm("¿Eliminar este insumo?")) return;
         insumos = insumos.filter(i => String(i.id) !== String(id));
+        for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        renderInsumos(); renderModulos(); calcularTodo();
+        renderInsumos();
+        renderModulos();
+        calcularTodo();
     }
+
     function actualizarSelectReceta() {
-        const select = document.getElementById('receta-insumo-select'); if(!select) return;
+        const select = document.getElementById('receta-insumo-select');
+        if(!select) return;
         select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
-        insumos.forEach(i => { const opt = document.createElement('option'); opt.value = i.id; opt.textContent = `${i.nombre} (${i.marca})`; select.appendChild(opt); });
+        insumos.forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.id;
+            opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`;
+            select.appendChild(opt);
+        });
     }
+
     function filtrarInsumosReceta(texto) {
-        const select = document.getElementById('receta-insumo-select'); select.innerHTML = '';
-        insumos.filter(i => i.nombre.toLowerCase().includes(texto.toLowerCase())).forEach(i => { const opt = document.createElement('option'); opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt); });
+        const t = texto.toLowerCase();
+        const select = document.getElementById('receta-insumo-select');
+        select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
+        insumos.filter(i => i.nombre.toLowerCase().includes(t)).forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt);
+        });
     }
+
     function actualizarLabelUnidadReceta() {
         const id = document.getElementById('receta-insumo-select').value;
-        const ins = insumos.find(i => String(i.id) === String(id));
-        if(ins) document.getElementById('receta-unidad').value = ins.unidad === 'kg' ? 'g' : (ins.unidad === 'L' ? 'ml' : ins.unidad);
+        const insumo = insumos.find(i => String(i.id) === String(id));
+        if(insumo) { document.getElementById('receta-unidad').value = insumo.unidad === 'kg' ? 'g' : (insumo.unidad === 'L' ? 'ml' : insumo.unidad); }
     }
+
     document.getElementById('form-receta').addEventListener('submit', function(e) {
         e.preventDefault();
         const id = document.getElementById('receta-insumo-select').value;
         const cant = parseFloat(document.getElementById('receta-cantidad').value);
+        const uni = document.getElementById('receta-unidad').value;
         if(!id || !cant) return;
-        modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: document.getElementById('receta-unidad').value });
-        renderModulos(); calcularTodo();
+
+        modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
+        this.reset();
+        renderModulos();
+        calcularTodo();
     });
+
     function renderModulos() {
         const m = config.moneda || "$";
         ['pan', 'relleno', 'betun'].forEach(key => {
-            const tbody = document.getElementById(`tabla-${key}`); if(!tbody) return; tbody.innerHTML = '';
-            modulos[key].forEach((item, idx) => {
-                const ins = insumos.find(i => String(i.id) === String(item.insumoId));
-                if(ins){
-                    let pack = ins.cantidad; if(ins.parent==='kg'&&item.unidadUsada==='g'||ins.unidad==='L'&&item.unidadUsada==='ml') pack*=1000;
-                    const c = (ins.precio / pack) * item.cantidadUsada;
-                    tbody.innerHTML += `<tr><td>${ins.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${c.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="modulos['${key}'].splice(${idx},1); renderModulos(); calcularTodo();">×</button></td></tr>`;
+            const tbody = document.getElementById(`tabla-${key}`);
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            modulos[key].forEach((item, index) => {
+                const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+                const tr = document.createElement('tr');
+                if(!insumo) {
+                    tr.innerHTML = `<td>⚠️ Insumo Eliminado</td><td>${item.cantidadUsada}</td><td>${m}0.00</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                } else {
+                    let cantPaquete = insumo.cantidad;
+                    if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                    if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                    const costo = (insumo.precio / cantPaquete) * item.cantidadUsada;
+                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costo.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
                 }
+                tbody.appendChild(tr);
             });
         });
     }
+
+    function eliminarDeModulo(moduloKey, index) {
+        modulos[moduloKey].splice(index, 1);
+        renderModulos();
+        calcularTodo();
+    }
+
     function calcularCostoModulo(key) {
-        let t = 0; modulos[key].forEach(item => { const ins = insumos.find(i => String(i.id) === String(item.insumoId)); if(ins) { let p = ins.cantidad; if(ins.unidad==='kg'&&item.unidadUsada==='g'||ins.unidad==='L'&&item.unidadUsada==='ml') p*=1000; t += (ins.precio/p)*item.cantidadUsada; } }); return t;
+        let total = 0;
+        modulos[key].forEach(item => {
+            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+            if (insumo) {
+                let cantPaquete = insumo.cantidad;
+                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                total += (insumo.precio / cantPaquete) * item.cantidadUsada;
+            }
+        });
+        return total;
     }
+
     function calcularTodo() {
-        const cp = calcularCostoModulo('pan'), cr = calcularCostoModulo('relleno'), cb = calcularCostoModulo('betun');
-        const sub = cp+cr+cb, ind = sub * ((config.porcentajeIndirectos||0]/100), tot = sub+ind, m = config.moneda||"$";
-        document.getElementById('txt-costo-pan').textContent = m+cp.toFixed(2); document.getElementById('txt-costo-relleno').textContent = m+cr.toFixed(2); document.getElementById('txt-costo-betun').textContent = m+cb.toFixed(2); document.getElementById('txt-costo-indirectos').textContent = m+ind.toFixed(2); document.getElementById('costo-produccion-total').textContent = m+tot.toFixed(2);
-        const p = parseFloat(document.getElementById('porciones-totales').value)||0, mult = parseFloat(document.getElementById('margen-ganancia').value)||3;
-        document.getElementById('res-costo-porcion').textContent = m+Math.ceil(p>0?tot/p:0); document.getElementById('res-precio-venta').textContent = m+Math.ceil(tot*mult); document.getElementById('res-precio-porcion').textContent = m+Math.ceil(p>0?(tot*mult)/p:0);
+        const costoPan = calcularCostoModulo('pan'); 
+        const costoRelleno = calcularCostoModulo('relleno'); 
+        const costoBetun = calcularCostoModulo('betun');
+        
+        const subtotal = costoPan + costoRelleno + costoBetun; 
+        const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 25) / 100;
+        const indirectos = subtotal * porcentajeId; 
+        const totalProduc = subtotal + indirectos;
+        const m = config.moneda || "$";
+        
+        document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
+        document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
+        document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
+        document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
+        document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
+        
+        const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
+        const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
+        
+        let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
+        let basePrecioVenta = totalProduc * multiplicador;
+        let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
+
+        let costPorPor = Math.ceil(baseCostoPorcion); 
+        let preVentTot = Math.ceil(basePrecioVenta); 
+        let prePorPorCli = Math.ceil(basePrecioPorcion);
+
+        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor}`; 
+        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot}`; 
+        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli}`;
     }
-    function switchTab(e, id) { currentModule = id; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(`tab-${id}`).classList.add('active'); }
-    function rebuildSelectPlantillas() { const s = document.getElementById('select-plantillas'); s.innerHTML = '<option value="">-- Cargar Receta --</option>'; Object.keys(plantillasRecetas).forEach(k=>{ s.innerHTML += `<option value="${k}">${k}</option>`; }); }
-    function cargarPlantilla(n) { if(n && plantillasRecetas[n]) { modulos = JSON.parse(JSON.stringify(plantillasRecetas[n])); renderModulos(); calcularTodo(); } }
-    function eliminarPlantillaActual() { const n = document.getElementById('select-plantillas').value; if(n) { delete plantillasRecetas[n]; localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas)); rebuildSelectPlantillas(); limpiarComposicionCompleta(); } }
-    function limpiarComposicionCompleta() { modulos = { pan: [], relleno: [], betun: [] }; renderModulos(); calcularTodo(); }
-    function toggleTheme() { const t = document.documentElement.getAttribute('data-theme')==='dark'?'':'dark'; if(t) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); document.getElementById('icon-render').textContent = t?'light_mode':'dark_mode'; }
-    function cambiarBannerStatus(m, p) { const b = document.getElementById('cloud-banner'); if(!b) return; b.textContent = m; b.style.backgroundColor = p?"#d1fae5":"#fee2e2"; b.style.color = p?"#065f46":"#991b1b"; }
+
+    function switchTab(e, moduloId) {
+        currentModule = moduloId;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        document.getElementById(`tab-${moduloId}`).classList.add('active');
+    }
+
+    function rebuildSelectPlantillas() {
+        const select = document.getElementById('select-plantillas');
+        if(!select) return;
+        select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
+        Object.keys(plantillasRecetas).forEach(k => {
+            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
+        });
+    }
+
+    function guardarPlantilla() {
+        const nombre = document.getElementById('nombre-plantilla').value.trim();
+        if(!nombre) return alert("Ponga un nombre");
+        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        document.getElementById('nombre-plantilla').value = "";
+        alert("Receta Guardada");
+    }
+
+    function cargarPlantilla(nombre) {
+        if(!nombre || !plantillasRecetas[nombre]) return;
+        modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+        renderModulos();
+        calcularTodo();
+    }
+
+    function eliminarPlantillaActual() {
+        const select = document.getElementById('select-plantillas');
+        const nombre = select.value;
+        if(!nombre) return;
+        delete plantillasRecetas[nombre];
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        limpiarComposicionCompleta();
+    }
+
+    function limpiarComposicionCompleta() {
+        modulos = { pan: [], relleno: [], betun: [] };
+        renderModulos();
+        calcularTodo();
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const iconRender = document.getElementById('icon-render');
+        if (currentTheme === 'dark') {
+            document.documentElement.removeAttribute('data-theme');
+            iconRender.textContent = 'dark_mode';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            iconRender.textContent = 'light_mode';
+        }
+    }
+    
+    async function descargarDeNube() {
+        // Obtenemos dinámicamente la URL ingresada por el usuario en lugar de usar una fija si existe
+        const urlServidor = config.urlNube || document.getElementById('cfg-url-nube').value.trim();
+        
+        if (!urlServidor) {
+            cambiarBannerStatus("❌ Error: Falta la URL de la nube", false);
+            evaluarEstadoVisualPremium();
+            return;
+        }
+
+        try {
+            if (!config.claveNube || config.claveNube.trim() !== "pass_9821") {
+                evaluarEstadoVisualPremium();
+                return;
+            }
+
+            console.log("Iniciando petición HTTP a Google Apps Script...");
+            
+            const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
+            if (banner) {
+                banner.textContent = "⏳ Conectando con Google Sheets...";
+            }
+
+            const response = await fetch(urlServidor);
+            const data = await response.json();
+
+            if (data.error) {
+                console.error("Error del servidor Google:", data.error);
+                cambiarBannerStatus("❌ Error en la estructura de Sheets: " + data.error, false);
+                return;
+            }
+
+            if (data.insumos && data.insumos.length > 0) {
+                insumos = data.insumos;
+                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+                
+                renderInsumos();
+                renderModulos();
+                calcularTodo();
+                
+                cambiarBannerStatus("☁️ Estado: Plan Premium Sincronizado (" + insumos.length + " insumos)", true);
+            } else {
+                cambiarBannerStatus("⚠️ Conectado a la nube, pero la pestaña 'Insumos' está vacía", false);
+            }
+
+            evaluarEstadoVisualPremium();
+
+        } catch(e) {
+            console.error("Error crítico en puente de datos:", e);
+            cambiarBannerStatus("❌ Error de sincronización: Verifica tu enlace o conexión", false);
+        }
+    }
+
+    function ocultarConfigSiEsPremium() {
+        const seccionComprar = document.getElementById('seccion-comprar-premium');
+        if(seccionComprar) {
+            seccionComprar.style.display = 'none';
+        }
+        const campoUrl = document.getElementById('campos-tecnicos-nube');
+        const campoClave = document.getElementById('campo-config-clave');
+        
+        if(campoUrl) campoUrl.style.display = 'none';
+        if(campoClave) campoClave.style.display = 'none';
+    }
 </script>
 </body>
 </html>
