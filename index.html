@@ -127,7 +127,7 @@
             <div id="seccion-bloque-estandar">
                 <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
                     <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ Obtén tu cuenta Premium de NEXI para sincronizar recetas y costos.</p>
-                    <a href="https://wa.me/522291915418?text=Hola,%20quiero%20crear%20mi%20cuenta%20Premium%20de%20NEXI" 
+                    <a href="https://wa.me/522291915418?text=%C2%A1Hola%20NEXI%21%F0%9F%91%8B%20%20%2Cprob%C3%A9%20el%20cotizador%20gratuito%20y%20%C2%A1me%20encant%C3%B3%21.%20Quiero%20contratar%20el%20Plan%20Premium%20para%20guardar%20mis%20recetas%20en%20la%20nube%20y%20no%20perder%20mis%20datos."
                        target="_blank" class="btn" style="background-color: #25d366; color: white; display: inline-block; text-decoration: none;">
                        💬 Solicitar mi Cuenta NEXI
                     </a>
@@ -431,13 +431,27 @@
     }
 
     function cerrarSesionNexi() {
-        if(!confirm("¿Deseas cerrar tu sesión en la nube y pasar a modo local?")) return;
-        config.correoUser = "";
-        config.tokenUser = "";
-        config.isPremium = false;
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        window.location.reload();
-    }
+    if(!confirm("¿Deseas cerrar tu sesión en la nube? Se borrarán los datos de la pantalla y la memoria local.")) return;
+    
+    // 1. Limpiar las credenciales de configuración
+    config.correoUser = "";
+    config.tokenUser = "";
+    config.isPremium = false;
+    localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+    
+    // 2. BORRAR por completo los insumos y recetas de la memoria del navegador
+    localStorage.removeItem('respaldo_insumos');
+    localStorage.removeItem('respaldo_plantillas');
+    
+    // 3. Reiniciar las variables en el código
+    insumos = [];
+    modulos = { pan: [], relleno: [], betun: [] };
+    plantillasRecetas = {};
+    
+    // 4. Recargar la página para que todo aparezca vacío y limpio
+    window.location.reload();
+}
+
 
     window.onload = async function() {
         cargarConfiguracion(); 
