@@ -591,14 +591,47 @@
         }
     }
 
-    function eliminarInsumo(id) {
-        if(!confirm("¿Eliminar este insumo?")) return;
+    async function eliminarInsumo(id) {
+        if(!confirm("¿Eliminar este insumo de tu inventario?")) return;
+
+        if (config.isPremium && config.urlNube) {
+            cambiarBannerStatus("⏳ Eliminando insumo de la nube...", true);
+            const datosParaNube = {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "eliminarInsumo",
+                id: id
+            };
+
+            try {
+                const respuesta = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(datosParaNube)
+                });
+                const resultado = await respuesta.json();
+                if (resultado.status !== "success") {
+                    alert("Error en la nube: " + resultado.message);
+                    cambiarBannerStatus("❌ Error al eliminar en nube", false);
+                    return; // Detiene el borrado local si falló el servidor
+                }
+            } catch(e) {
+                alert("Error de conexión. No se pudo eliminar de la nube.");
+                cambiarBannerStatus("❌ Error de conexión remota", false);
+                return;
+            }
+        }
+
+        // Proceder con el borrado local e interfaz
         insumos = insumos.filter(i => String(i.id) !== String(id));
         for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         renderInsumos();
         renderModulos();
         calcularTodo();
+        evaluarEstadoVisualPremium();
+        alert("✅ Insumo eliminado correctamente.");
     }
 
     function actualizarSelectReceta() {
@@ -817,15 +850,48 @@
         calcularTodo();
     }
 
-    function eliminarPlantillaActual() {
+    async function eliminarPlantillaActual() {
         const select = document.getElementById('select-plantillas');
         const nombre = select.value;
-        if(!nombre) return;
+        if(!nombre) return alert("Por favor, selecciona primero una receta para eliminar.");
         if(!confirm(`¿Seguro que deseas eliminar la receta "${nombre}"?`)) return;
+
+        if (config.isPremium && config.urlNube) {
+            cambiarBannerStatus("⏳ Eliminando receta de la nube...", true);
+            const datosParaNube = {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "eliminarPlantilla",
+                nombreReceta: nombre
+            };
+
+            try {
+                const respuesta = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(datosParaNube)
+                });
+                const resultado = await respuesta.json();
+                if (resultado.status !== "success") {
+                    alert("Error en la nube: " + resultado.message);
+                    cambiarBannerStatus("❌ Error al eliminar receta en nube", false);
+                    return;
+                }
+            } catch(e) {
+                alert("Error de conexión. No se pudo eliminar la receta de la nube.");
+                cambiarBannerStatus("❌ Error de conexión remota", false);
+                return;
+            }
+        }
+
+        // Proceder con el borrado local e interfaz
         delete plantillasRecetas[nombre];
         localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
         rebuildSelectPlantillas();
         limpiarComposicionCompleta();
+        evaluarEstadoVisualPremium();
+        alert(`✅ Receta "${nombre}" eliminada por completo.`);
     }
 
     function limpiarComposicionCompleta() {
