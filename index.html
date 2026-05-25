@@ -404,7 +404,7 @@
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
     }
 
-        async function guardarConfiguracion() {
+            async function guardarConfiguracion() {
         config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
         config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
         config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
@@ -419,9 +419,10 @@
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
         
         if (config.tokenUser && config.urlNube) {
-            // ✨ NUEVO: Antes de descargar, mandamos los datos actuales para que se guarden en la nube
+            cambiarBannerStatus("⏳ Respaldando configuración en la nube...", null);
             try {
-                await fetch(config.urlNube, {
+                // ✨ SE ADICIONA EL RETORNO DE PROMESA CORRECTO
+                const envio = await fetch(config.urlNube, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { "Content-Type": "text/plain" },
@@ -434,9 +435,10 @@
                         porcentajeMerma: config.porcentajeMerma
                     })
                 });
-            } catch(e) { console.log("Error al respaldar configuración inicial"); }
+                await envio.json(); // Esperamos a que la base de datos confirme la escritura
+            } catch(e) { console.log("Error al respaldar configuración inicial", e); }
 
-            // Después descargamos todo el set de datos para activar el modo premium
+            // Después descargamos de forma segura el set actualizado para activar el modo premium
             await descargarDeNube();
         } else {
             config.isPremium = false;
@@ -965,7 +967,7 @@
         }
     }
     
-    async function descargarDeNube() {
+        async function descargarDeNube() {
         if (!config.urlNube || !config.tokenUser) return;
 
         cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
@@ -984,7 +986,13 @@
                 return;
             }
 
+            // ✨ CORRECCIÓN CLAVE: Extraemos la configuración que viene directo de la nube
             config.isPremium = true;
+            if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
+            if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
+            if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
+            
+            // Guardamos la configuración de la nube en la memoria local actual
             localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
             if (data.insumos) {
@@ -996,15 +1004,22 @@
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
             }
 
+            // Actualizamos los inputs visuales del Panel con lo que llegó de la nube
+            document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
+            document.getElementById('cfg-merma').value = config.porcentajeMerma;
+            document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+            document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+
             evaluarEstadoVisualPremium();
             
-            // SOLUCIÓN 1 INYECTADA AQUÍ: Refrescar la interfaz inmediatamente tras descargar
+            // Refrescar toda la interfaz inmediatamente tras descargar
             renderInsumos();
             renderModulos();
             rebuildSelectPlantillas();
             calcularTodo();
 
-            alert("🔓 ¡Sesión iniciada correctamente! Datos sincronizados.");
+            cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
         } catch(e) {
             cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
         }
