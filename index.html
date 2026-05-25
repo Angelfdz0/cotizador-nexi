@@ -392,10 +392,10 @@
         if(local) {
             try { config = JSON.parse(local); } catch(e) { }
         }
-        document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
+        document.getElementById('cfg-nombre').value = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('cfg-moneda').value = config.moneda || "$";
-        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
-        document.getElementById('cfg-merma').value = config.porcentajeMerma || "";
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || 0;
+        document.getElementById('cfg-merma').value = config.porcentajeMerma || 0;
         document.getElementById('cfg-url-servidor').value = config.urlNube || "";
         document.getElementById('cfg-correo-user').value = config.correoUser || "";
         document.getElementById('cfg-token-user').value = config.tokenUser || "";
@@ -405,55 +405,55 @@
     }
 
     async function guardarConfiguracion() {
-    config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
-    config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-    config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-    config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
-    config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
-    config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
-    config.tokenUser = document.getElementById('cfg-token-user').value.trim();
+        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi Pastelería";
+        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
+        config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
+        config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
+        config.tokenUser = document.getElementById('cfg-token-user').value.trim();
 
-    document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-    document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-    
-    if (config.tokenUser && config.urlNube) {
-        config.isPremium = true;
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+        
+        if (config.tokenUser && config.urlNube) {
+            config.isPremium = true;
+            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-        cambiarBannerStatus("⏳ Respaldando configuración en la nube...", null);
-        try {
-            const envio = await fetch(config.urlNube, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    correo: config.correoUser,
-                    token: config.tokenUser,
-                    accion: "guardarConfiguracion",
-                    nombrePasteleria: config.nombrePasteleria,
-                    moneda: config.moneda, // <-- AGREGAMOS ESTA LÍNEA AQUÍ
-                    porcentajeIndirectos: config.porcentajeIndirectos,
-                    porcentajeMerma: config.porcentajeMerma
-                })
-            });
-            await envio.json(); 
-        } catch(e) { 
-            console.log("Error al respaldar configuración inicial", e); 
+            cambiarBannerStatus("⏳ Respaldando configuración en la nube...", null);
+            try {
+                const envio = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        correo: config.correoUser,
+                        token: config.tokenUser,
+                        accion: "guardarConfiguracion",
+                        nombrePasteleria: config.nombrePasteleria,
+                        moneda: config.moneda, 
+                        porcentajeIndirectos: config.porcentajeIndirectos,
+                        porcentajeMerma: config.porcentajeMerma
+                    })
+                });
+                await envio.json(); 
+            } catch(e) { 
+                console.log("Error al respaldar configuración inicial", e); 
+            }
+
+            await descargarDeNube();
+            alert("💾 Configuración sincronizada y cuenta Premium Activada.");
+        } else {
+            config.isPremium = false;
+            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+            evaluarEstadoVisualPremium();
+            renderInsumos();
+            renderModulos();
+            rebuildSelectPlantillas();
+            calcularTodo();
+            alert("💾 Configuración local actualizada.");
         }
-
-        await descargarDeNube();
-        alert("💾 Configuración sincronizada y cuenta Premium Activada.");
-    } else {
-        config.isPremium = false;
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        evaluarEstadoVisualPremium();
-        renderInsumos();
-        renderModulos();
-        rebuildSelectPlantillas();
-        calcularTodo();
-        alert("💾 Configuración local actualizada.");
     }
-}
 
     function cerrarSesionNexi() {
         if(!confirm("¿Deseas cerrar tu sesión en la nube? Se borrarán los datos de la pantalla y la memoria local.")) return;
@@ -623,7 +623,6 @@
             renderModulos();
             calcularTodo();
             
-            // Auto sincronizar edición rápida si es premium
             if(config.isPremium && config.urlNube) {
                 fetch(config.urlNube, {
                     method: 'POST', mode: 'cors', headers: { "Content-Type": "text/plain" },
@@ -934,7 +933,7 @@
         rebuildSelectPlantillas();
         limpiarComposicionCompleta();
         evaluarEstadoVisualPremium();
-        alert(`✅ Receta "${nombre}" eliminada por completo.`);
+        alert(`✅ Receta "${nombre}" eliminada por conocer.`);
     }
 
     function limpiarComposicionCompleta() {
@@ -944,7 +943,7 @@
     }
 
     function enviarCotizacionWhatsApp() {
-        const pasteleria = config.nombrePasteleria || "Nuestra Pastelería";
+        const pasteleria = config.nombrePasteleria || "Mi Pastelería";
         const porciones = document.getElementById('porciones-totales').value || "0";
         const precioTotal = document.getElementById('res-precio-venta').textContent;
         const precioRebanada = document.getElementById('res-precio-porcion').textContent;
@@ -981,64 +980,61 @@
     }
     
     async function descargarDeNube() {
-    if (!config.urlNube || !config.tokenUser) return;
+        if (!config.urlNube || !config.tokenUser) return;
 
-    cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
+        cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
-    try {
-        const urlConParametros = `${config.urlNube}?correo=${encodeURIComponent(config.correoUser)}&token=${encodeURIComponent(config.tokenUser)}&_=${Date.now()}`;
-        const response = await fetch(urlConParametros, { method: 'GET', mode: 'cors' });
-        const data = await response.json();
+        try {
+            const urlConParametros = `${config.urlNube}?correo=${encodeURIComponent(config.correoUser)}&token=${encodeURIComponent(config.tokenUser)}&_=${Date.now()}`;
+            const response = await fetch(urlConParametros, { method: 'GET', mode: 'cors' });
+            const data = await response.json();
 
-        if (data.status === "error") {
-            config.isPremium = false;
+            if (data.status === "error") {
+                config.isPremium = false;
+                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                cambiarBannerStatus("❌ " + data.message, false);
+                alert("Error de Acceso: " + data.message);
+                evaluarEstadoVisualPremium();
+                return;
+            }
+
+            config.isPremium = true;
+            if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
+            if (data.moneda) config.moneda = data.moneda; 
+            if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
+            if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
+            
             localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-            cambiarBannerStatus("❌ " + data.message, false);
-            alert("Error de Acceso: " + data.message);
+
+            if (data.insumos) {
+                insumos = data.insumos;
+                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+            }
+            if (data.plantillas) {
+                plantillasRecetas = data.plantillas;
+                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+            }
+
+            document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+            document.getElementById('cfg-moneda').value = config.moneda; 
+            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
+            document.getElementById('cfg-merma').value = config.porcentajeMerma;
+            
+            document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+            document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+
             evaluarEstadoVisualPremium();
-            return;
+            
+            renderInsumos();
+            renderModulos();
+            rebuildSelectPlantillas();
+            calcularTodo();
+
+            cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
+        } catch(e) {
+            cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
         }
-
-        config.isPremium = true;
-        if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
-        if (data.moneda) config.moneda = data.moneda; // 1. ¡CORREGIDO! Ahora sí lee la moneda de la nube
-        if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
-        if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
-        
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-
-        if (data.insumos) {
-            insumos = data.insumos;
-            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        }
-        if (data.plantillas) {
-            plantillasRecetas = data.plantillas;
-            localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        }
-
-        // 2. Actualizamos los inputs visuales del Panel de Configuración
-        document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-        document.getElementById('cfg-moneda').value = config.moneda; // ¡CORREGIDO! Muestra la moneda guardada
-        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
-        document.getElementById('cfg-merma').value = config.porcentajeMerma;
-        
-        // 3. Actualizamos los textos e indicadores de la interfaz
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-
-        evaluarEstadoVisualPremium();
-        
-        // 4. ¡CORREGIDO! Forzamos a la app a redibujar todo con la moneda e insumos reales de la nube
-        renderInsumos();
-        renderModulos();
-        rebuildSelectPlantillas();
-        calcularTodo();
-
-        cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
-    } catch(e) {
-        cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
     }
-}
 </script>
 </body>
 </html>
