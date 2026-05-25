@@ -218,7 +218,7 @@
                 <button type="button" class="btn btn-danger btn-small" onclick="limpiarComposicionCompleta()">🧹 Limpiar Todo</button>
             </div>
 
-            <form id="form-receta" class="flex-row" style="margin-bottom: 15px;" autocomplete="off">
+            <form id="form-receta" class="flex-row" style="margin-bottom: 15px;" autocomplete="off" onsubmit="event.preventDefault(); agregarIngredienteRecetaManejador();">
                 <div style="flex: 1.2; min-width: 130px;">
                     <label>🔍 Buscar ingrediente</label>
                     <input type="text" id="buscador-receta" placeholder="Ej: Harina..." oninput="filtrarInsumosReceta(this.value)">
@@ -440,30 +440,25 @@
     }
 
     window.onload = async function() {
-    // 1. Cargar la configuración inicial de la app
-    cargarConfiguracion(); 
-    
-    // 2. Intentar cargar lo que haya guardado en el teléfono por ahora
-    const localInsumos = localStorage.getItem('respaldo_insumos');
-    if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
-    
-    const localPlantillas = localStorage.getItem('respaldo_plantillas');
-    if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+        cargarConfiguracion(); 
+        
+        const localInsumos = localStorage.getItem('respaldo_insumos');
+        if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
+        
+        const localPlantillas = localStorage.getItem('respaldo_plantillas');
+        if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
 
-    // 3. Evaluar el estado visual preliminar
-    evaluarEstadoVisualPremium();
+        evaluarEstadoVisualPremium();
 
-    // 4. Si el usuario es premium, descargar los datos reales y esperar a que terminen ('await')
-    if (config.isPremium && config.urlNube) {
-        await descargarDeNube();
-    }
+        if (config.isPremium && config.urlNube) {
+            await descargarDeNube();
+        }
 
-    // 5. Dibujar y calcular todo en la pantalla con los datos más frescos disponibles
-    renderInsumos();
-    renderModulos();
-    rebuildSelectPlantillas();
-    calcularTodo();
-};
+        renderInsumos();
+        renderModulos();
+        rebuildSelectPlantillas();
+        calcularTodo();
+    };
 
     function renderInsumos() {
         const tbody = document.getElementById('tabla-insumos');
@@ -550,13 +545,11 @@
 
         try {
             const respuesta = await fetch(config.urlNube, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 
-        "Content-Type": "text/plain" 
-    },
-    body: JSON.stringify(datosParaNube)
-});
+                method: 'POST',
+                mode: 'cors',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(datosParaNube)
+            });
             
             const resultado = await respuesta.json();
             if (resultado.status === "success") {
@@ -656,8 +649,8 @@
         }
     }
 
-    document.getElementById('form-receta').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Corregido: Trasladado a función directa invocada por el formulario seguro
+    function agregarIngredienteRecetaManejador() {
         const id = document.getElementById('receta-insumo-select').value;
         const cant = parseFloat(document.getElementById('receta-cantidad').value);
         const uni = document.getElementById('receta-unidad').value;
@@ -666,10 +659,10 @@
         modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
         document.getElementById('buscador-receta').value = "";
         actualizarSelectReceta();
-        this.reset();
+        document.getElementById('form-receta').reset();
         renderModulos();
         calcularTodo();
-    });
+    }
 
     function renderModulos() {
         const m = config.moneda || "$";
@@ -779,45 +772,43 @@
     }
 
     async function guardarPlantillaNube() {
-    const nombre = document.getElementById('nombre-plantilla').value.trim();
-    if (!nombre) return alert("Ingresa un nombre para la receta.");
-    
-    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-    rebuildSelectPlantillas();
-    document.getElementById('nombre-plantilla').value = "";
+        const nombre = document.getElementById('nombre-plantilla').value.trim();
+        if (!nombre) return alert("Ingresa un nombre para la receta.");
+        
+        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        document.getElementById('nombre-plantilla').value = "";
 
-    if (config.isPremium && config.urlNube) {
-        cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
-        const datosParaNube = {
-            correo: config.correoUser,
-            token: config.tokenUser,
-            accion: "guardarPlantilla",
-            nombreReceta: nombre,
-            estructuraJson: JSON.stringify(modulos)
-        };
+        if (config.isPremium && config.urlNube) {
+            cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
+            const datosParaNube = {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "guardarPlantilla",
+                nombreReceta: nombre,
+                estructuraJson: JSON.stringify(modulos)
+            };
 
-        try {
-            const respuesta = await fetch(config.urlNube, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 
-                    "Content-Type": "text/plain" // ✅ Corregido también aquí
-                },
-                body: JSON.stringify(datosParaNube)
-            });
-            const resultado = await respuesta.json();
-            if (resultado.status === "success") {
-                evaluarEstadoVisualPremium();
-                alert("✅ Receta guardada y sincronizada en NEXI Cloud."); // Añadido para avisarte
-            } else {
-                alert("Error de almacenamiento: " + resultado.message);
+            try {
+                const respuesta = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(datosParaNube)
+                });
+                const resultado = await respuesta.json();
+                if (resultado.status === "success") {
+                    evaluarEstadoVisualPremium();
+                    alert("✅ Receta guardada y sincronizada en NEXI Cloud.");
+                } else {
+                    alert("Error de almacenamiento: " + resultado.message);
+                }
+            } catch(e) {
+                alert("Error de conexión remota al guardar la receta.");
             }
-        } catch(e) {
-            alert("Error de conexión remota al guardar la receta.");
         }
     }
-}
 
     function cargarPlantilla(nombre) {
         if(!nombre || !plantillasRecetas[nombre]) return;
@@ -909,10 +900,10 @@
             if (data.plantillas) {
                 plantillasRecetas = data.plantillas;
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        }
+            }
 
-        evaluarEstadoVisualPremium();
-        alert("🔓 ¡Sesión iniciada correctamente! Datos sincronizados.");
+            evaluarEstadoVisualPremium();
+            alert("🔓 ¡Sesión iniciada correctamente! Datos sincronizados.");
         } catch(e) {
             cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
         }
