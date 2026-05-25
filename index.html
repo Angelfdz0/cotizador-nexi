@@ -404,7 +404,7 @@
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
     }
 
-    async function guardarConfiguracion() {
+        async function guardarConfiguracion() {
         config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
         config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
         config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
@@ -419,12 +419,29 @@
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
         
         if (config.tokenUser && config.urlNube) {
+            // ✨ NUEVO: Antes de descargar, mandamos los datos actuales para que se guarden en la nube
+            try {
+                await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        correo: config.correoUser,
+                        token: config.tokenUser,
+                        accion: "guardarConfiguracion",
+                        nombrePasteleria: config.nombrePasteleria,
+                        porcentajeIndirectos: config.porcentajeIndirectos,
+                        porcentajeMerma: config.porcentajeMerma
+                    })
+                });
+            } catch(e) { console.log("Error al respaldar configuración inicial"); }
+
+            // Después descargamos todo el set de datos para activar el modo premium
             await descargarDeNube();
         } else {
             config.isPremium = false;
             localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
             evaluarEstadoVisualPremium();
-            // SOLUCIÓN 1: Refrescar la pantalla si pasa a modo local
             renderInsumos();
             renderModulos();
             rebuildSelectPlantillas();
