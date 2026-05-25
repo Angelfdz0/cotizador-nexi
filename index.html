@@ -405,56 +405,55 @@
     }
 
     async function guardarConfiguracion() {
-        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
-        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-        config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
-        config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
-        config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
-        config.tokenUser = document.getElementById('cfg-token-user').value.trim();
+    config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
+    config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+    config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+    config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
+    config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
+    config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
+    config.tokenUser = document.getElementById('cfg-token-user').value.trim();
 
-        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-        
-        if (config.tokenUser && config.urlNube) {
-            // Establecemos true localmente de antemano para que el render asuma el guardado correcto
-            config.isPremium = true;
-            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+    document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+    document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+    
+    if (config.tokenUser && config.urlNube) {
+        config.isPremium = true;
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-            cambiarBannerStatus("⏳ Respaldando configuración en la nube...", null);
-            try {
-                const envio = await fetch(config.urlNube, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify({
-                        correo: config.correoUser,
-                        token: config.tokenUser,
-                        accion: "guardarConfiguracion",
-                        nombrePasteleria: config.nombrePasteleria,
-                        porcentajeIndirectos: config.porcentajeIndirectos,
-                        porcentajeMerma: config.porcentajeMerma
-                    })
-                });
-                await envio.json(); 
-            } catch(e) { 
-                console.log("Error al respaldar configuración inicial", e); 
-            }
-
-            // Descargamos y consolidamos visualmente el entorno Premium
-            await descargarDeNube();
-            alert("💾 Configuración sincronizada y cuenta Premium Activada.");
-        } else {
-            config.isPremium = false;
-            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-            evaluarEstadoVisualPremium();
-            renderInsumos();
-            renderModulos();
-            rebuildSelectPlantillas();
-            calcularTodo();
-            alert("💾 Configuración local actualizada.");
+        cambiarBannerStatus("⏳ Respaldando configuración en la nube...", null);
+        try {
+            const envio = await fetch(config.urlNube, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({
+                    correo: config.correoUser,
+                    token: config.tokenUser,
+                    accion: "guardarConfiguracion",
+                    nombrePasteleria: config.nombrePasteleria,
+                    moneda: config.moneda, // <-- AGREGAMOS ESTA LÍNEA AQUÍ
+                    porcentajeIndirectos: config.porcentajeIndirectos,
+                    porcentajeMerma: config.porcentajeMerma
+                })
+            });
+            await envio.json(); 
+        } catch(e) { 
+            console.log("Error al respaldar configuración inicial", e); 
         }
+
+        await descargarDeNube();
+        alert("💾 Configuración sincronizada y cuenta Premium Activada.");
+    } else {
+        config.isPremium = false;
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        evaluarEstadoVisualPremium();
+        renderInsumos();
+        renderModulos();
+        rebuildSelectPlantillas();
+        calcularTodo();
+        alert("💾 Configuración local actualizada.");
     }
+}
 
     function cerrarSesionNexi() {
         if(!confirm("¿Deseas cerrar tu sesión en la nube? Se borrarán los datos de la pantalla y la memoria local.")) return;
