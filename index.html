@@ -981,58 +981,64 @@
     }
     
     async function descargarDeNube() {
-        if (!config.urlNube || !config.tokenUser) return;
+    if (!config.urlNube || !config.tokenUser) return;
 
-        cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
+    cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
-        try {
-            const urlConParametros = `${config.urlNube}?correo=${encodeURIComponent(config.correoUser)}&token=${encodeURIComponent(config.tokenUser)}&_=${Date.now()}`;
-            const response = await fetch(urlConParametros, { method: 'GET', mode: 'cors' });
-            const data = await response.json();
+    try {
+        const urlConParametros = `${config.urlNube}?correo=${encodeURIComponent(config.correoUser)}&token=${encodeURIComponent(config.tokenUser)}&_=${Date.now()}`;
+        const response = await fetch(urlConParametros, { method: 'GET', mode: 'cors' });
+        const data = await response.json();
 
-            if (data.status === "error") {
-                config.isPremium = false;
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                cambiarBannerStatus("❌ " + data.message, false);
-                alert("Error de Acceso: " + data.message);
-                evaluarEstadoVisualPremium();
-                return;
-            }
-
-            config.isPremium = true;
-            if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
-            if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
-            if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
-            
+        if (data.status === "error") {
+            config.isPremium = false;
             localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-
-            if (data.insumos) {
-                insumos = data.insumos;
-                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-            }
-            if (data.plantillas) {
-                plantillasRecetas = data.plantillas;
-                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-            }
-
-            document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-            document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
-            document.getElementById('cfg-merma').value = config.porcentajeMerma;
-            document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-            document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-
+            cambiarBannerStatus("❌ " + data.message, false);
+            alert("Error de Acceso: " + data.message);
             evaluarEstadoVisualPremium();
-            
-            renderInsumos();
-            renderModulos();
-            rebuildSelectPlantillas();
-            calcularTodo();
-
-            cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
-        } catch(e) {
-            cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
+            return;
         }
+
+        config.isPremium = true;
+        if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
+        if (data.moneda) config.moneda = data.moneda; // 1. ¡CORREGIDO! Ahora sí lee la moneda de la nube
+        if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
+        if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
+        
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+
+        if (data.insumos) {
+            insumos = data.insumos;
+            localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+        }
+        if (data.plantillas) {
+            plantillasRecetas = data.plantillas;
+            localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        }
+
+        // 2. Actualizamos los inputs visuales del Panel de Configuración
+        document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+        document.getElementById('cfg-moneda').value = config.moneda; // ¡CORREGIDO! Muestra la moneda guardada
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
+        document.getElementById('cfg-merma').value = config.porcentajeMerma;
+        
+        // 3. Actualizamos los textos e indicadores de la interfaz
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+
+        evaluarEstadoVisualPremium();
+        
+        // 4. ¡CORREGIDO! Forzamos a la app a redibujar todo con la moneda e insumos reales de la nube
+        renderInsumos();
+        renderModulos();
+        rebuildSelectPlantillas();
+        calcularTodo();
+
+        cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
+    } catch(e) {
+        cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
     }
+}
 </script>
 </body>
 </html>
