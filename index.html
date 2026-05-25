@@ -37,10 +37,14 @@
             display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);
         }
         .theme-toggle-icon span { color: #ffffff !important; font-size: 22px; }
+        
+        .card-header-toggle { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .btn-flecha { transition: transform 0.3s ease; font-size: 24px; user-select: none; color: var(--title-color); }
+
         .grid { display: block; }
         @media (min-width: 768px) { .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; } }
         .card { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-card); }
-        .card-title { font-size: 18px; color: var(--title-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--border-title); padding-bottom: 8px; }
+        .card-title { font-size: 18px; color: var(--title-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--border-title); padding-bottom: 8px; width: 100%; }
         .tabs-container { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-title); padding-bottom: 5px; flex-wrap: wrap; }
         .tabs { display: flex; gap: 5px; }
         .tab { background: none; border: none; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--instruction-text); border-radius: 6px 6px 0 0; }
@@ -49,17 +53,25 @@
         .tab-content.active { display: block; }
         label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--label-color); }
         input, select { width: 100%; padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); color: var(--text-main); }
-        .table-input { width: 75px; padding: 4px 6px; font-size: 13px; border: 1px solid transparent; background: transparent; color: var(--text-main); }
-        .table-input:hover, .table-input:focus { border-color: var(--input-border); background-color: var(--input-bg); }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        
+        .table-container { max-height: 520px; overflow-y: auto; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
         th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--td-border); }
-        th { background-color: var(--th-bg); color: var(--th-text); }
-        .btn { background-color: var(--btn-main); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        th { background-color: var(--th-bg); color: var(--th-text); position: sticky; top: 0; z-index: 1; }
+        
+        .table-input { border: 1px solid transparent; background: transparent; color: var(--text-main); padding: 4px 6px; font-size: 13px; border-radius: 4px; }
+        .table-input:hover, .table-input:focus { border-color: var(--input-border); background-color: var(--input-bg); }
+        
+        .btn { background-color: var(--btn-main); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
         .btn:hover { background-color: var(--btn-hover); }
-        .btn-danger { background-color: #e57373; }
+        .btn-danger { background-color: #e57373; color: white; }
         .btn-danger:hover { background-color: #d32f2f; }
         .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-success { background-color: #25d366; color: white; }
+        .btn-success:hover { background-color: #128c7e; }
         .btn-small { padding: 4px 8px; font-size: 11px; }
+        
         .flex-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
         .result-box { background-color: var(--result-bg); border-left: 4px solid var(--result-border); padding: 12px; margin-top: 15px; border-radius: 0 8px 8px 0; }
         .result-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
@@ -86,60 +98,71 @@
 
     <div id="cloud-banner" class="cloud-status">☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)</div>
 
-   <div class="card" id="tarjeta-configuracion">
-    <div class="card-title">🛠️ Panel de Configuración del Negocio</div>
-    <div>
-        <div class="form-group">
-            <label>Nombre de la Pastelería:</label>
-            <input type="text" id="cfg-nombre" placeholder="Mi pastelería">
+    <div class="card" id="tarjeta-configuracion">
+        <div class="card-title card-header-toggle" onclick="togglePanelConfiguracion()">
+            <span>🛠️ Panel de Configuración del Negocio</span>
+            <span class="material-symbols-outlined btn-flecha" id="btn-flecha-config">expand_more</span>
         </div>
-        <div class="form-group" style="margin-top: 10px;">
-            <label>Moneda:</label>
-            <input type="text" id="cfg-moneda" placeholder="$">
-        </div>
-        <div class="form-group" style="margin-top: 10px;">
-            <label>Gastos Indirectos Adicionales (%):</label>
-            <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)">
-        </div>
-
-        <div id="seccion-bloque-estandar">
-            <div style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
-                <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ ¿Te gustaría respaldar tus recetas y precios en tiempo real?</p>
-                <a href="https://wa.me/522291915418?text=Hola,%20me%20interesa%20adquirir%20la%20versión%20Premium" 
-                   target="_blank" class="btn" style="background-color: #25d366; color: white; display: inline-block; text-decoration: none;">
-                   💬 Solicitar Versión Premium (Sincronizada)
-                </a>
-            </div>
-
-            <div id="campos-tecnicos-nube">
+        
+        <div id="cuerpo-configuracion" style="display: none; margin-top: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                 <div class="form-group">
-                    <label>URL de la Nube (Entregado por NEXI):</label>
-                    <input type="text" id="cfg-url-nube" placeholder="https://script.google.com/...">
+                    <label>Nombre de la Pastelería:</label>
+                    <input type="text" id="cfg-nombre" placeholder="Mi pastelería">
                 </div>
-                <div class="form-group" style="margin-top: 10px;">
-                    <label>Clave de Acceso Premium:</label>
-                    <input type="password" id="cfg-clave-nube" placeholder="Introduce tu clave de activación">
+                <div class="form-group">
+                    <label>Moneda:</label>
+                    <input type="text" id="cfg-moneda" placeholder="$">
                 </div>
-                <div class="form-group" style="margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                    <label style="color: #1e293b;">🆔 ID de tu Google Sheets Personal:</label>
-                    <input type="text" id="cfg-id-sheets" placeholder="Pega aquí el texto largo de tu hoja">
+                <div class="form-group">
+                    <label>Gastos Indirectos Adicionales (%):</label>
+                    <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)">
+                </div>
+                <div class="form-group">
+                    <label>Margen de Merma / Pérdidas globales (%):</label>
+                    <input type="number" id="cfg-merma" placeholder="Ej: 5% (Garantiza mermas de batido/horneado)" min="0" max="50">
                 </div>
             </div>
-        </div>
 
-        <div id="seccion-bloque-premium" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; text-align: center;">
-            <div style="color: #15803d; font-weight: bold;">✓ ¡Suscripción Premium Activa!</div>
-            <button class="btn btn-warning btn-small" onclick="desactivarLicenciaPremium()" style="margin-top: 10px;">🔒 Desvincular Cuenta</button>
-        </div>
+            <div id="seccion-bloque-estandar">
+                <div id="seccion-comprar-premium" style="margin: 20px 0; padding: 15px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; text-align: center;">
+                    <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e3a8a; font-weight: 500;">☁️ Obtén tu cuenta Premium de NEXI para sincronizar recetas y costos.</p>
+                    <a href="https://wa.me/522291915418?text=Hola,%20quiero%20crear%20mi%20cuenta%20Premium%20de%20NEXI" 
+                       target="_blank" class="btn" style="background-color: #25d366; color: white; display: inline-block; text-decoration: none;">
+                       💬 Solicitar mi Cuenta NEXI
+                    </a>
+                </div>
 
-        <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 15px; width: 100%;">💾 Guardar Configuración</button>
+                <div id="campos-login-nexi" style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-card);">
+                    <label style="font-weight: bold; color: var(--title-color); margin-bottom: 10px; display: block;">🔐 Iniciar Sesión en NEXI Cloud</label>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Correo Electrónico Registrado:</label>
+                        <input type="email" id="cfg-correo-user" placeholder="ejemplo@pasteleria.com">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Contraseña / Token NEXI:</label>
+                        <input type="password" id="cfg-token-user" placeholder="Introduce tu clave de acceso">
+                    </div>
+                    <div class="form-group">
+                        <label>URL del Servidor General NEXI:</label>
+                        <input type="text" id="cfg-url-servidor" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                </div>
+            </div>
+
+            <div id="seccion-bloque-premium" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; text-align: center;">
+                <div style="color: #15803d; font-weight: bold;" id="txt-bienvenida-premium">✓ ¡Sesión Iniciada! Conectado a NEXI Cloud.</div>
+                <button class="btn btn-warning btn-small" onclick="cerrarSesionNexi()" style="margin-top: 10px;">🔒 Cerrar Sesión</button>
+            </div>
+
+            <button class="btn" onclick="guardarConfiguracion()" style="margin-top: 15px; width: 100%;">💾 Guardar Configuración</button>
+        </div>
     </div>
-</div>
 
     <div class="grid">
         <div class="card">
             <div class="card-title">1. Inventario de Precios</div>
-            <form id="form-insumo" class="flex-row" style="margin-bottom: 15px;">
+            <form id="form-insumo" class="flex-row" style="margin-bottom: 15px;" onsubmit="event.preventDefault(); agregarInsumoManejador();">
                 <div style="flex: 2; min-width: 130px;">
                     <label>Ingrediente / Material</label>
                     <input type="text" id="insumo-nombre" placeholder="Ej. Queso" required>
@@ -170,10 +193,10 @@
                     <label>Precio</label>
                     <input type="number" id="insumo-precio" placeholder="120" min="0.01" step="any" required>
                 </div>
-                <button type="button" class="btn" style="height: 38px;" onclick="agregarNuevoInsumoNube()">+</button>
+                <button type="submit" class="btn" style="height: 38px;">Agregar</button>
             </form>
 
-            <div style="max-height: 520px; overflow-y: auto;">
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr><th>Insumo</th><th>Marca</th><th>Tamaño</th><th>Paquete</th><th>Precio</th><th>Costo Base</th><th></th></tr>
@@ -219,9 +242,9 @@
                 <button type="submit" class="btn" style="height: 38px;">+</button>
             </form>
 
-            <div id="tab-pan" class="tab-content active"><table><thead><tr><th>PAN</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-pan"></tbody></table></div>
-            <div id="tab-relleno" class="tab-content"><table><thead><tr><th>RELLENO</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-relleno"></tbody></table></div>
-            <div id="tab-betun" class="tab-content"><table><thead><tr><th>BETÚN</th><th>Cant</th><th>Costo</th><th></th></tr></thead><tbody id="tabla-betun"></tbody></table></div>
+            <div id="tab-pan" class="tab-content active"><div class="table-container"><table><thead><tr><th>PAN</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-pan"></tbody></table></div></div>
+            <div id="tab-relleno" class="tab-content"><div class="table-container"><table><thead><tr><th>RELLENO</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-relleno"></tbody></table></div></div>
+            <div id="tab-betun" class="tab-content"><div class="table-container"><table><thead><tr><th>BETÚN</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-betun"></tbody></table></div></div>
 
             <div class="memory-zone">
                 <label style="margin-bottom: 6px; font-weight: bold; color: var(--title-color);">💾 Guardar Receta / Plantilla</label>
@@ -244,36 +267,50 @@
                 <div class="result-row"><span>Costo Relleno:</span><span id="txt-costo-relleno">$0.00</span></div>
                 <div class="result-row"><span>Costo Betún:</span><span id="txt-costo-betun">$0.00</span></div>
                 <div class="result-row"><span id="lbl-indirectos-porcentaje">Gastos Indirectos (0%):</span><span id="txt-costo-indirectos">$0.00</span></div>
+                <div class="result-row"><span>Mano de Obra Calculada:</span><span id="txt-costo-manodeobra">$0.00</span></div>
                 <div class="result-row" style="font-weight: bold; border-top: 1px dashed var(--border-title); padding-top: 5px;">
-                    <span>COSTO TOTAL PRODUCCIÓN:</span><span id="costo-produccion-total" class="highlight">$0.00</span>
+                    <span>COSTO TOTAL PRODUCTION:</span><span id="costo-produccion-total" class="highlight">$0.00</span>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="card-title">3. Cotizador Rápido por Porciones</div>
+        <div class="card-title">3. Cotizador Rápido y Mano de Obra</div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-                <label>¿Para cuántas porciones solicita el cliente?</label>
-                <input type="number" id="porciones-totales" placeholder="Numero de porciones" oninput="calcularTodo()">
+                <label>¿Para cuántas porciones/rebanadas solicita el cliente?</label>
+                <input type="number" id="porciones-totales" placeholder="Ej: 20" oninput="calcularTodo()">
             </div>
             <div class="form-group">
-                <label>Dificultad del Diseño</label>
+                <label>Dificultad del Diseño (Margen)</label>
                 <select id="margen-ganancia" onchange="calcularTodo()">
                     <option value="3" selected>Nivel 1: Tradicional (66.6% Ganancia)</option>
                     <option value="3.5">Nivel 2: Complejo (71.4% Ganancia)</option>
                     <option value="4.5">Nivel 3: Laborioso (77.7% Ganancia)</option>
                 </select>
             </div>
-        </div>
-        <div class="result-box" style="background-color: var(--mint-bg); border-left-color: var(--mint-border); margin-bottom: 15px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
-                <div><label style="color: var(--mint-text);">Costo Rebanada</label><span id="res-costo-porcion">$0.00</span></div>
-                <div><label style="color: var(--mint-text); font-weight: bold;">PRECIO DE VENTA TOTAL</label><span id="res-precio-venta" style="font-size: 24px; font-weight: bold;">$0.00</span></div>
-                <div><label style="color: var(--mint-text);">Precio Rebanada</label><span id="res-precio-porcion">$0.00</span></div>
+            <div class="form-group">
+                <label>Horas dedicadas a la preparación:</label>
+                <input type="number" id="mo-horas" placeholder="Ej: 3 horas" min="0" step="any" oninput="calcularTodo()">
+            </div>
+            <div class="form-group">
+                <label>Precio cobrado por hora de trabajo:</label>
+                <input type="number" id="mo-precio-hora" placeholder="Ej: 50" min="0" step="any" oninput="calcularTodo()">
             </div>
         </div>
+        
+        <div class="result-box" style="background-color: var(--mint-bg); border-left-color: var(--mint-border); margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center;">
+                <div><label style="color: var(--mint-text);">Costo Real Rebanada</label><span id="res-costo-porcion" style="color: var(--mint-amount); font-weight: bold; font-size: 16px;">$0.00</span></div>
+                <div><label style="color: var(--mint-text); font-weight: bold;">PRECIO DE VENTA TOTAL RECOMENDADO</label><span id="res-precio-venta" style="font-size: 26px; font-weight: bold; color: var(--mint-amount);">$0.00</span></div>
+                <div><label style="color: var(--mint-text);">Precio Venta Rebanada</label><span id="res-precio-porcion" style="color: var(--mint-amount); font-weight: bold; font-size: 16px;">$0.00</span></div>
+            </div>
+        </div>
+        
+        <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 15px;" onclick="enviarCotizacionWhatsApp()">
+            <span class="material-symbols-outlined">send</span> Enviar Presupuesto Listo a WhatsApp
+        </button>
     </div>
 </div>
 
@@ -284,10 +321,23 @@
     let modulos = { pan: [], relleno: [], betun: [] };
     let plantillasRecetas = {};
     let currentModule = 'pan';
-    let config = { nombrePasteleria: "Mi Pastelería", moneda: "$", porcentajeIndirectos: 0, urlNube: "", claveNube: "" };
+    let config = { 
+        nombrePasteleria: "Mi Pastelería", 
+        moneda: "$", 
+        porcentajeIndirectos: 0, 
+        porcentajeMerma: 0, 
+        urlNube: "", 
+        correoUser: "", 
+        tokenUser: "",
+        isPremium: false
+    };
+
+    function redondearPrecioComercial(valor) {
+        return Math.ceil(valor / 5) * 5; 
+    }
 
     function cambiarBannerStatus(texto, exito) {
-        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
+        const banner = document.getElementById('cloud-banner');
         if (!banner) return;
         banner.textContent = texto;
         if (exito === true) {
@@ -299,35 +349,27 @@
         }
     }
 
-    function generarIdUnico() {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) { return crypto.randomUUID(); }
-        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
     function evaluarEstadoVisualPremium() {
-        const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
-        if (!banner) return;
+        const banner = document.getElementById('cloud-banner');
+        const bloquePremium = document.getElementById('seccion-bloque-premium');
+        const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+        const txtBienvenida = document.getElementById('txt-bienvenida-premium');
 
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-            banner.id = 'premium-banner-status';
-            banner.style.backgroundColor = "#d1fae5"; 
-            banner.style.color = "#065f46";
-            banner.innerHTML = `☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`;
-            
-            ocultarConfigSiEsPremium();
-            
-            const bloquePremium = document.getElementById('seccion-bloque-premium');
-            const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+        if (config.isPremium) {
+            if(banner) {
+                banner.style.backgroundColor = "#d1fae5"; 
+                banner.style.color = "#065f46";
+                banner.innerHTML = `☁️ Conectado como: <strong>${config.correoUser}</strong> (NEXI Cloud Activo)`;
+            }
+            if(txtBienvenida) txtBienvenida.innerHTML = `✓ Conectado exitosamente como: <strong>${config.correoUser}</strong>`;
             if(bloquePremium) bloquePremium.classList.remove('hidden');
             if(bloqueEstandar) bloqueEstandar.classList.add('hidden');
         } else {
-            banner.id = 'cloud-banner';
-            banner.style.backgroundColor = "#e2e8f0";
-            banner.style.color = "#4a5568";
-            banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
-            
-            const bloquePremium = document.getElementById('seccion-bloque-premium');
-            const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
+            if(banner) {
+                banner.style.backgroundColor = "#e2e8f0";
+                banner.style.color = "#4a5568";
+                banner.innerHTML = `☁️ Estado: Plan Estándar (Modo Local - Sin sincronizar)`;
+            }
             if(bloquePremium) bloquePremium.classList.add('hidden');
             if(bloqueEstandar) bloqueEstandar.classList.remove('hidden');
         }
@@ -338,23 +380,11 @@
         const flecha = document.getElementById('btn-flecha-config');
         if (cuerpo.style.display === 'none') {
             cuerpo.style.display = 'block';
-            flecha.style.transform = 'rotate(0deg)';
+            flecha.style.transform = 'rotate(180deg)';
         } else {
             cuerpo.style.display = 'none';
-            flecha.style.transform = 'rotate(180deg)';
+            flecha.style.transform = 'rotate(0deg)';
         }
-    }
-
-    function desactivarLicenciaPremium() {
-        if(!confirm("¿Deseas desvincular la base de datos en la nube y volver al modo local?")) return;
-        config.urlNube = "";
-        config.claveNube = "";
-        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        
-        document.getElementById('cfg-url-nube').value = "";
-        document.getElementById('cfg-clave-nube').value = "";
-        
-        window.location.reload();
     }
 
     function cargarConfiguracion() {
@@ -364,47 +394,49 @@
         }
         document.getElementById('cfg-nombre').value = config.nombrePasteleria || "";
         document.getElementById('cfg-moneda').value = config.moneda || "$";
-        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos === 0 ? "" : config.porcentajeIndirectos;
-        
-        if(document.getElementById('cfg-url-nube')) document.getElementById('cfg-url-nube').value = config.urlNube || "";
-        if(document.getElementById('cfg-clave-nube')) document.getElementById('cfg-clave-nube').value = config.claveNube || "";
+        document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
+        document.getElementById('cfg-merma').value = config.porcentajeMerma || "";
+        document.getElementById('cfg-url-servidor').value = config.urlNube || "";
+        document.getElementById('cfg-correo-user').value = config.correoUser || "";
+        document.getElementById('cfg-token-user').value = config.tokenUser || "";
 
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria || "Mi Pastelería";
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos || 0}%):`;
     }
 
     async function guardarConfiguracion() {
-        const nombre = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
-        const moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-        const indirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-        
-        const urlNubeInput = document.getElementById('cfg-url-nube') ? document.getElementById('cfg-url-nube').value.trim() : "";
-        const claveNubeInput = document.getElementById('cfg-clave-nube') ? document.getElementById('cfg-clave-nube').value.trim() : "";
-        const idSheets = document.getElementById('cfg-id-sheets').value.trim();
-
-        config.nombrePasteleria = nombre;
-        config.moneda = moneda;
-        config.porcentajeIndirectos = indirectos;
-        config.claveNube = claveNubeInput;
-        config.urlNube = urlNubeInput;
-        config.idSheets = idSheets;
+        config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "Mi pastelería";
+        config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
+        config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+        config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
+        config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
+        config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
+        config.tokenUser = document.getElementById('cfg-token-user').value.trim();
 
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-        document.getElementById('lbl-nombre-pasteleria').textContent = nombre;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${indirectos}%):`;
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
         calcularTodo();
-        renderInsumos();
-        renderModulos();
         
-        alert("💾 ¡Configuración guardada y actualizada con éxito!");
-        
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
+        if (config.tokenUser && config.urlNube) {
             await descargarDeNube();
         } else {
+            config.isPremium = false;
+            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
             evaluarEstadoVisualPremium();
+            alert("💾 Configuración local actualizada.");
         }
+    }
+
+    function cerrarSesionNexi() {
+        if(!confirm("¿Deseas cerrar tu sesión en la nube y pasar a modo local?")) return;
+        config.correoUser = "";
+        config.tokenUser = "";
+        config.isPremium = false;
+        localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        window.location.reload();
     }
 
     window.onload = async function() {
@@ -416,25 +448,9 @@
         const localPlantillas = localStorage.getItem('respaldo_plantillas');
         if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
 
-        const bannerViejo = document.getElementById('cloud-banner');
-        if (bannerViejo) {
-            bannerViejo.id = 'premium-banner-status';
-        }
-
         evaluarEstadoVisualPremium();
 
-        if (config.claveNube && config.claveNube.trim() === "pass_9821") {
-            const bannerPublicidad = document.getElementById('seccion-comprar-premium');
-            if (bannerPublicidad) {
-                bannerPublicidad.style.display = 'none';
-            }
-
-            const banner = document.getElementById('premium-banner-status');
-            if (banner) {
-                banner.textContent = "⏳ Conectando con Google Sheets...";
-                banner.style.backgroundColor = "#e2e8f0";
-                banner.style.color = "#4a5568";
-            }
+        if (config.isPremium && config.urlNube) {
             await descargarDeNube();
         }
 
@@ -459,19 +475,15 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${insumo.nombre}</strong></td>
-                <td><input type="text" style="width:75px; border:1px solid transparent; background:transparent;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
-                <td>
-                    <input type="text" style="width:80px; padding:2px; border:1px solid #ddd; border-radius:4px;" 
-                           value="${insumo.tamano || 'N/A'}" 
-                           oninput="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)">
-                </td>
+                <td><input type="text" class="table-input" style="width:75px;" value="${insumo.marca||''}" oninput="actualizarDatoInsumo('${insumo.id}', 'marca', this.value)"></td>
+                <td><input type="text" class="table-input" style="width:80px;" value="${insumo.tamano || 'N/A'}" oninput="actualizarDatoInsumo('${insumo.id}', 'tamano', this.value)"></td>
                 <td>
                     <div style="display:flex; align-items:center; gap:2px;">
                         <input type="number" class="table-input" value="${cantidadVal}" style="width:50px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'cantidad', this.value)">
                         <span style="font-size:11px; color:var(--instruction-text); font-weight:600;">${insumo.unidad}</span>
                     </div>
                 </td>
-                <td><input type="number" class="table-input" value="${precioVal}" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
+                <td><input type="number" class="table-input" value="${precioVal}" style="width:65px;" step="any" min="0.01" required oninput="actualizarDatoInsumo('${insumo.id}', 'precio', this.value)"></td>
                 <td>${m}${costoUnidad.toFixed(2)}/${unidadStr}</td>
                 <td class="text-right"><button type="button" class="btn btn-danger btn-small" onclick="eliminarInsumo('${insumo.id}')">×</button></td>
             `;
@@ -480,84 +492,91 @@
         actualizarSelectReceta();
     }
     
-    async function agregarNuevoInsumoNube() {
-        const nombreInput = document.getElementById('insumo-nombre').value.trim();
-        const marcaInput = document.getElementById('insumo-marca').value.trim();
-        const tamanoInput = document.getElementById('insumo-tamano').value.trim();
-        const cantidadInput = parseFloat(document.getElementById('insumo-cantidad').value);
-        const unidadInput = document.getElementById('insumo-unidad').value;
-        const precioInput = parseFloat(document.getElementById('insumo-precio').value);
-
-        if (!nombreInput || isNaN(cantidadInput) || isNaN(precioInput)) {
-            alert("Por favor rellena los campos obligatorios (Nombre, Cantidad y Precio).");
-            return;
+    function agregarInsumoManejador() {
+        if (config.isPremium && config.urlNube) {
+            agregarNuevoInsumoNube();
+        } else {
+            agregarInsumoLocal();
         }
+    }
 
-        const nuevoId = Date.now().toString();
+    function agregarInsumoLocal() {
         const nuevoInsumo = {
-            id: nuevoId,
-            nombre: nombreInput,
-            marca: marcaInput || "S/M",
-            tamano: tamanoInput || "N/A",
-            cantidad: cantidadInput,
-            unidad: unidadInput,
-            precio: precioInput
+            id: 'id_' + Date.now(),
+            nombre: document.getElementById('insumo-nombre').value.trim(),
+            marca: document.getElementById('insumo-marca').value.trim(),
+            tamano: document.getElementById('insumo-tamano').value.trim(),
+            cantidad: parseFloat(document.getElementById('insumo-cantidad').value),
+            unidad: document.getElementById('insumo-unidad').value,
+            precio: parseFloat(document.getElementById('insumo-precio').value)
         };
 
-        // Guardamos primero de forma local para no frenar la experiencia de usuario
         insumos.push(nuevoInsumo);
         localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-        
+        document.getElementById('form-insumo').reset();
         renderInsumos();
-        renderModulos();
         calcularTodo();
+        alert("✅ Insumo guardado localmente.");
+    }
 
-        // Limpiamos el formulario
-        document.getElementById('insumo-nombre').value = '';
-        document.getElementById('insumo-marca').value = '';
-        document.getElementById('insumo-tamano').value = '';
-        document.getElementById('insumo-cantidad').value = '';
-        document.getElementById('insumo-precio').value = '';
+    async function agregarNuevoInsumoNube() {
+        const idInsumo = Date.now().toString();
+        const nombreInsumo = document.getElementById('insumo-nombre').value.trim();
+        const marcaInsumo = document.getElementById('insumo-marca').value.trim();
+        const tamanoInsumo = document.getElementById('insumo-tamano').value.trim();
+        const cantidadInsumo = document.getElementById('insumo-cantidad').value;
+        const unidadInsumo = document.getElementById('insumo-unidad').value;
+        const precioInsumo = document.getElementById('insumo-precio').value;
 
-        if (config.claveNube && config.claveNube.trim() === "pass_9821" && config.urlNube) {
-            cambiarBannerStatus("⏳ Guardando nuevo insumo en Google Sheets...", true);
+        const datosParaNube = {
+            correo: config.correoUser,
+            token: config.tokenUser,
+            accion: "guardarInsumo",
+            id: idInsumo,
+            nombre: nombreInsumo,
+            marca: marcaInsumo,
+            tamano: tamanoInsumo, 
+            cantidad: cantidadInsumo,
+            unidad: unidadInsumo,
+            precio: precioInsumo
+        };
+
+        cambiarBannerStatus("⏳ Sincronizando insumo...", true);
+
+        try {
+            const respuesta = await fetch(config.urlNube, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datosParaNube)
+            });
             
-            const inputIdSheets = document.getElementById('cfg-id-sheets') || document.getElementById('cfg-id-sheet');
-            const idSheets = inputIdSheets ? inputIdSheets.value.trim() : (config.idSheets || "");
+            const resultado = await respuesta.json();
+            if (resultado.status === "success") {
+                const nuevoInsumoLocal = {
+                    id: idInsumo,
+                    nombre: nombreInsumo,
+                    marca: marcaInsumo,
+                    tamano: tamanoInsumo,
+                    cantidad: parseFloat(cantidadInsumo),
+                    unidad: unidadInsumo,
+                    precio: parseFloat(precioInsumo)
+                };
 
-            // CORRECCIÓN CRÍTICA: Empaquetamos la petición POST exactamente como tu doPost(e) la requiere
-            const datosParaNube = {
-                spreadsheetId: idSheets,
-                accion: "guardarInsumo",
-                id: nuevoId,
-                nombre: nuevoInsumo.nombre,
-                marca: nuevoInsumo.marca,
-                tamano: nuevoInsumo.tamano,
-                cantidad: nuevoInsumo.cantidad,
-                unidad: nuevoInsumo.unidad,
-                precio: nuevoInsumo.precio
-            };
-
-            try {
-                const respuesta = await fetch(config.urlNube, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify(datosParaNube)
-                });
-                
-                const resultado = await respuesta.json();
-                
-                if (resultado.status === "success") {
-                    cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
-                } else {
-                    console.error("Error devuelto por Apps Script:", resultado.message);
-                    alert("Se guardó en el navegador, pero Google Sheets rechazó el dato: " + resultado.message);
-                }
-            } catch(e) {
-                console.error("Error de red al conectar con Google Sheets:", e);
-                alert("Error de conexión: El insumo se guardó localmente, pero no se pudo reflejar en la nube.");
-                cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
+                insumos.push(nuevoInsumoLocal);
+                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+                document.getElementById('form-insumo').reset();
+                renderInsumos();
+                calcularTodo();
+                evaluarEstadoVisualPremium();
+                alert("✅ Insumo guardado y sincronizado en NEXI Cloud.");
+            } else {
+                alert("Error del servidor: " + resultado.message);
+                cambiarBannerStatus("❌ Error: " + resultado.message, false);
             }
+        } catch(e) {
+            alert("Error de conexión al guardar. Verifica la URL de tu servidor.");
+            cambiarBannerStatus("❌ Error de conexión remota", false);
         }
     }
 
@@ -598,16 +617,36 @@
         const t = texto.toLowerCase();
         const select = document.getElementById('receta-insumo-select');
         select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
-        insumos.filter(i => i.nombre.toLowerCase().includes(t)).forEach(i => {
+        
+        const filtrados = insumos.filter(i => i.nombre.toLowerCase().includes(t));
+        if(filtrados.length === 0 && t === "") {
+            actualizarSelectReceta();
+            return;
+        }
+        filtrados.forEach(i => {
             const opt = document.createElement('option');
-            opt.value = i.id; opt.textContent = i.nombre; select.appendChild(opt);
+            opt.value = i.id; opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`; select.appendChild(opt);
         });
     }
 
     function actualizarLabelUnidadReceta() {
         const id = document.getElementById('receta-insumo-select').value;
         const insumo = insumos.find(i => String(i.id) === String(id));
-        if(insumo) { document.getElementById('receta-unidad').value = insumo.unidad === 'kg' ? 'g' : (insumo.unidad === 'L' ? 'ml' : insumo.unidad); }
+        const selectUnidad = document.getElementById('receta-unidad');
+        
+        if(insumo && selectUnidad) { 
+            selectUnidad.innerHTML = ''; 
+            if(insumo.unidad === 'kg' || insumo.unidad === 'g') {
+                selectUnidad.innerHTML = '<option value="g">g</option><option value="kg">kg</option>';
+                selectUnidad.value = "g";
+            } else if(insumo.unidad === 'L' || insumo.unidad === 'ml') {
+                selectUnidad.innerHTML = '<option value="ml">ml</option><option value="L">L</option>';
+                selectUnidad.value = "ml";
+            } else {
+                selectUnidad.innerHTML = `<option value="${insumo.unidad}">${insumo.unidad}</option>`;
+                selectUnidad.value = insumo.unidad;
+            }
+        }
     }
 
     document.getElementById('form-receta').addEventListener('submit', function(e) {
@@ -618,6 +657,8 @@
         if(!id || !cant) return;
 
         modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
+        document.getElementById('buscador-receta').value = "";
+        actualizarSelectReceta();
         this.reset();
         renderModulos();
         calcularTodo();
@@ -625,6 +666,8 @@
 
     function renderModulos() {
         const m = config.moneda || "$";
+        const factorMerma = 1 + ((config.porcentajeMerma || 0) / 100);
+
         ['pan', 'relleno', 'betun'].forEach(key => {
             const tbody = document.getElementById(`tabla-${key}`);
             if(!tbody) return;
@@ -637,9 +680,14 @@
                 } else {
                     let cantPaquete = insumo.cantidad;
                     if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                    if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
                     if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-                    const costo = (insumo.precio / cantPaquete) * item.cantidadUsada;
-                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costo.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                    if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
+                    
+                    const costoBase = (insumo.precio / cantPaquete) * item.cantidadUsada;
+                    const costoConMerma = costoBase * factorMerma;
+
+                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costoConMerma.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
                 }
                 tbody.appendChild(tr);
             });
@@ -654,13 +702,18 @@
 
     function calcularCostoModulo(key) {
         let total = 0;
+        const factorMerma = 1 + ((config.porcentajeMerma || 0) / 100);
+
         modulos[key].forEach(item => {
             const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
             if (insumo) {
                 let cantPaquete = insumo.cantidad;
                 if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
                 if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-                total += (insumo.precio / cantPaquete) * item.cantidadUsada;
+                if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
+                
+                total += ((insumo.precio / cantPaquete) * item.cantidadUsada) * factorMerma;
             }
         });
         return total;
@@ -671,16 +724,22 @@
         const costoRelleno = calcularCostoModulo('relleno'); 
         const costoBetun = calcularCostoModulo('betun');
         
-        const subtotal = costoPan + costoRelleno + costoBetun; 
-        const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 25) / 100;
-        const indirectos = subtotal * porcentajeId; 
-        const totalProduc = subtotal + indirectos;
+        const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
+        const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
+        const indirectos = subtotalInsumos * porcentajeId; 
+        
+        const horasMO = parseFloat(document.getElementById('mo-horas').value) || 0;
+        const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
+        const totalManoObra = horasMO * precioHoraMO;
+
+        const totalProduc = subtotalInsumos + indirectos + totalManoObra;
         const m = config.moneda || "$";
         
         document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
         document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
         document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
         document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
+        document.getElementById('txt-costo-manodeobra').textContent = `${m}${totalManoObra.toFixed(2)}`; 
         document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
         
         const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
@@ -690,13 +749,9 @@
         let basePrecioVenta = totalProduc * multiplicador;
         let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
 
-        let costPorPor = Math.ceil(baseCostoPorcion); 
-        let preVentTot = Math.ceil(basePrecioVenta); 
-        let prePorPorCli = Math.ceil(basePrecioPorcion);
-
-        document.getElementById('res-costo-porcion').textContent = `${m}${costPorPor}`; 
-        document.getElementById('res-precio-venta').textContent = `${m}${preVentTot}`; 
-        document.getElementById('res-precio-porcion').textContent = `${m}${prePorPorCli}`;
+        document.getElementById('res-costo-porcion').textContent = `${m}${baseCostoPorcion.toFixed(2)}`; 
+        document.getElementById('res-precio-venta').textContent = `${m}${redondearPrecioComercial(basePrecioVenta)}`; 
+        document.getElementById('res-precio-porcion').textContent = `${m}${redondearPrecioComercial(basePrecioPorcion)}`;
     }
 
     function switchTab(e, moduloId) {
@@ -717,47 +772,42 @@
     }
 
     async function guardarPlantillaNube() {
-    const nombre = document.getElementById('nombre-plantilla').value.trim();
-    if (!nombre) return alert("Por favor, ingresa un nombre para la receta.");
-    
-    // 1. Guardar localmente
-    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-    rebuildSelectPlantillas();
-    document.getElementById('nombre-plantilla').value = "";
-
-    // 2. Si es Premium, intentar sincronizar con Google
-    if (config.claveNube === "pass_9821" && config.urlNube) {
-        cambiarBannerStatus("⏳ Guardando receta en la nube...", true);
+        const nombre = document.getElementById('nombre-plantilla').value.trim();
+        if (!nombre) return alert("Ingresa un nombre para la receta.");
         
-        const idSheets = document.getElementById('cfg-id-sheets').value.trim();
-        const datosParaNube = {
-            spreadsheetId: idSheets,
-            accion: "guardarPlantilla",
-            nombreReceta: nombre,
-            estructuraJson: JSON.stringify(modulos)
-        };
+        plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        rebuildSelectPlantillas();
+        document.getElementById('nombre-plantilla').value = "";
 
-        try {
-            const respuesta = await fetch(config.urlNube, {
-                method: 'POST',
-                mode: 'cors',
-                body: JSON.stringify(datosParaNube)
-            });
-            const resultado = await respuesta.json();
-            
-            if (resultado.status === "success") {
-                cambiarBannerStatus("☁️ Receta guardada en Google Sheets", true);
-            } else {
-                alert("Error al guardar en la nube: " + resultado.message);
+        if (config.isPremium && config.urlNube) {
+            cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
+            const datosParaNube = {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "guardarPlantilla",
+                nombreReceta: nombre,
+                estructuraJson: JSON.stringify(modulos)
+            };
+
+            try {
+                const respuesta = await fetch(config.urlNube, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datosParaNube)
+                });
+                const resultado = await respuesta.json();
+                if (resultado.status === "success") {
+                    evaluarEstadoVisualPremium();
+                } else {
+                    alert("Error de almacenamiento: " + resultado.message);
+                }
+            } catch(e) {
+                alert("Error de conexión remota.");
             }
-        } catch(e) {
-            alert("Error de conexión con la nube.");
         }
-    } else {
-        alert("Receta guardada localmente.");
     }
-}
 
     function cargarPlantilla(nombre) {
         if(!nombre || !plantillasRecetas[nombre]) return;
@@ -770,6 +820,7 @@
         const select = document.getElementById('select-plantillas');
         const nombre = select.value;
         if(!nombre) return;
+        if(!confirm(`¿Seguro que deseas eliminar la receta "${nombre}"?`)) return;
         delete plantillasRecetas[nombre];
         localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
         rebuildSelectPlantillas();
@@ -780,6 +831,31 @@
         modulos = { pan: [], relleno: [], betun: [] };
         renderModulos();
         calcularTodo();
+    }
+
+    function enviarCotizacionWhatsApp() {
+        const pasteleria = config.nombrePasteleria || "Nuestra Pastelería";
+        const porciones = document.getElementById('porciones-totales').value || "0";
+        const precioTotal = document.getElementById('res-precio-venta').textContent;
+        const precioRebanada = document.getElementById('res-precio-porcion').textContent;
+        const dificultadSelect = document.getElementById('margen-ganancia');
+        const dificultad = dificultadSelect.options[dificultadSelect.selectedIndex].text.split("(")[0].trim();
+
+        if (porciones === "0" || precioTotal === "$0" || precioTotal === "$0.00") {
+            return alert("⚠️ Por favor introduce un número válido de porciones e insumos antes de exportar.");
+        }
+
+        const mensaje = `¡Hola! ✨ Te saluda *${pasteleria}*.\n\n` +
+                        `Aquí tienes el presupuesto detallado para tu pedido:\n` +
+                        `🎂 *Porciones solicitadas:* ${porciones} rebanadas\n` +
+                        `🎨 *Tipo de acabado/Diseño:* ${dificultad}\n` +
+                        `💵 *Precio por rebanada:* ${precioRebanada}\n` +
+                        `----------------------------------------\n` +
+                        `💰 *TOTAL NETO:* ${precioTotal}\n\n` +
+                        `*Nota:* Esta cotización incluye pan base premium, rellenos artesanales y coberturas personalizadas. ¿Te gustaría agendar tu fecha con nosotros? 👩‍🍳🍰`;
+
+        const urlWhatsapp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+        window.open(urlWhatsapp, '_blank');
     }
 
     function toggleTheme() {
@@ -795,109 +871,45 @@
     }
     
     async function descargarDeNube() {
-        // 1. Obtenemos la URL de la nube y limpiamos espacios
-        const urlServidor = (config.urlNube || document.getElementById('cfg-url-nube').value).trim();
-        
-        // 2. Extraemos el ID de Google Sheets que el usuario ingresó en la interfaz web
-        // Buscamos el input del ID. Si no existe en tu HTML, lo tomamos de una propiedad (ej: config.idSheets)
-        const inputIdSheets = document.getElementById('cfg-id-sheets') || document.getElementById('cfg-id-sheet');
-        const idSheets = inputIdSheets ? inputIdSheets.value.trim() : (config.idSheets || "");
+        if (!config.urlNube || !config.tokenUser) return;
 
-        if (!urlServidor) {
-            cambiarBannerStatus("❌ Error: Falta la URL de la nube", false);
-            evaluarEstadoVisualPremium();
-            return;
-        }
-        if (!idSheets) {
-            cambiarBannerStatus("❌ Error: Falta el ID de Google Sheets", false);
-            evaluarEstadoVisualPremium();
-            return;
-        }
+        cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
         try {
-            if (!config.claveNube || config.claveNube.trim() !== "pass_9821") {
+            const urlConParametros = `${config.urlNube}?correo=${encodeURIComponent(config.correoUser)}&token=${encodeURIComponent(config.tokenUser)}&_=${Date.now()}`;
+            const response = await fetch(urlConParametros, { method: 'GET', mode: 'cors' });
+            const data = await response.json();
+
+            if (data.status === "error") {
+                config.isPremium = false;
+                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                cambiarBannerStatus("❌ " + data.message, false);
+                alert("Error de Acceso: " + data.message);
                 evaluarEstadoVisualPremium();
                 return;
             }
 
-            console.log("Iniciando petición HTTP a Google Apps Script...");
-            
-            const banner = document.getElementById('premium-banner-status') || document.getElementById('cloud-banner');
-            if (banner) {
-                banner.textContent = "⏳ Conectando con Google Sheets...";
-            }
-
-            // CORRECCIÓN CRÍTICA: Le pasamos el parámetro 'spreadsheetId' tal como lo pide tu doGet(e)
-            // Agregamos un timestamp para evitar que el navegador guarde la respuesta en caché
-            const urlConParametros = `${urlServidor}?spreadsheetId=${encodeURIComponent(idSheets)}&_=${Date.now()}`;
-            
-            const response = await fetch(urlConParametros, {
-                method: 'GET',
-                mode: 'cors'
-            });
-            const data = await response.json();
-
-            // Si el backend de Google responde con el objeto de error que programaste
-            if (data.status === "error") {
-                console.error("Error del servidor Google:", data.message);
-                cambiarBannerStatus("❌ " + data.message, false);
-                return;
-            }
+            config.isPremium = true;
+            localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
             if (data.insumos) {
-                // Sincronizamos los insumos que vienen de la nube
                 insumos = data.insumos;
                 localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-                
-                // Si la nube trae datos de configuración del negocio, los adoptamos
-                if (data.configuracion && data.configuracion.nombrePasteleria) {
-                    config.nombrePasteleria = data.configuracion.nombrePasteleria;
-                    config.moneda = data.configuracion.moneda || "$";
-                    config.porcentajeIndirectos = parseFloat(data.configuracion.porcentajeIndirectos) || 0;
-                    localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                    
-                    // Actualizamos los campos visuales de la configuración
-                    document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-                    document.getElementById('cfg-moneda').value = config.moneda;
-                    document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos || "";
-                    document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-                    document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
-                }
-
-                // Si la nube trae recetas pre-guardadas, las sincronizamos
-                if (data.plantillas) {
-                    plantillasRecetas = data.plantillas;
-                    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-                    rebuildSelectPlantillas();
-                }
-                
-                renderInsumos();
-                renderModulos();
-                calcularTodo();
-                
-                cambiarBannerStatus(`☁️ Estado: Plan Premium Sincronizado (${insumos.length} insumos)`, true);
-            } else {
-                cambiarBannerStatus("⚠️ Conectado a la nube, pero la estructura de datos es incorrecta", false);
             }
-
+            if (data.plantillas) {
+                plantillasRecetas = data.plantillas;
+                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                rebuildSelectPlantillas();
+            }
+            
+            renderInsumos();
+            renderModulos();
+            calcularTodo();
             evaluarEstadoVisualPremium();
-
+            alert("🔓 ¡Sesión iniciada correctamente! Datos sincronizados.");
         } catch(e) {
-            console.error("Error crítico en puente de datos:", e);
-            cambiarBannerStatus("❌ Error de sincronización: Verifica tu enlace o conexión", false);
+            cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
         }
-    }
-
-    function ocultarConfigSiEsPremium() {
-        const seccionComprar = document.getElementById('seccion-comprar-premium');
-        if(seccionComprar) {
-            seccionComprar.style.display = 'none';
-        }
-        const campoUrl = document.getElementById('campos-tecnicos-nube');
-        const campoClave = document.getElementById('campo-config-clave');
-        
-        if(campoUrl) campoUrl.style.display = 'none';
-        if(campoClave) campoClave.style.display = 'none';
     }
 </script>
 </body>
