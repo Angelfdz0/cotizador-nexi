@@ -121,6 +121,7 @@ async function guardarConfiguracion() {
     config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
     config.tokenUser = document.getElementById('cfg-token-user').value.trim();
 
+    // Actualización visual express inicial
     document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
     document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
     
@@ -159,7 +160,10 @@ async function guardarConfiguracion() {
                 let insumosNube = consultaNube.insumos || [];
                 let plantillasNube = consultaNube.plantillas || {};
 
-                if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
+                // Si la nube tiene un nombre guardado anterior, se respeta, de lo contrario se usa el del input
+                if (consultaNube.nombrePasteleria) {
+                    config.nombrePasteleria = consultaNube.nombrePasteleria;
+                }
                 if (consultaNube.moneda) config.moneda = consultaNube.moneda;
                 if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
                 if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
@@ -242,6 +246,10 @@ async function guardarConfiguracion() {
                 document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
                 document.getElementById('cfg-merma').value = config.porcentajeMerma;
 
+                // 🟢 REFUERZO DE ACTUALIZACIÓN VISUAL POST-SINK
+                document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+                document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+
                 evaluarEstadoVisualPremium();
                 renderInsumos();
                 renderModulos();
@@ -284,6 +292,10 @@ async function guardarConfiguracion() {
         // Guardado local normal (instantáneo)
         config.isPremium = false;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        
+        // 🟢 Aseguramos actualización local
+        document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+        
         evaluarEstadoVisualPremium();
         renderInsumos();
         renderModulos();
