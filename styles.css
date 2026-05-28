@@ -1,0 +1,415 @@
+* { 
+    box-sizing: border-box; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, .card-title, .highlight, .main-price {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+:root {
+    --bg-body: #f8fafc; --text-main: #334155; --bg-card: #ffffff; --border-card: #e2e8f0;
+    --title-color: #1e293b; --border-title: #cbd5e1; --label-color: #475569; --input-bg: #ffffff;
+    --input-border: #cbd5e1; --th-bg: #f1f5f9; --th-text: #1e293b; --td-border: #e2e8f0;
+    --btn-main: #3b82f6; --btn-hover: #2563eb; --instruction-text: #64748b; --result-bg: #f0fdf4;
+    --result-border: #10b981; --mint-bg: #f1f5f9; --mint-border: #cbd5e1; --mint-text: #475569; --mint-amount: #1e293b;
+}
+
+[data-theme="dark"] {
+    --bg-body: #0f172a; --text-main: #f8fafc; --bg-card: #1e293b; --border-card: #334155;
+    --title-color: #3b82f6; --border-title: #334155; --label-color: #94a3b8; --input-bg: #0f172a;
+    --input-border: #475569; --th-bg: #334155; --th-text: #f8fafc; --td-border: #334155;
+    --btn-main: #3b82f6; --btn-hover: #2563eb; --instruction-text: #94a3b8; --result-bg: #14532d;
+    --result-border: #22c55e; --mint-bg: #1e293b; --mint-border: #334155; --mint-text: #cbd5e1; --mint-amount: #f8fafc;
+}
+
+body { background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 60px; }
+.container { max-width: 1100px; margin: 0 auto; }
+
+header { 
+    position: relative; 
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+    color: #ffffff; 
+    padding: 50px 30px; 
+    border-radius: 24px; /* Bordes más suaves y modernos */
+    margin-bottom: 30px; 
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.5); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    overflow: hidden;
+
+    /* Activamos Flexbox para ordenar todo al centro con precisión */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px; /* Controla la separación idéntica entre cada línea */
+}
+
+/* Efecto de luz ambiental de fondo para dar profundidad de app de alta gama */
+header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+header h1 { 
+    margin: 0; 
+    font-size: 42px; /* Un poco más grande para imponer jerarquía */
+    font-weight: 800; 
+    letter-spacing: -1.5px; 
+    color: #ffffff !important; 
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.brand-sub { 
+    font-size: 11px; 
+    color: #38bdf8; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 4px; 
+    margin: 0; /* Eliminamos el margen forzado antiguo */
+    padding-bottom: 4px;
+}
+
+.brand-desc { 
+    margin: 0; 
+    font-size: 14px; 
+    color: #94a3b8; /* Cambiado a un gris azulado que cansa menos la vista */
+    font-weight: 400; 
+    max-width: 520px; /* Evita que el texto se estire feo en pantallas gigantes */
+    line-height: 1.5;
+}
+
+/* Ajuste del botón de la luna para que calce perfecto en la nueva esquina */
+.theme-toggle-icon { 
+    position: absolute; 
+    top: 24px; 
+    right: 24px; 
+    cursor: pointer; 
+    background: rgba(255, 255, 255, 0.04); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    padding: 0; 
+    border-radius: 50%; 
+    width: 42px; 
+    height: 42px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+}
+
+.theme-toggle-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+.theme-toggle-icon span { 
+    color: #ffffff !important; 
+    font-size: 20px; /* Tamaño ideal para que quepa dentro del círculo de 42px */
+    display: block;
+    line-height: 1;
+}
+
+.card-header-toggle { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.btn-flecha { transition: transform 0.3s ease; font-size: 24px; user-select: none; color: var(--title-color); }
+
+.grid { display: block; }
+@media (min-width: 768px) { .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; } }
+
+.card { 
+    background: var(--bg-card); padding: 24px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--border-card);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); 
+}
+
+.card-title { font-size: 18px; color: var(--title-color); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--border-title); padding-bottom: 8px; width: 100%; }
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+
+.premium-notice { margin: 20px 0; padding: 15px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--btn-main); border-radius: 8px; text-align: center; }
+.premium-notice p { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+.btn-whatsapp-link { background-color: #25d366; color: white; display: inline-block; text-decoration: none; }
+
+.login-box { background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-card); }
+.login-box-title { font-weight: bold; color: var(--title-color); margin-bottom: 10px; display: block; }
+.premium-active-box { margin: 20px 0; padding: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; text-align: center; }
+.premium-active-box div { color: #10b981; font-weight: bold; }
+
+.tabs-container { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-title); padding-bottom: 5px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 5px; }
+.tab { background: none; border: none; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--instruction-text); border-radius: 6px 6px 0 0; }
+.tab.active { background-color: var(--th-bg); color: var(--title-color); border: 1px solid var(--border-title); border-bottom: 1px solid transparent; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--label-color); }
+input, select { 
+    width: 100%; padding: 10px 14px; border: 1px solid var(--input-border); border-radius: 8px; 
+    font-size: 13.5px; background-color: var(--input-bg); color: var(--text-main); outline: none; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02); 
+}
+input:focus, select:focus { border-color: var(--btn-main); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+.table-container { max-height: 520px; overflow-y: auto; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
+th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--td-border); }
+th { background-color: var(--th-bg); color: var(--th-text); position: sticky; top: 0; z-index: 1; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+tbody tr:hover { background-color: rgba(59, 130, 246, 0.02); }
+
+.table-input { border: 1px solid transparent; background: transparent; color: var(--text-main); padding: 4px 6px; font-size: 13px; border-radius: 4px; }
+.table-input:hover, .table-input:focus { border-color: var(--input-border); background-color: var(--input-bg); }
+
+.btn { 
+    background-color: var(--btn-main); color: white; border: none; padding: 10px 16px; border-radius: 8px; 
+    cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: all 0.2s ease;
+}
+.btn:hover { background-color: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); }
+.btn:active { transform: translateY(0); }
+.btn-danger { background-color: #e57373; color: white; }
+.btn-danger:hover { background-color: #d32f2f; }
+.btn-warning { background-color: #f59e0b; color: white; }
+.btn-warning:hover { background-color: #d97706; }
+.btn-success { background-color: #25d366; color: white; }
+.btn-success:hover { background-color: #128c7e; }
+.btn-small { padding: 4px 8px; font-size: 11px; }
+
+.flex-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+.result-box { background-color: var(--result-bg); border-left: 4px solid var(--result-border); padding: 16px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.result-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13.5px; align-items: center; }
+.highlight { font-weight: 800; color: var(--title-color); font-size: 18px; }
+.text-right { text-align: right; }
+.memory-zone { margin-top: 15px; padding: 10px; border-radius: 8px; border: 1px dashed var(--border-title); background-color: var(--input-bg); }
+
+.commercial-results { background-color: var(--mint-bg); border-left-color: var(--mint-border); margin-bottom: 15px; }
+.commercial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center; }
+.commercial-grid label { color: var(--mint-text); }
+.commercial-grid span { color: var(--mint-amount); font-weight: bold; font-size: 16px; }
+.commercial-grid .main-price { font-size: 26px; color: var(--mint-amount); }
+
+.cloud-status { 
+    font-size: 11.5px; font-weight: 500; margin-bottom: 20px; padding: 10px 14px; border-radius: 10px; text-align: center; 
+    background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-card);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: 0.2px;
+}
+.hidden { display: none !important; }
+
+footer { background-color: var(--bg-card); color: var(--instruction-text); text-align: center; padding: 16px; font-size: 11.5px; border-radius: 12px; border: 1px solid var(--border-card); margin-top: 20px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); }
+footer a { color: #3b82f6; text-decoration: none; font-weight: 600; }
+footer a:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   🎯 SECCIÓN RESPONSIVE - OPTIMIZACIÓN PARA CELULARES Y TABLETS
+   ========================================================================== */
+
+/* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
+@media (max-width: 767px) {
+    body {
+        padding: 10px; /* Menos espacio en los bordes de la pantalla */
+        padding-bottom: 40px;
+    }
+
+    /* 🧼 Ajuste del Header */
+    header {
+        padding: 35px 20px; /* Reducimos el colchón del banner */
+        border-radius: 16px;
+        margin-bottom: 15px;
+    }
+    
+    header h1 {
+        font-size: 28px; /* Título más compacto para que no se corte */
+        letter-spacing: -0.5px;
+    }
+
+    .brand-desc {
+        font-size: 13px;
+        max-width: 100%; /* Que use todo el ancho en el celular */
+    }
+
+    /* 🌙 Reposicionamos el botón del tema oscuro */
+    .theme-toggle-icon {
+        top: 15px;
+        right: 15px;
+        width: 36px;
+        height: 36px;
+    }
+    .theme-toggle-icon span {
+        font-size: 18px;
+    }
+
+    /* 📦 Ajuste de Tarjetas */
+    .card {
+        padding: 16px; /* Más espacio interno libre para el contenido */
+        margin-bottom: 16px;
+    }
+
+    /* 🧱 Formularios Flex-Row en Celular */
+    .flex-row {
+        flex-direction: column; /* Apila los inputs uno abajo del otro */
+        align-items: stretch !important; /* Estira los campos al ancho completo */
+        gap: 12px;
+    }
+
+    .flex-row > div, 
+    .flex-row > input, 
+    .flex-row > select, 
+    .flex-row > button {
+        width: 100% !important; /* Obliga a cada elemento a usar su propio renglón */
+        flex: none !important;  
+    }
+
+    .flex-row .btn, .flex-row button {
+        height: 42px !important; /* Botones más grandes y táctiles para el dedo */
+        margin-top: 5px;
+    }
+
+    /* 📑 Pestañas de Composición */
+    .tabs-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .tabs {
+        width: 100%;
+    }
+    .tab {
+        flex: 1; /* Distribuye las pestañas equitativamente en el ancho del celular */
+        text-align: center;
+        padding: 10px 5px;
+    }
+    .tabs-container .btn-danger {
+        width: 100%; /* El botón "Limpiar todo" abarca todo el ancho abajo */
+    }
+
+    /* 📊 Zona de Resultados Comerciales */
+    .commercial-grid .main-price {
+        font-size: 22px; /* Evita que el precio gigante rompa la caja */
+    }
+    
+    /* 💾 Zona de guardar recetas en memoria */
+    .memory-zone .flex-row {
+        gap: 8px;
+    }
+
+    /* 🎛️ Config-grids (Panel superior y Cotizador rápido) */
+    .config-grid {
+        grid-template-columns: 1fr; /* Una sola columna perfecta */
+        gap: 12px;
+    }
+}
+
+/* 📊 Optimización del scroll en tablas para cualquier pantalla que se desborde */
+.table-container {
+    width: 100%;
+    overflow-x: auto; /* Activa el desplazamiento lateral con el dedo si no cabe */
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    border: 1px solid var(--td-border);
+}
+
+table {
+    min-width: 550px; /* Forzamos un mínimo para que los datos mantengan su forma de tabla ordenada */
+}
+
+/* 📝 Inputs internos de las tablas más cómodos para edición táctil */
+.table-input {
+    padding: 6px 8px;
+    width: 100%;
+    min-width: 60px;
+}
+
+/* ==========================================================================
+   💻 SECCIÓN PARA TABLETAS Y ORDENADORES
+   ========================================================================== */
+
+/* ➔ 1. DISPOSITIVOS MEDIANOS (Tabletas en vertical/horizontal y Laptops pequeñas) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    body {
+        padding: 24px;
+    }
+
+    header {
+        padding: 40px 30px;
+    }
+
+    header h1 {
+        font-size: 36px;
+    }
+
+    /* En tabletas, las dos tarjetas principales se ponen una abajo de la otra 
+       pero el Panel de Configuración y el Cotizador se abren en 2 columnas */
+    .grid {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .config-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas perfectas */
+        gap: 16px;
+    }
+
+    .commercial-grid {
+        grid-template-columns: repeat(3, 1fr); /* Distribuye los 3 precios lado a lado */
+    }
+}
+
+/* ➔ 2. ORDENADORES Y PANTALLAS GRANDES (Laptops de 13"+ y Monitor de Escritorio) */
+@media (min-width: 1025px) {
+    body {
+        padding: 30px;
+    }
+
+    /* El grid principal que separa el Inventario de la Composición del Pastel */
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr; /* Inventario ligeramente más estrecho, composición más ancha */
+        gap: 24px;
+        align-items: start; /* Evita que las tarjetas se estiren verticalmente de forma rara */
+    }
+
+    /* Panel de configuración en computadoras: los 4 campos en una sola fila limpia */
+    .config-grid {
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 20px;
+    }
+
+    /* El cotizador rápido abajo se divide en dos columnas: controles a la izquierda, resultados a la derecha */
+    #tarjeta-cotizador {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    align-items: center;
+}
+
+#tarjeta-cotizador .btn-success {
+    grid-column: span 2;
+    margin-top: 10px;
+}
+
+    /* En computadoras los formularios no se apilan, fluyen en una sola línea elegante */
+    .flex-row {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+}
+
+/* ➔ 3. PANTALLAS ULTRA ANCHAS (Para que la app no se desarme en monitores gigantes) */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1350px; /* Expandimos un poco más el espacio de trabajo */
+    }
+    
+    .grid {
+        grid-template-columns: 1fr 1.25fr; /* Más espacio para armar la receta */
+    }
+}
