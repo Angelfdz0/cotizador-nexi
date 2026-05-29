@@ -1,12 +1,11 @@
 /**
- * Lógica Principal de la Aplicación (UI & Estado) - NEXI Bake 2026
+ * Lógica Principal de la Aplicación (UI & Estado)
  */
 
 let insumos = [];
 let modulos = { pan: [], relleno: [], betun: [] };
 let plantillasRecetas = {};
 let currentModule = 'pan';
-let plantillaSeleccionadaId = null;
 let config = { 
     nombrePasteleria: "NEXI Bake", 
     moneda: "$", 
@@ -113,6 +112,7 @@ let isSavingConfig = false;
 async function guardarConfiguracion() {
     if (isSavingConfig) return;
 
+    // Capturamos los datos del formulario de inmediato
     config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "NEXI Bake";
     config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
     config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
@@ -121,22 +121,26 @@ async function guardarConfiguracion() {
     config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
     config.tokenUser = document.getElementById('cfg-token-user').value.trim();
 
+    // Actualización visual express inicial
     document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
     document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
     
     if (config.tokenUser && config.urlNube) {
-        isSavingConfig = true; 
+        isSavingConfig = true; // Bloqueamos re-clics
         config.isPremium = true;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
         
         evaluarEstadoVisualPremium();
         calcularTodo();
 
+        // 🌟 AGREGADO: Loading de SweetAlert2 previo al flujo de la nube
         Swal.fire({
             title: 'Sincronizando cuenta...',
             text: 'Por favor, espera un momento mientras validamos tus datos.',
             allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
 
         cambiarBannerStatus("⏳ Sincronizando y activando cuenta Premium...", null);
@@ -156,13 +160,17 @@ async function guardarConfiguracion() {
                 let insumosNube = consultaNube.insumos || [];
                 let plantillasNube = consultaNube.plantillas || {};
 
-                if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
+                // Si la nube tiene un nombre guardado anterior, se respeta, de lo contrario se usa el del input
+                if (consultaNube.nombrePasteleria) {
+                    config.nombrePasteleria = consultaNube.nombrePasteleria;
+                }
                 if (consultaNube.moneda) config.moneda = consultaNube.moneda;
                 if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
                 if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
                 localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
                 if (insumosLocales.length > 0 && insumosNube.length > 0) {
+                    // Cerramos el loading temporalmente si requiere interacción del usuario
                     Swal.close(); 
                     
                     const resultadoFusion = await Swal.fire({
@@ -175,14 +183,15 @@ async function guardarConfiguracion() {
                         confirmButtonText: 'Sí, fusionar datos',
                         cancelButtonText: 'No fusionar'
                     });
+                    const deseaFusionar = resultadoFusion.isConfirmed;
                     
-                    if (resultadoFusion.isConfirmed) {
+                    if (deseaFusionar) {
                         datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
                         datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
                     } else {
                         const resultadoNube = await Swal.fire({
                             title: '¿Cómo deseas proceder?',
-                            text: '¿Prefieres usar SOLAMENTE tus datos guardados en NEXI Cloud?',
+                            text: '¿Prefieres usar SOLAMENTE tus datos guardados en NEXI Cloud? (Se borrarán los insumos actuales de la pantalla).',
                             icon: 'warning',
                             showCancelButton: true,
                             confirmButtonColor: '#3b82f6',
@@ -196,6 +205,7 @@ async function guardarConfiguracion() {
                         }
                     }
 
+                    // Volvemos a poner el loading para la fase de inyección final
                     Swal.fire({
                         title: 'Guardando cambios...',
                         allowOutsideClick: false,
@@ -235,6 +245,8 @@ async function guardarConfiguracion() {
                 document.getElementById('cfg-moneda').value = config.moneda;
                 document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
                 document.getElementById('cfg-merma').value = config.porcentajeMerma;
+
+                // 🟢 REFUERZO DE ACTUALIZACIÓN VISUAL POST-SINK
                 document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
                 document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
@@ -244,6 +256,7 @@ async function guardarConfiguracion() {
                 rebuildSelectPlantillas();
                 calcularTodo();
 
+                // Aquí sobreescribimos el loading con el éxito 🎉
                 Swal.fire({
                     title: '¡Conectado exitosamente! 🎉',
                     text: 'Tu cuenta Premium de NEXI Bake está activa. Datos sincronizados.',
@@ -255,18 +268,32 @@ async function guardarConfiguracion() {
                 localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
                 evaluarEstadoVisualPremium();
                 cambiarBannerStatus("❌ Token o Correo Inválido", false);
-                Swal.fire({ title: 'Atención ⚠️', text: `La nube rechazó el acceso: ${respuestaServidor.message}`, icon: 'warning', confirmButtonColor: '#3b82f6' });
+                Swal.fire({
+                    title: 'Atención ⚠️',
+                    text: `La nube rechazó el acceso: ${respuestaServidor.message}`,
+                    icon: 'warning',
+                    confirmButtonColor: '#3b82f6'
+                });
             }
         } catch(e) { 
             console.error(e);
             cambiarBannerStatus("⚠️ Conectado en modo Local temporal", false);
-            Swal.fire({ title: 'Modo Local Activado', text: 'Se guardó localmente, pero hubo un problema al conectar con NEXI Cloud.', icon: 'info', confirmButtonColor: '#3b82f6' });
+            Swal.fire({
+                title: 'Modo Local Activado',
+                text: 'Se guardó localmente, pero hubo un problema al conectar con NEXI Cloud.',
+                icon: 'info',
+                confirmButtonColor: '#3b82f6'
+            });
         } finally {
             isSavingConfig = false;
         }
+        
     } else {
+        // Guardado local normal (instantáneo)
         config.isPremium = false;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+        
+        // 🟢 Aseguramos actualización local
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
         
         evaluarEstadoVisualPremium();
@@ -274,18 +301,25 @@ async function guardarConfiguracion() {
         renderModulos();
         rebuildSelectPlantillas();
         calcularTodo();
-        Swal.fire({ title: '¡Guardado!', text: 'Configuración local actualizada correctamente.', icon: 'success', confirmButtonColor: '#3b82f6' });
+        Swal.fire({
+            title: '¡Guardado!',
+            text: 'Configuración local actualizada correctamente.',
+            icon: 'success',
+            confirmButtonColor: '#3b82f6'
+        });
         isSavingConfig = false; 
     }
 }
 
 function fusionarListasInsumos(locales, nube) {
     let unificados = JSON.parse(JSON.stringify(nube));
+
     locales.forEach(local => {
         const existe = unificados.find(n => 
             String(n.nombre || '').toLowerCase().trim() === String(local.nombre || '').toLowerCase().trim() &&
             String(n.marca || '').toLowerCase().trim() === String(local.marca || '').toLowerCase().trim()
         );
+
         if (!existe) {
             unificados.push(local);
         } else {
@@ -295,13 +329,14 @@ function fusionarListasInsumos(locales, nube) {
             existe.tamano = local.tamano;
         }
     });
+
     return unificados;
 }
 
 async function cerrarSesionNexi() {
     const resultadoCierre = await Swal.fire({
         title: '🚨 ¡ATENCIÓN!',
-        html: 'Al cerrar sesión se borrarán las recetas y el inventario de la pantalla de este dispositivo.<br><br><strong>¿Estás completamente seguro?</strong>',
+        html: 'Al cerrar sesión se borrarán las recetas y el inventario de la pantalla de este dispositivo.<br><br>Si trabajaste sin internet, asegúrate de que tus datos se hayan subido por completo a la nube.<br><br><strong>¿Estás completamente seguro de que deseas cerrar sesión?</strong>',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e57373', 
@@ -312,10 +347,18 @@ async function cerrarSesionNexi() {
 
     if (!resultadoCierre.isConfirmed) return;
 
-    config.correoUser = ""; config.tokenUser = ""; config.isPremium = false;
+    config.correoUser = "";
+    config.tokenUser = "";
+    config.isPremium = false;
+    
     localStorage.removeItem('respaldo_config_pasteleria');
     localStorage.removeItem('respaldo_insumos');
     localStorage.removeItem('respaldo_plantillas');
+    
+    insumos = [];
+    modulos = { pan: [], relleno: [], betun: [] };
+    plantillasRecetas = {};
+    
     window.location.reload();
 }
 
@@ -326,15 +369,13 @@ function renderInsumos() {
     const m = config.moneda || "$";
 
     const inputBuscar = document.getElementById('buscador-inventario');
-    const textoBusqueda = inputBuscar ? inputBuscar.value.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+    const textoBusqueda = inputBuscar ? inputBuscar.value.toLowerCase().trim() : '';
 
-    let insumosFiltrados = insumos.filter(insumo => {
-        const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-        const marca = insumo.marca ? String(insumo.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+    const insumosFiltrados = insumos.filter(insumo => {
+        const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase() : '';
+        const marca = insumo.marca ? String(insumo.marca).toLowerCase() : '';
         return nombre.includes(textoBusqueda) || marca.includes(textoBusqueda);
     });
-
-    insumosFiltrados.sort((a, b) => (a.nombre || "").trim().localeCompare((b.nombre || "").trim(), 'es', { sensitivity: 'base' }));
 
     insumosFiltrados.forEach(insumo => {
         const cantidadVal = parseFloat(insumo.cantidad) || 1;
@@ -378,58 +419,119 @@ function agregarInsumoLocal() {
     const unidad = document.getElementById('insumo-unidad').value;
     const precio = parseFloat(document.getElementById('insumo-precio').value);
 
-    if (!nombre || isNaN(cantidad) || cantidad <= 0 || isNaN(precio) || precio < 0) {
-        Swal.fire({ title: 'Datos incorrectos', text: 'Por favor, revise los campos numéricos y el nombre.', icon: 'error' });
-        return;
+    if (!nombre) { 
+        Swal.fire({ title: 'Campo requerido', text: 'El nombre del ingrediente es obligatorio.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
+    }
+    if (isNaN(cantidad) || cantidad <= 0) { 
+        Swal.fire({ title: 'Cantidad no válida', text: 'La cantidad del paquete debe ser un número mayor a 0.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
+    }
+    if (isNaN(precio) || precio < 0) { 
+        Swal.fire({ title: 'Precio no válido', text: 'El precio no puede ser un número negativo o vacío.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
     }
 
-    insumos.push({ id: 'id_' + Date.now(), nombre, marca, tamano, cantidad, unidad, precio });
+    const nuevoInsumo = {
+        id: 'id_' + Date.now(),
+        nombre: nombre,
+        marca: marca,
+        tamano: tamano,
+        cantidad: cantidad,
+        unidad: unidad,
+        precio: precio
+    };
+
+    insumos.push(nuevoInsumo);
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     document.getElementById('form-insumo').reset();
     renderInsumos();
     calcularTodo();
-    Swal.fire({ title: '¡Añadido!', text: 'Insumo guardado localmente.', icon: 'success', timer: 1500, showConfirmButton: false });
+    Swal.fire({ title: '¡Añadido!', text: 'Insumo guardado localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
 }
 
 let isSavingInsumo = false; 
+
 async function agregarNuevoInsumoNube() {
     if (isSavingInsumo) return;
 
-    const nombre = document.getElementById('insumo-nombre').value.trim();
-    const marca = document.getElementById('insumo-marca').value.trim();
-    const tamano = document.getElementById('insumo-tamano').value.trim();
-    const cantidad = parseFloat(document.getElementById('insumo-cantidad').value);
-    const unidad = document.getElementById('insumo-unidad').value;
-    const precio = parseFloat(document.getElementById('insumo-precio').value);
+    const nombreInsumo = document.getElementById('insumo-nombre').value.trim();
+    const marcaInsumo = document.getElementById('insumo-marca').value.trim();
+    const tamanoInsumo = document.getElementById('insumo-tamano').value.trim();
+    const cantidadInsumo = parseFloat(document.getElementById('insumo-cantidad').value);
+    const unidadInsumo = document.getElementById('insumo-unidad').value;
+    const precioInsumo = parseFloat(document.getElementById('insumo-precio').value);
 
-    if (!nombre || isNaN(cantidad) || cantidad <= 0 || isNaN(precio) || precio < 0) {
-        Swal.fire({ title: 'Datos incorrectos', text: 'Por favor verifique su formulario.', icon: 'error' });
-        return;
+    if (!nombreInsumo) { 
+        Swal.fire({ title: 'Campo requerido', text: 'El nombre del ingrediente es obligatorio.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
+    }
+    if (isNaN(cantidadInsumo) || cantidadInsumo <= 0) { 
+        Swal.fire({ title: 'Cantidad no válida', text: 'La cantidad del paquete debe ser un número mayor a 0.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
+    }
+    if (isNaN(precioInsumo) || precioInsumo < 0) { 
+        Swal.fire({ title: 'Precio no válido', text: 'El precio no puede ser un número negativo o vacío.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        return; 
     }
 
     isSavingInsumo = true;
-    const id = Date.now().toString();
+    const idInsumo = Date.now().toString();
     cambiarBannerStatus("⏳ Sincronizando insumo...", true);
 
-    Swal.fire({ title: 'Guardando ingrediente...', text: 'Subiendo datos a NEXI Cloud.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    // 🌟 AGREGADO: Pantalla de carga para guardar ingrediente
+    Swal.fire({
+        title: 'Guardando ingrediente...',
+        text: 'Subiendo datos a NEXI Cloud.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
-        const resultado = await apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "guardarInsumo", id, nombre, marca, tamano, cantidad, unidad, precio });
+        const resultado = await apiFetch(config.urlNube, {
+            correo: config.correoUser,
+            token: config.tokenUser,
+            accion: "guardarInsumo",
+            id: idInsumo,
+            nombre: nombreInsumo,
+            marca: marcaInsumo,
+            tamano: tamanoInsumo, 
+            cantidad: cantidadInsumo,
+            unidad: unidadInsumo,
+            precio: precioInsumo
+        });
+        
         if (resultado.status === "success") {
-            insumos.push({ id, nombre, marca, tamano, cantidad, unidad, precio });
+            const nuevoInsumoLocal = {
+                id: idInsumo,
+                nombre: nombreInsumo,
+                marca: marcaInsumo,
+                tamano: tamanoInsumo,
+                cantidad: cantidadInsumo,
+                unidad: unidadInsumo,
+                precio: precioInsumo
+            };
+
+            insumos.push(nuevoInsumoLocal);
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
             document.getElementById('form-insumo').reset();
             renderInsumos();
             calcularTodo();
-            Swal.fire({ title: '¡Sincronizado!', text: 'Insumo alojado en NEXI Cloud.', icon: 'success' });
+            evaluarEstadoVisualPremium();
+            
+            // Reemplazamos el loading por Éxito
+            Swal.fire({ title: '¡Sincronizado!', text: 'Insumo guardado y alojado en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
         } else {
-            Swal.fire({ title: 'Error', text: resultado.message, icon: 'error' });
+            Swal.fire({ title: 'Error de servidor', text: resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
+            cambiarBannerStatus("❌ Error: " + resultado.message, false);
         }
     } catch(e) {
-        Swal.fire({ title: 'Fallo de Red', text: 'No se pudo guardar remotamente.', icon: 'error' });
+        Swal.fire({ title: 'Fallo de Red', text: 'Error de conexión. El insumo no se guardó de forma remota.', icon: 'error', confirmButtonColor: '#3b82f6' });
+        cambiarBannerStatus("❌ Error de conexión remota", false);
     } finally {
         isSavingInsumo = false;
-        evaluarEstadoVisualPremium();
     }
 }
 
@@ -437,13 +539,28 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
     const insumo = insumos.find(i => String(i.id) === String(id));
     if (!insumo) return;
 
+    // 🛡️ FILTRO DE SEGURIDAD AVANZADO PARA CANTIDAD Y PRECIO
     if (campo === 'precio' || campo === 'cantidad') { 
+        // Convertimos a string por seguridad, limpiamos letras/espacios y cambiamos comas por puntos
         let valorLimpio = String(valor).replace(/,/g, '.').replace(/[^0-9.]/g, '');
         const valorNumerico = parseFloat(valorLimpio);
         
+        // Si no es un número real, o es menor/igual a cero, disparamos alerta y restauramos
         if (isNaN(valorNumerico) || valorNumerico <= 0) {
-            Swal.fire({ title: 'Valor inválido ⚠️', text: 'Introduce un número real mayor a cero.', icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-            if (inputElement) inputElement.value = insumo[campo];
+            Swal.fire({
+                title: 'Valor inválido ⚠️',
+                text: 'Por favor, introduce un número válido y mayor a cero.',
+                icon: 'warning',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500
+            });
+            
+            // Si tenemos la referencia del input, le regresamos el valor que tenía guardado el objeto
+            if (inputElement) {
+                inputElement.value = insumo[campo];
+            }
             return; 
         }
         insumo[campo] = valorNumerico; 
@@ -458,50 +575,86 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
     if(config.isPremium && config.urlNube) {
         syncQueue = syncQueue.then(async () => {
             try {
-                await apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "guardarInsumo", id: insumo.id, nombre: insumo.nombre, marca: insumo.marca, tamano: insumo.tamano, cantidad: insumo.cantidad, unidad: insumo.unidad, precio: insumo.precio });
+                const data = await apiFetch(config.urlNube, {
+                    correo: config.correoUser, token: config.tokenUser, accion: "guardarInsumo",
+                    id: insumo.id, nombre: insumo.nombre, marca: insumo.marca, tamano: insumo.tamano,
+                    cantidad: insumo.cantidad, unidad: insumo.unidad, precio: insumo.precio
+                });
+                if(data.status !== "success") console.error("Error en sincronización deferred:", data.message);
             } catch(err) {
-                cambiarBannerStatus("⚠️ Cambios pendientes de sincronización", false);
+                console.error("Fallo crítico de red en background:", err);
+                cambiarBannerStatus("⚠️ Cambios guardados localmente (Pendiente sincronizar)", false);
             }
         });
     }
 }
 
 async function eliminarInsumo(id) {
+    // Buscamos el insumo localmente para obtener su nombre y hacerlo más personalizado
     const insumoEncontrado = insumos.find(i => String(i.id) === String(id));
-    if (!insumoEncontrado) return;
+    const nombreInsumo = insumoEncontrado ? insumoEncontrado.nombre : "este insumo";
 
     const confirmacion = await Swal.fire({
         title: '¿Eliminar insumo?',
-        text: `¿Seguro que deseas borrar "${insumoEncontrado.nombre}"?`,
+        text: `¿Seguro que deseas borrar "${nombreInsumo}" de tu inventario?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e57373',
-        confirmButtonText: 'Sí, eliminar'
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
     });
 
     if (!confirmacion.isConfirmed) return;
 
     if (config.isPremium && config.urlNube) {
-        Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        cambiarBannerStatus("⏳ Eliminando insumo de la nube...", true);
+
+        // Pantalla de carga inmediata tras confirmar
+        Swal.fire({
+            title: 'Eliminando ingrediente...',
+            text: 'Removiendo datos de NEXI Cloud. Por favor espera.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
-            const res = await apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "eliminarInsumo", id });
-            if (res.status !== "success") {
-                Swal.fire({ title: 'Error', text: res.message, icon: 'error' });
+            const resultado = await apiFetch(config.urlNube, {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "eliminarInsumo",
+                id: id
+            });
+            if (resultado.status !== "success") {
+                Swal.fire({ title: 'Error', text: 'Error en la nube: ' + resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
+                cambiarBannerStatus("❌ Error al eliminar en nube", false);
                 return;
             }
         } catch(e) {
-            Swal.fire({ title: 'Fallo de Red', text: 'Error de conexión remota.', icon: 'error' });
+            Swal.fire({ title: 'Error de Red', text: 'No se pudo conectar para eliminar el insumo de la nube.', icon: 'error', confirmButtonColor: '#3b82f6' });
+            cambiarBannerStatus("❌ Error de conexión remota", false);
             return;
         }
     }
 
+    // Código de limpieza local existente
     insumos = insumos.filter(i => String(i.id) !== String(id));
     for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     renderInsumos();
     renderModulos();
     calcularTodo();
-    Swal.fire({ title: 'Eliminado', icon: 'success', timer: 1000, showConfirmButton: false });
+    evaluarEstadoVisualPremium();
+
+    // ÉXITO: Sobreescribe la carga con el mensaje final
+    Swal.fire({ 
+        title: 'Eliminado', 
+        text: 'El insumo ha sido eliminado correctamente.', 
+        icon: 'success', 
+        confirmButtonColor: '#3b82f6' 
+    });
 }
 
 function actualizarSelectReceta() {
@@ -517,26 +670,22 @@ function actualizarSelectReceta() {
 }
 
 function filtrarInsumosReceta(texto) {
-    const t = texto.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const t = texto.toLowerCase().trim();
     const select = document.getElementById('receta-insumo-select');
     select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
     
-    let filtrados = insumos.filter(i => {
-        const n = i.nombre ? String(i.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-        const m = i.marca ? String(i.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-        return n.includes(t) || m.includes(t);
-    });
+    const filtrados = insumos.filter(i => i.nombre.toLowerCase().includes(t) || (i.marca && i.marca.toLowerCase().includes(t)));
     
     if(filtrados.length === 0 && t === "") {
         actualizarSelectReceta();
         return;
     }
-
-    filtrados.sort((a, b) => (a.nombre || "").trim().localeCompare((b.nombre || "").trim(), 'es', { sensitivity: 'base' }));
     
     filtrados.forEach(i => {
         const opt = document.createElement('option');
-        opt.value = i.id; opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`; select.appendChild(opt);
+        opt.value = i.id; 
+        opt.textContent = `${i.nombre} (${i.marca || 'S/M'})`; 
+        select.appendChild(opt);
     });
 
     if (filtrados.length > 0) {
@@ -569,14 +718,12 @@ function agregarIngredienteRecetaManejador() {
     const id = document.getElementById('receta-insumo-select').value;
     const cant = parseFloat(document.getElementById('receta-cantidad').value);
     const uni = document.getElementById('receta-unidad').value;
-    if(!id || isNaN(cant) || cant <= 0) return;
+    if(!id || !cant) return;
 
     modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
-    
+    document.getElementById('buscador-receta').value = "";
+    actualizarSelectReceta();
     document.getElementById('form-receta').reset();
-    document.getElementById('buscador-receta').value = ""; 
-    actualizarSelectReceta(); 
-    
     renderModulos();
     calcularTodo();
 }
@@ -640,14 +787,14 @@ function calcularTodo() {
     const costoPan = calcularCostoModulo('pan'); 
     const costoRelleno = calcularCostoModulo('relleno'); 
     const costoBetun = calcularCostoModulo('betun');
-    const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
     
+    const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
     const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
     const indirectos = subtotalInsumos * porcentajeId; 
     
     const horasMO = parseFloat(document.getElementById('mo-horas').value) || 0;
-    const precioHour = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
-    const totalManoObra = horasMO * precioHour;
+    const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
+    const totalManoObra = horasMO * precioHoraMO;
 
     const totalProduc = subtotalInsumos + indirectos + totalManoObra;
     const m = config.moneda || "$";
@@ -662,8 +809,8 @@ function calcularTodo() {
     const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
     const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
     
-    let basePrecioVenta = ((subtotalInsumos + indirectos) * multiplicador) + totalManoObra;
     let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
+    let basePrecioVenta = totalProduc * multiplicador;
     let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
 
     document.getElementById('res-costo-porcion').textContent = `${m}${baseCostoPorcion.toFixed(2)}`; 
@@ -683,121 +830,139 @@ function rebuildSelectPlantillas() {
     const select = document.getElementById('select-plantillas');
     if(!select) return;
     select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
-    
-    const nombresOrdenados = Object.keys(plantillasRecetas).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-    nombresOrdenados.forEach(k => {
+    Object.keys(plantillasRecetas).forEach(k => {
         const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
     });
 }
 
-function cargarPlantilla(nombrePlantilla) {
-    if (!nombrePlantilla || !plantillasRecetas[nombrePlantilla]) {
-        plantillaSeleccionadaId = null;
+async function guardarPlantillaNube() {
+    const nombre = document.getElementById('nombre-plantilla').value.trim();
+    if (!nombre) {
+        Swal.fire({ title: 'Falta nombre', text: 'Por favor, ingresa un nombre para guardar la receta.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         return;
     }
-    plantillaSeleccionadaId = nombrePlantilla;
-    const receta = plantillasRecetas[nombrePlantilla];
     
-    modulos.pan = receta.pan ? JSON.parse(JSON.stringify(receta.pan)) : [];
-    modulos.relleno = receta.relleno ? JSON.parse(JSON.stringify(receta.relleno)) : [];
-    modulos.betun = receta.betun ? JSON.parse(JSON.stringify(receta.betun)) : [];
-    
-    document.getElementById('nombre-plantilla').value = nombrePlantilla;
-    renderModulos();
-    calcularTodo();
-
-    // ✨ SOLUCIÓN: Resetea el select al valor por defecto para que el siguiente clic obligatoriamente sea un "cambio"
-    setTimeout(() => {
-        document.getElementById('select-plantillas').value = "";
-    }, 100);
-}
-
-function guardarPlantillaNube() {
-    const nombreInput = document.getElementById('nombre-plantilla').value.trim();
-    if (!nombreInput) {
-        Swal.fire('¡Atención!', 'Por favor, escribe un nombre para la receta.', 'warning');
+    if (modulos.pan.length === 0 && modulos.relleno.length === 0 && modulos.betun.length === 0) {
+        Swal.fire({ title: 'Receta Vacía', text: 'No puedes guardar una plantilla sin ingredientes. Agrega componentes al pan, relleno o betún primero.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         return;
     }
-
-    if (plantillaSeleccionadaId && plantillaSeleccionadaId !== nombreInput) {
-        Swal.fire({
-            title: '¿Deseas renombrar esta receta?',
-            text: `Detectamos un cambio de nombre de "${plantillaSeleccionadaId}" a "${nombreInput}".`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, renombrar',
-            cancelButtonText: 'Guardar como copia'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                ejecutarGuardadoReceta(nombreInput, plantillaSeleccionadaId, true); 
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                ejecutarGuardadoReceta(nombreInput, null, false);
-            }
-        });
-    } else {
-        ejecutarGuardadoReceta(nombreInput, null, false);
-    }
-}
-
-function ejecutarGuardadoReceta(nombreNuevo, nombreAntiguo, esRenombrado) {
-    const datosComposicion = { pan: modulos.pan, relleno: modulos.relleno, betun: modulos.betun };
-    Swal.fire({ title: 'Guardando receta...', text: 'Sincronizando con NEXI Cloud.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+    rebuildSelectPlantillas();
+    document.getElementById('nombre-plantilla').value = "";
 
     if (config.isPremium && config.urlNube) {
-        apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "guardarPlantilla", nombreReceta: nombreNuevo, composicion: datosComposicion })
-        .then(async (resultado) => {
-            if (resultado.status === "success") {
-                if (esRenombrado && nombreAntiguo) {
-                    try {
-                        await apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "eliminarPlantilla", nombreReceta: nombreAntiguo });
-                        delete plantillasRecetas[nombreAntiguo];
-                    } catch(e) { console.error(e); }
-                }
-                plantillasRecetas[nombreNuevo] = datosComposicion;
-                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-                plantillaSeleccionadaId = nombreNuevo;
-                rebuildSelectPlantillas();
-document.getElementById('select-plantillas').value = "";
-                Swal.fire({ title: '¡Éxito! 🎉', text: 'Receta sincronizada.', icon: 'success' });
-            } else {
-                Swal.fire('Error', resultado.message, 'error');
+        cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
+
+        // 🌟 AGREGADO: Pantalla de carga para guardar la receta completa
+        Swal.fire({
+            title: 'Subiendo receta...',
+            text: 'Guardando composición del pastel en tu cuenta remota.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-        }).catch(() => Swal.fire('Error', 'Problema de red.', 'error'));
+        });
+
+        try {
+            const resultado = await apiFetch(config.urlNube, {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "guardarPlantilla",
+                nombreReceta: nombre,
+                estructuraJson: JSON.stringify(modulos)
+            });
+            if (resultado.status === "success") {
+                evaluarEstadoVisualPremium();
+                // Éxito reemplaza loading
+                Swal.fire({ title: '¡Guardada!', text: 'Receta guardada y sincronizada en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
+            } else {
+                Swal.fire({ title: 'Error', text: 'Error de almacenamiento: ' + resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
+            }
+        } catch(e) {
+            Swal.fire({ title: 'Error de Red', text: 'No hay conexión remota disponible. La receta se mantendrá guardada de forma local.', icon: 'warning', confirmButtonColor: '#3b82f6' });
+        }
     } else {
-        if (esRenombrado && nombreAntiguo) delete plantillasRecetas[nombreAntiguo];
-        plantillasRecetas[nombreNuevo] = datosComposicion;
-        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-        plantillaSeleccionadaId = nombreNuevo;
-        rebuildSelectPlantillas();
-        document.getElementById('select-plantillas').value = nombreNuevo;
-        Swal.fire({ title: '¡Guardado local!', text: 'Receta guardada en el dispositivo.', icon: 'success' });
+        // Éxito instantáneo para usuarios locales
+        Swal.fire({ title: '¡Guardada!', text: 'Receta guardada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
     }
+}
+
+function cargarPlantilla(nombre) {
+    if(!nombre || !plantillasRecetas[nombre]) return;
+    modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+    renderModulos();
+    calcularTodo();
 }
 
 async function eliminarPlantillaActual() {
     const select = document.getElementById('select-plantillas');
     const nombre = select.value;
     if(!nombre) {
-        Swal.fire({ title: 'Selección vacía', text: 'Selecciona una receta primero.', icon: 'info' });
+        Swal.fire({ title: 'Selección vacía', text: 'Por favor, selecciona primero una receta para eliminar.', icon: 'info', confirmButtonColor: '#3b82f6' });
         return;
     }
 
-    const confirmacion = await Swal.fire({ title: '¿Eliminar receta?', text: `¿Seguro de borrar "${nombre}"?`, icon: 'warning', showCancelButton: true });
+    const confirmacion = await Swal.fire({
+        title: '¿Eliminar receta?',
+        text: `¿Seguro que deseas eliminar definitivamente la receta "${nombre}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e57373',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
     if(!confirmacion.isConfirmed) return;
 
     if (config.isPremium && config.urlNube) {
-        Swal.fire({ title: 'Borrando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        cambiarBannerStatus("⏳ Eliminando receta de la nube...", true);
+
+        // 🌟 AGREGADO: Pantalla de carga para la eliminación de receta
+        Swal.fire({
+            title: 'Borrando receta...',
+            text: 'Eliminando composición de NEXI Cloud. Por favor espera.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
-            const res = await apiFetch(config.urlNube, { correo: config.correoUser, token: config.tokenUser, accion: "eliminarPlantilla", nombreReceta: nombre });
-            if (res.status !== "success") { Swal.fire({ title: 'Error', text: res.message, icon: 'error' }); return; }
-        } catch(e) { Swal.fire({ title: 'Error de Red', icon: 'error' }); return; }
+            const resultado = await apiFetch(config.urlNube, {
+                correo: config.correoUser,
+                token: config.tokenUser,
+                accion: "eliminarPlantilla",
+                nombreReceta: nombre
+            });
+            if (resultado.status !== "success") {
+                Swal.fire({ title: 'Error', text: 'Error en la nube: ' + resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
+                cambiarBannerStatus("❌ Error al eliminar receta en nube", false);
+                return;
+            }
+        } catch(e) {
+            Swal.fire({ title: 'Error de Red', text: 'No se pudo conectar a la nube para borrar la receta remota.', icon: 'error', confirmButtonColor: '#3b82f6' });
+            cambiarBannerStatus("❌ Error de conexión remota", false);
+            return;
+        }
     }
 
+    // Código de limpieza local existente
     delete plantillasRecetas[nombre];
     localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
     rebuildSelectPlantillas();
     limpiarComposicionCompleta();
-    Swal.fire({ title: 'Receta Eliminada', icon: 'success', timer: 1000, showConfirmButton: false });
+    evaluarEstadoVisualPremium();
+
+    // 🌟 ÉXITO: Quita el loader y avisa al usuario de la eliminación correcta
+    Swal.fire({ 
+        title: 'Receta Eliminada', 
+        text: `La receta "${nombre}" fue eliminada correctamente.`, 
+        icon: 'success', 
+        confirmButtonColor: '#3b82f6' 
+    });
 }
 
 function limpiarComposicionCompleta() {
@@ -816,7 +981,7 @@ function enviarCotizacionWhatsApp() {
     const dificultad = dificultadSelect.options[dificultadSelect.selectedIndex].text.split("(")[0].trim();
 
     if (porciones === "0" || precioTotal === "$0" || precioTotal === "$0.00") {
-        Swal.fire({ title: 'Faltan datos', text: 'Por favor introduce porciones e insumos válidos.', icon: 'warning' });
+        Swal.fire({ title: 'Faltan datos', text: 'Por favor introduce un número válido de porciones e insumos antes de exportar el presupuesto.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         return;
     }
 
@@ -827,9 +992,10 @@ function enviarCotizacionWhatsApp() {
                     `💵 *Precio por rebanada:* ${precioRebanada}\n` +
                     `----------------------------------------\n` +
                     `💰 *TOTAL NETO:* ${precioTotal}\n\n` +
-                    `¿Te gustaría agendar tu fecha con nosotros? 👩‍🍳🍰`;
+                    `*Nota:* Esta cotización incluye pan base premium, rellenos artesanales y coberturas personalizadas. ¿Te gustaría agendar tu fecha con nosotros? 👩‍🍳🍰`;
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+    const urlWhatsapp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(urlWhatsapp, '_blank');
 }
 
 function toggleTheme() {
@@ -846,14 +1012,17 @@ function toggleTheme() {
 
 async function descargarDeNube() {
     if (!config.urlNube || !config.tokenUser) return;
+
     cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
     try {
         const data = await apiGet(config.urlNube, config.correoUser, config.tokenUser);
+
         if (data.status === "error") {
             config.isPremium = false;
             localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
             cambiarBannerStatus("❌ " + data.message, false);
+            Swal.fire({ title: 'Sesión Expirada', text: `Error de acceso en la nube: ${data.message}`, icon: 'error', confirmButtonColor: '#3b82f6' });
             evaluarEstadoVisualPremium();
             return;
         }
@@ -863,18 +1032,27 @@ async function descargarDeNube() {
         if (data.moneda) config.moneda = data.moneda; 
         if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
         if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
+        
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
         if (data.insumos) {
             const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
             let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
-            insumos = (insumosLocales.length > 0 && data.insumos.length > 0) ? fusionarListasInsumos(insumosLocales, data.insumos) : (data.insumos.length > 0 ? data.insumos : insumosLocales);
+            
+            if (insumosLocales.length > 0 && data.insumos.length > 0) {
+                insumos = fusionarListasInsumos(insumosLocales, data.insumos);
+            } else {
+                insumos = data.insumos.length > 0 ? data.insumos : insumosLocales;
+            }
+            
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         }
         
         if (data.plantillas) {
             const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
-            plantillasRecetas = { ...data.plantillas, ...(plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {}) };
+            let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
+            
+            plantillasRecetas = { ...data.plantillas, ...plantillasLocales };
             localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
         }
 
@@ -882,27 +1060,35 @@ async function descargarDeNube() {
         document.getElementById('cfg-moneda').value = config.moneda; 
         document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
         document.getElementById('cfg-merma').value = config.porcentajeMerma;
+        
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
         document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
         evaluarEstadoVisualPremium();
+        
         renderInsumos();
         renderModulos();
         rebuildSelectPlantillas();
         calcularTodo();
+
+        cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
     } catch(e) {
         cambiarBannerStatus("❌ Error de conexión con el servidor NEXI", false);
     }
 }
 
+// Inicialización de la App al cargar la ventana
 window.onload = async function() {
     cargarConfiguracion(); 
+    
     const localInsumos = localStorage.getItem('respaldo_insumos');
     if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
+    
     const localPlantillas = localStorage.getItem('respaldo_plantillas');
     if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
 
     evaluarEstadoVisualPremium();
+
     if (config.isPremium && config.urlNube) {
         await descargarDeNube();
     } else {
@@ -916,13 +1102,17 @@ window.onload = async function() {
 function toggleAcordeonTotales() {
     const cuerpo = document.getElementById('cuerpo-acordeon-totales');
     const flecha = document.getElementById('flecha-acordeon');
+    
     if (!cuerpo) return;
     
-    if (cuerpo.style.display === "none") {
-        cuerpo.style.display = "block";
-        if(flecha) flecha.style.transform = 'rotate(180deg)';
-    } else {
+    // 🟢 CORRECCIÓN: Validamos si explícitamente está en "block" o si está vacío (por defecto inicial)
+    // Si ya está abierto, lo ocultamos.
+    if (cuerpo.style.display === "block" || cuerpo.style.display === "") {
         cuerpo.style.display = "none";
         if(flecha) flecha.style.transform = 'rotate(0deg)';
+    } else {
+        // Si estaba en "none", lo mostramos al primer toque.
+        cuerpo.style.display = "block";
+        if(flecha) flecha.style.transform = 'rotate(180deg)';
     }
 }
