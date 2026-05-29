@@ -172,7 +172,7 @@ async function guardarConfiguracion() {
                 let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
                 let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
 
-                // 🌟 CORRECCIÓN: Usamos apiFetch directamente especificando la acción
+                // 🌟 CORRECCIÓN: Usamos apiFetch directamente especificar la acción
                 const consultaNube = await apiFetch(config.urlNube, {
                     correo: config.correoUser,
                     token: config.tokenUser,
@@ -183,14 +183,12 @@ async function guardarConfiguracion() {
                     let insumosNube = consultaNube.insumos || [];
                     let plantillasNube = consultaNube.plantillas || {};
 
-                    // Si la nube ya tiene configuraciones de negocio previas, las adoptamos
                     if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
                     if (consultaNube.moneda) config.moneda = consultaNube.moneda;
                     if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
                     if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
                     localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-                    // CASO CONFLICTO: Hay datos en ambos lados (Local y Nube) -> Preguntar fusión
                     if (insumosLocales.length > 0 && insumosNube.length > 0) {
                         Swal.close(); 
                         const resultadoFusion = await Swal.fire({
@@ -206,20 +204,15 @@ async function guardarConfiguracion() {
                         if (resultadoFusion.isConfirmed) {
                             datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
                             datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
-                            ejecutarMigracionLote = true; // Forzamos sobreescritura unificada en la nube
+                            ejecutarMigracionLote = true; 
                         } else {
-                            // Si cancela, respetamos lo que está en la nube por seguridad
                             datosFinalesInsumos = insumosNube;
                             datosFinalesPlantillas = plantillasNube;
                             ejecutarMigracionLote = false;
                         }
                     } else {
-                        // CASO SIMPLE: Uno de los dos lados está vacío, priorizamos el que tenga información
                         datosFinalesInsumos = insumosNube.length > 0 ? insumosNube : insumosLocales;
                         datosFinalesPlantillas = Object.keys(plantillasNube).length > 0 ? plantillasNube : plantillasLocales;
-                        
-                        // Si los datos vinieron de lo local, necesitamos subirlos a la nube (lote = true)
-                        // Si los datos vinieron de la nube, solo los guardamos localmente (lote = false)
                         ejecutarMigracionLote = insumosLocales.length > 0 || Object.keys(plantillasLocales).length > 0;
                     }
                 } else if (consultaNube && consultaNube.status === "error") {
@@ -227,14 +220,12 @@ async function guardarConfiguracion() {
                 }
             }
 
-            // Preparamos la inyección en lote
             let datosAInyectar = {
                 ejecutarMigracion: ejecutarMigracionLote,
                 insumos: datosFinalesInsumos,
                 plantillas: datosFinalesPlantillas
             };
 
-            // Mandamos la orden de actualización a la nube
             const respuestaServidor = await apiFetch(config.urlNube, {
                 correo: config.correoUser,
                 token: config.tokenUser,
@@ -247,7 +238,6 @@ async function guardarConfiguracion() {
             });
             
             if(respuestaServidor.status === "success") {
-                // Actualizamos el estado global en memoria
                 insumos = datosFinalesInsumos;
                 plantillasRecetas = datosFinalesPlantillas;
 
@@ -256,7 +246,6 @@ async function guardarConfiguracion() {
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
                 localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
                 
-                // Forzamos actualización de inputs del formulario
                 document.getElementById('cfg-nombre').value = config.nombrePasteleria;
                 document.getElementById('cfg-moneda').value = config.moneda;
                 document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
@@ -268,6 +257,11 @@ async function guardarConfiguracion() {
                 renderModulos();
                 rebuildSelectPlantillas();
                 calcularTodo();
+
+                // 🎯 ANALYTICS: Configuración exitosa vinculada a la nube
+                gtag('event', 'configuracion_guardada', {
+                    'metodo': 'NEXI_Cloud'
+                });
 
                 Swal.fire({
                     title: '¡Configuración Guardada! ☁️',
@@ -298,6 +292,11 @@ async function guardarConfiguracion() {
         rebuildSelectPlantillas();
         calcularTodo();
         
+        // 🎯 ANALYTICS: Configuración guardada en modo local
+        gtag('event', 'configuracion_guardada', {
+            'metodo': 'Modo_Local'
+        });
+
         Swal.fire({ title: '¡Guardado!', text: 'Configuración local actualizada correctamente.', icon: 'success', confirmButtonColor: '#3b82f6' });
         isSavingConfig = false; 
     }
@@ -344,14 +343,18 @@ async function cerrarSesionNexi() {
     config.isPremium = false;
     
     localStorage.removeItem('respaldo_config_pasteleria');
-    localStorage.removeItem('respaldo_insumos');
-    localStorage.removeItem('respaldo_plantillas');
-    
-    insumos = [];
-    modulos = { pan: [], relleno: [], betun: [] };
-    plantillasRecetas = {};
-    
+localStorage.removeItem('respaldo_insumos');
+localStorage.removeItem('respaldo_plantillas');
+
+// Limpieza absoluta de referencias en memoria
+insumos = [];
+modulos = { pan: [], relleno: [], betun: [] };
+plantillasRecetas = {};
+
+// Pequeña espera para asegurar la escritura del disco en localStorage antes del reload
+setTimeout(() => {
     window.location.reload();
+}, 100);
 }
 
 function renderInsumos() {
@@ -366,7 +369,7 @@ function renderInsumos() {
     const insumosFiltrados = insumos.filter(insumo => {
         const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
         const marca = insumo.marca ? String(insumo.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-        return nombre.startsWith(textoBusqueda);
+        return nombre.includes(textoBusqueda) || marca.includes(textoBusqueda); 
 });
 
     insumosFiltrados.forEach(insumo => {
@@ -441,6 +444,9 @@ localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     renderInsumos();
     calcularTodo();
     Swal.fire({ title: '¡Añadido!', text: 'Insumo guardado localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
+    
+    gtag('event', 'insumo_creado', { 'alojamiento': 'Local' });
+
 }
 
 let isSavingInsumo = false; 
@@ -508,6 +514,8 @@ async function agregarNuevoInsumoNube() {
             };
 
             insumos.push(nuevoInsumoLocal);
+            
+            gtag('event', 'insumo_creado', { 'alojamiento': 'NEXI_Cloud' });
             
             // 🎯 CORRECCIÓN: Ordenar alfabéticamente el nuevo insumo de la nube de inmediato
             ordenarInsumosAlfabeticamente(); 
@@ -930,6 +938,8 @@ async function guardarPlantillaNube() {
             Swal.fire({ title: 'Error de Red', text: 'No hay conexión remota disponible. La receta se mantendrá guardada de forma local.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         }
     } else {
+      gtag('event', 'receta_guardada', { 'alojamiento': 'Local' });
+
         Swal.fire({ title: '¡Guardada!', text: 'Receta actualizada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
     }
 }
@@ -1051,6 +1061,7 @@ function enviarCotizacionWhatsApp() {
                     `*Nota:* Esta cotización incluye pan base premium, rellenos artesanales y coberturas personalizadas. ¿Te gustaría agendar tu fecha con nosotros? 👩‍🍳🍰`;
 
     const urlWhatsapp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    gtag('event', 'cotizacion_exportada_whatsapp');
     window.open(urlWhatsapp, '_blank');
 }
 
@@ -1173,13 +1184,13 @@ function toggleAcordeonTotales() {
     
     if (!cuerpo) return;
     
-    // 🟢 CORRECCIÓN: Validamos si explícitamente está en "block" o si está vacío (por defecto inicial)
-    // Si ya está abierto, lo ocultamos.
-    if (cuerpo.style.display === "block" || cuerpo.style.display === "") {
+    // Obtenemos el estilo real (venga de CSS o inline)
+    const displayActual = cuerpo.style.display || window.getComputedStyle(cuerpo).display;
+    
+    if (displayActual === "block") {
         cuerpo.style.display = "none";
         if(flecha) flecha.style.transform = 'rotate(0deg)';
     } else {
-        // Si estaba en "none", lo mostramos al primer toque.
         cuerpo.style.display = "block";
         if(flecha) flecha.style.transform = 'rotate(180deg)';
     }
