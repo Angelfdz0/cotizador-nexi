@@ -5,10 +5,10 @@
 async function apiFetch(url, payload) {
     const response = await fetch(url, {
         method: 'POST',
-        mode: 'cors',           // 1. Forzar el modo CORS
-        redirect: 'follow',     // 2. Seguir las redirecciones 302 de Google
+        mode: 'cors',           
+        redirect: 'follow',     
         headers: { 
-            "Content-Type": "text/plain" // Mantener como text/plain para evitar solicitudes "preflight" de CORS
+            "Content-Type": "text/plain" 
         },
         body: JSON.stringify(payload)
     });
@@ -20,7 +20,7 @@ async function apiGet(url, correo, token) {
     const response = await fetch(urlConParametros, { 
         method: 'GET',
         mode: 'cors',
-        redirect: 'follow'      // Seguir redirecciones también en lecturas
+        redirect: 'follow'      
     });
     return await response.json();
 }

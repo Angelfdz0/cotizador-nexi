@@ -34,22 +34,19 @@ header {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
     color: #ffffff; 
     padding: 50px 30px; 
-    border-radius: 24px; /* Bordes más suaves y modernos */
+    border-radius: 24px; 
     margin-bottom: 30px; 
     box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.5); 
     border: 1px solid rgba(255, 255, 255, 0.08); 
     overflow: hidden;
-
-    /* Activamos Flexbox para ordenar todo al centro con precisión */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 10px; /* Controla la separación idéntica entre cada línea */
+    gap: 10px;
 }
 
-/* Efecto de luz ambiental de fondo para dar profundidad de app de alta gama */
 header::before {
     content: '';
     position: absolute;
@@ -63,7 +60,7 @@ header::before {
 
 header h1 { 
     margin: 0; 
-    font-size: 42px; /* Un poco más grande para imponer jerarquía */
+    font-size: 42px; 
     font-weight: 800; 
     letter-spacing: -1.5px; 
     color: #ffffff !important; 
@@ -76,20 +73,18 @@ header h1 {
     font-weight: 700; 
     text-transform: uppercase; 
     letter-spacing: 4px; 
-    margin: 0; /* Eliminamos el margen forzado antiguo */
     padding-bottom: 4px;
 }
 
 .brand-desc { 
     margin: 0; 
     font-size: 14px; 
-    color: #94a3b8; /* Cambiado a un gris azulado que cansa menos la vista */
+    color: #94a3b8; 
     font-weight: 400; 
-    max-width: 520px; /* Evita que el texto se estire feo en pantallas gigantes */
+    max-width: 520px; 
     line-height: 1.5;
 }
 
-/* Ajuste del botón de la luna para que calce perfecto en la nueva esquina */
 .theme-toggle-icon { 
     position: absolute; 
     top: 24px; 
@@ -97,7 +92,6 @@ header h1 {
     cursor: pointer; 
     background: rgba(255, 255, 255, 0.04); 
     border: 1px solid rgba(255, 255, 255, 0.1); 
-    padding: 0; 
     border-radius: 50%; 
     width: 42px; 
     height: 42px; 
@@ -116,7 +110,7 @@ header h1 {
 }
 .theme-toggle-icon span { 
     color: #ffffff !important; 
-    font-size: 20px; /* Tamaño ideal para que quepa dentro del círculo de 42px */
+    font-size: 20px; 
     display: block;
     line-height: 1;
 }
@@ -207,194 +201,56 @@ footer { background-color: var(--bg-card); color: var(--instruction-text); text-
 footer a { color: #3b82f6; text-decoration: none; font-weight: 600; }
 footer a:hover { text-decoration: underline; }
 
-/* ==========================================================================
-   🎯 SECCIÓN RESPONSIVE - OPTIMIZACIÓN PARA CELULARES Y TABLETS
-   ========================================================================== */
-
-/* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
-/* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
+/* 📱 OPTIMIZACIÓN RESPONSIVE CELULARES */
 @media (max-width: 767px) {
     body { padding: 10px; padding-bottom: 40px; }
-
     header { padding: 30px 15px; border-radius: 16px; margin-bottom: 15px; }
     header h1 { font-size: 26px; }
     .brand-desc { font-size: 13px; margin-top: 5px; }
 
-    /* 🧱 Formularios Flex-Row: Solo los que pertenecen a formularios, no tablas */
-    .card form.flex-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
+    .card form.flex-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .card form.flex-row > div { width: 100%; flex: none; }
+    .card form.flex-row input, .card form.flex-row select { height: 44px; }
 
-    .card form.flex-row > div {
-        width: 100%;
-        flex: none;
-    }
-
-    /* Corrección de inputs para que luzcan alineados */
-    .card form.flex-row input, 
-    .card form.flex-row select {
-        height: 44px; /* Altura táctil más cómoda */
-    }
-
-    /* 📊 Ajuste de los resultados */
-    .commercial-grid {
-        display: grid;
-        grid-template-columns: 1fr; /* Una columna en móvil */
-        gap: 15px;
-    }
-
-    /* 📑 Pestañas (Evitar desalineación) */
-    .tabs {
-        width: 100%;
-        display: flex;
-        overflow-x: auto; /* Permite scroll si las pestañas son muchas */
-    }
-    .tab {
-        flex: 1;
-        white-space: nowrap; /* Evita que el texto de las pestañas se parta */
-    }
+    .commercial-grid { grid-template-columns: 1fr; gap: 15px; }
+    .tabs { width: 100%; display: flex; overflow-x: auto; }
+    .tab { flex: 1; white-space: nowrap; }
 }
 
-/* 📊 Optimización del scroll en tablas para cualquier pantalla que se desborde */
 .table-container {
-    width: 100%;
-    overflow-x: auto; /* Activa el desplazamiento lateral con el dedo si no cabe */
-    -webkit-overflow-scrolling: touch;
-    border-radius: 8px;
-    border: 1px solid var(--td-border);
+    width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--td-border);
 }
+table { min-width: 550px; }
+.table-input { padding: 6px 8px; width: 100%; min-width: 60px; height: 32px; display: flex; align-items: center; }
 
-table {
-    min-width: 550px; /* Forzamos un mínimo para que los datos mantengan su forma de tabla ordenada */
-}
-
-/* 📝 Inputs internos de las tablas más cómodos para edición táctil */
-.table-input {
-    padding: 6px 8px;
-    width: 100%;
-    min-width: 60px;
-}
-
-/* ==========================================================================
-   💻 SECCIÓN PARA TABLETAS Y ORDENADORES
-   ========================================================================== */
-
-/* ➔ 1. DISPOSITIVOS MEDIANOS (Tabletas en vertical/horizontal y Laptops pequeñas) */
+/* ➔ TABLETAS Y ORDENADORES MEDIANOS */
 @media (min-width: 768px) and (max-width: 1024px) {
-    body {
-        padding: 24px;
-    }
-
-    header {
-        padding: 40px 30px;
-    }
-
-    header h1 {
-        font-size: 36px;
-    }
-
-    /* En tabletas, las dos tarjetas principales se ponen una abajo de la otra 
-       pero el Panel de Configuración y el Cotizador se abren en 2 columnas */
-    .grid {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-    }
-
-    .config-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas perfectas */
-        gap: 16px;
-    }
-
-    .commercial-grid {
-        grid-template-columns: repeat(3, 1fr); /* Distribuye los 3 precios lado a lado */
-    }
+    body { padding: 24px; }
+    header { padding: 40px 30px; }
+    header h1 { font-size: 36px; }
+    .grid { display: flex; flex-direction: column; gap: 24px; }
+    .config-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .commercial-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ➔ 2. ORDENADORES Y PANTALLAS GRANDES (Laptops de 13"+ y Monitor de Escritorio) */
+/* ➔ COMPUTADORAS DE ESCRITORIO */
 @media (min-width: 1025px) {
-    body {
-        padding: 30px;
-    }
-
-    /* El grid principal que separa el Inventario de la Composición del Pastel */
-    .grid {
-        display: grid;
-        grid-template-columns: 1fr 1.15fr; /* Inventario ligeramente más estrecho, composición más ancha */
-        gap: 24px;
-        align-items: start; /* Evita que las tarjetas se estiren verticalmente de forma rara */
-    }
-
-    /* Panel de configuración en computadoras: los 4 campos en una sola fila limpia */
-    .config-grid {
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 20px;
-    }
-
-    /* El cotizador rápido abajo se divide en dos columnas: controles a la izquierda, resultados a la derecha */
-    #tarjeta-cotizador {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 24px;
-    align-items: center;
+    body { padding: 30px; }
+    .grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 24px; align-items: start; }
+    .config-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    #tarjeta-cotizador { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center; }
+    #tarjeta-cotizador .btn-success { grid-column: span 2; margin-top: 10px; }
+    .flex-row { flex-direction: row; align-items: flex-end; }
 }
 
-#tarjeta-cotizador .btn-success {
-    grid-column: span 2;
-    margin-top: 10px;
-}
-
-    /* En computadoras los formularios no se apilan, fluyen en una sola línea elegante */
-    .flex-row {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-}
-
-/* ➔ 3. PANTALLAS ULTRA ANCHAS (Para que la app no se desarme en monitores gigantes) */
+/* ➔ PANTALLAS ULTRA ANCHAS */
 @media (min-width: 1400px) {
-    .container {
-        max-width: 1350px; /* Expandimos un poco más el espacio de trabajo */
-    }
-    
-    .grid {
-        grid-template-columns: 1fr 1.25fr; /* Más espacio para armar la receta */
-    }
+    .container { max-width: 1350px; }
+    .grid { grid-template-columns: 1fr 1.25fr; }
 }
 
-/* Alineación precisa de etiquetas y formularios */
-.form-group {
-    margin-bottom: 12px;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 12.5px;
-    color: var(--label-color);
-    font-weight: 600;
-}
-
-/* Asegurar que las celdas de la tabla se mantengan alineadas verticalmente */
-td, th {
-    vertical-align: middle;
-    line-height: 1.4;
-}
-
-/* Ajuste del botón de WhatsApp para que siempre se vea bien */
-.btn-whatsapp-link {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 700;
-    text-align: center;
-}
-
-/* Corrección de altura para inputs de tabla */
-.table-input {
-    height: 32px;
-    display: flex;
-    align-items: center;
-}
+.form-group { margin-bottom: 12px; }
+td, th { vertical-align: middle; line-height: 1.4; }
+.btn-whatsapp-link { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; text-align: center; }
+.acordeon-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px; background-color: var(--th-bg); border-radius: 8px; margin-top: 15px; font-weight: bold; color: var(--title-color); }
+.acordeon-content { display: block; }
