@@ -127,11 +127,11 @@ async function guardarConfiguracion() {
     const correoInput = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
     const tokenInput = document.getElementById('cfg-token-user').value.trim();
 
-    // Comprobamos si las credenciales cambiaron o si ya estábamos logueados de antes
+    // Comprobamos si es un cambio de credenciales o una activación de cuenta
     const esPrimerLogueo = (!config.isPremium && tokenInput && urlNubeInput) || 
                            (config.correoUser !== correoInput || config.tokenUser !== tokenInput);
 
-    // Asignamos temporalmente al objeto local para la actualización visual inmediata
+    // Asignamos temporalmente al objeto de configuración local
     config.nombrePasteleria = nuevoNombre;
     config.moneda = nuevaMoneda;
     config.porcentajeIndirectos = nuevosIndirectos;
@@ -162,7 +162,6 @@ async function guardarConfiguracion() {
         cambiarBannerStatus("⏳ Sincronizando datos del negocio...", null);
         
         try {
-            // Clonamos profundamente para evitar problemas de sincronía y punteros
             let datosFinalesInsumos = JSON.parse(JSON.stringify(insumos));
             let datosFinalesPlantillas = JSON.parse(JSON.stringify(plantillasRecetas));
             let ejecutarMigracionLote = false;
@@ -173,18 +172,25 @@ async function guardarConfiguracion() {
                 let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
                 let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
 
-                const consultaNube = await apiGet(config.urlNube, config.correoUser, config.tokenUser);
+                // 🌟 CORRECCIÓN: Usamos apiFetch directamente especificando la acción
+                const consultaNube = await apiFetch(config.urlNube, {
+                    correo: config.correoUser,
+                    token: config.tokenUser,
+                    accion: "obtenerConfiguracion"
+                });
 
                 if (consultaNube && consultaNube.status !== "error") {
                     let insumosNube = consultaNube.insumos || [];
                     let plantillasNube = consultaNube.plantillas || {};
 
+                    // Si la nube ya tiene configuraciones de negocio previas, las adoptamos
                     if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
                     if (consultaNube.moneda) config.moneda = consultaNube.moneda;
                     if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
                     if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
                     localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
+                    // CASO CONFLICTO: Hay datos en ambos lados (Local y Nube) -> Preguntar fusión
                     if (insumosLocales.length > 0 && insumosNube.length > 0) {
                         Swal.close(); 
                         const resultadoFusion = await Swal.fire({
@@ -200,28 +206,35 @@ async function guardarConfiguracion() {
                         if (resultadoFusion.isConfirmed) {
                             datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
                             datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
-                            ejecutarMigracionLote = true;
+                            ejecutarMigracionLote = true; // Forzamos sobreescritura unificada en la nube
+                        } else {
+                            // Si cancela, respetamos lo que está en la nube por seguridad
+                            datosFinalesInsumos = insumosNube;
+                            datosFinalesPlantillas = plantillasNube;
+                            ejecutarMigracionLote = false;
                         }
                     } else {
-                        // Si no hay conflicto de duplicados, tomamos lo que haya disponible
+                        // CASO SIMPLE: Uno de los dos lados está vacío, priorizamos el que tenga información
                         datosFinalesInsumos = insumosNube.length > 0 ? insumosNube : insumosLocales;
                         datosFinalesPlantillas = Object.keys(plantillasNube).length > 0 ? plantillasNube : plantillasLocales;
+                        
+                        // Si los datos vinieron de lo local, necesitamos subirlos a la nube (lote = true)
+                        // Si los datos vinieron de la nube, solo los guardamos localmente (lote = false)
+                        ejecutarMigracionLote = insumosLocales.length > 0 || Object.keys(plantillasLocales).length > 0;
                     }
+                } else if (consultaNube && consultaNube.status === "error") {
+                    throw new Error(consultaNube.message);
                 }
-            } else {
-                // CASO B: El usuario ya estaba conectado y SOLO está editando datos del negocio
-                datosFinalesInsumos = insumos;
-                datosFinalesPlantillas = plantillasRecetas;
-                ejecutarMigracionLote = false;
             }
 
+            // Preparamos la inyección en lote
             let datosAInyectar = {
                 ejecutarMigracion: ejecutarMigracionLote,
                 insumos: datosFinalesInsumos,
                 plantillas: datosFinalesPlantillas
             };
 
-            // Mandamos la orden de actualización absoluta a la nube
+            // Mandamos la orden de actualización a la nube
             const respuestaServidor = await apiFetch(config.urlNube, {
                 correo: config.correoUser,
                 token: config.tokenUser,
@@ -234,6 +247,7 @@ async function guardarConfiguracion() {
             });
             
             if(respuestaServidor.status === "success") {
+                // Actualizamos el estado global en memoria
                 insumos = datosFinalesInsumos;
                 plantillasRecetas = datosFinalesPlantillas;
 
@@ -242,6 +256,7 @@ async function guardarConfiguracion() {
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
                 localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
                 
+                // Forzamos actualización de inputs del formulario
                 document.getElementById('cfg-nombre').value = config.nombrePasteleria;
                 document.getElementById('cfg-moneda').value = config.moneda;
                 document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
@@ -266,13 +281,13 @@ async function guardarConfiguracion() {
         } catch(e) { 
             console.error(e);
             cambiarBannerStatus("⚠️ Error al sincronizar configuración remota", false);
-            Swal.fire({ title: 'Aviso', text: 'Se guardó en el dispositivo, pero falló la sincronización con la nube.', icon: 'info', confirmButtonColor: '#3b82f6' });
+            Swal.fire({ title: 'Aviso', text: 'Error de acceso o conexión: ' + e.message, icon: 'info', confirmButtonColor: '#3b82f6' });
         } finally {
             isSavingConfig = false;
         }
         
     } else {
-        // Flujo Local normal para usuarios Free
+        // Flujo Local Modo Free
         config.isPremium = false;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
@@ -1051,13 +1066,21 @@ function toggleTheme() {
     }
 }
 
+/**
+ * ACCIÓN: DESCARGAR TOTAL DE LA NUBE AL INICIAR LA VENTANA
+ */
 async function descargarDeNube() {
     if (!config.urlNube || !config.tokenUser) return;
 
     cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
     try {
-        const data = await apiGet(config.urlNube, config.correoUser, config.tokenUser);
+        // 🌟 CORRECCIÓN: Reemplazado por apiFetch nativo directo
+        const data = await apiFetch(config.urlNube, {
+            correo: config.correoUser,
+            token: config.tokenUser,
+            accion: "obtenerConfiguracion"
+        });
 
         if (data.status === "error") {
             config.isPremium = false;
@@ -1076,7 +1099,7 @@ async function descargarDeNube() {
         
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-                if (data.insumos) {
+        if (data.insumos) {
             const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
             let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
             
@@ -1086,9 +1109,7 @@ async function descargarDeNube() {
                 insumos = data.insumos.length > 0 ? data.insumos : insumosLocales;
             }
             
-            // 🎯 ORDENAR ALFABÉTICAMENTE TRAS DESCARGAR DE LA NUBE
             ordenarInsumosAlfabeticamente();
-            
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         }
         
