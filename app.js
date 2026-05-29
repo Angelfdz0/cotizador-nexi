@@ -705,6 +705,11 @@ function cargarPlantilla(nombrePlantilla) {
     document.getElementById('nombre-plantilla').value = nombrePlantilla;
     renderModulos();
     calcularTodo();
+
+    // ✨ SOLUCIÓN: Resetea el select al valor por defecto para que el siguiente clic obligatoriamente sea un "cambio"
+    setTimeout(() => {
+        document.getElementById('select-plantillas').value = "";
+    }, 100);
 }
 
 function guardarPlantillaNube() {
@@ -752,7 +757,7 @@ function ejecutarGuardadoReceta(nombreNuevo, nombreAntiguo, esRenombrado) {
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
                 plantillaSeleccionadaId = nombreNuevo;
                 rebuildSelectPlantillas();
-                document.getElementById('select-plantillas').value = nombreNuevo;
+document.getElementById('select-plantillas').value = "";
                 Swal.fire({ title: '¡Éxito! 🎉', text: 'Receta sincronizada.', icon: 'success' });
             } else {
                 Swal.fire('Error', resultado.message, 'error');
