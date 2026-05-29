@@ -3,24 +3,35 @@
  */
 
 async function apiFetch(url, payload) {
-    const response = await fetch(url, {
-        method: 'POST',
-        mode: 'cors',           // 1. Forzar el modo CORS
-        redirect: 'follow',     // 2. Seguir las redirecciones 302 de Google
-        headers: { 
-            "Content-Type": "text/plain" // Mantener como text/plain para evitar solicitudes "preflight" de CORS
-        },
-        body: JSON.stringify(payload)
-    });
-    return await response.json();
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',           
+            redirect: 'follow',     
+            headers: { 
+                "Content-Type": "text/plain" 
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error en servidor: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error("Error en apiFetch:", error);
+        throw error;
+    }
 }
 
+/**
+ * Migrado internamente a POST para proteger credenciales en GAS
+ */
 async function apiGet(url, correo, token) {
-    const urlConParametros = `${url}?correo=${encodeURIComponent(correo)}&token=${encodeURIComponent(token)}&_=${Date.now()}`;
-    const response = await fetch(urlConParametros, { 
-        method: 'GET',
-        mode: 'cors',
-        redirect: 'follow'      // Seguir redirecciones también en lecturas
+    return await apiFetch(url, {
+        correo: correo,
+        token: token,
+        accion: "obtenerConfiguracion" // Asegúrate de manejar esta acción en tu código de Apps Script
     });
-    return await response.json();
 }

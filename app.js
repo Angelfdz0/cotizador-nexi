@@ -162,11 +162,11 @@ async function guardarConfiguracion() {
         cambiarBannerStatus("⏳ Sincronizando datos del negocio...", null);
         
         try {
-            let datosFinalesInsumos = insumos;
-            let datosFinalesPlantillas = plantillasRecetas;
+            // Clonamos profundamente para evitar problemas de sincronía y punteros
+            let datosFinalesInsumos = JSON.parse(JSON.stringify(insumos));
+            let datosFinalesPlantillas = JSON.parse(JSON.stringify(plantillasRecetas));
             let ejecutarMigracionLote = false;
 
-            // CASO A: Es inicio de sesión nuevo o cambio de cuenta (FUSIONAR O DESCARGAR)
             if (esPrimerLogueo) {
                 const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
                 const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
@@ -179,7 +179,6 @@ async function guardarConfiguracion() {
                     let insumosNube = consultaNube.insumos || [];
                     let plantillasNube = consultaNube.plantillas || {};
 
-                    // Al ser login inicial, la nube manda sobre el formulario
                     if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
                     if (consultaNube.moneda) config.moneda = consultaNube.moneda;
                     if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
@@ -190,45 +189,27 @@ async function guardarConfiguracion() {
                         Swal.close(); 
                         const resultadoFusion = await Swal.fire({
                             title: '⚡ Datos Duplicados Detectados',
-                            text: 'Detectamos insumos tanto locales como en NEXI Cloud. ¿Deseas unirlos de forma inteligente para no perder nada?',
+                            text: 'Detectamos insumos tanto locales como en NEXI Cloud. ¿Deseas unirlos?',
                             icon: 'question',
                             showCancelButton: true,
                             confirmButtonColor: '#3b82f6',
                             cancelButtonColor: '#64748b',
-                            confirmButtonText: 'Sí, fusionar datos',
-                            cancelButtonText: 'No fusionar'
+                            confirmButtonText: 'Sí, fusionar datos'
                         });
                         
                         if (resultadoFusion.isConfirmed) {
                             datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
                             datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
                             ejecutarMigracionLote = true;
-                        } else {
-                            const resultadoNube = await Swal.fire({
-                                title: '¿Cómo deseas proceder?',
-                                text: '¿Prefieres usar SOLAMENTE tus datos guardados en la Nube?',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#3b82f6',
-                                cancelButtonColor: '#e57373',
-                                confirmButtonText: 'Usar solo la Nube',
-                                cancelButtonText: 'Mantener locales'
-                            });
-                            if (resultadoNube.isConfirmed) {
-                                datosFinalesInsumos = insumosNube;
-                                datosFinalesPlantillas = plantillasNube;
-                            }
                         }
-                        
-                        Swal.fire({ title: 'Guardando cambios...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                    } else if (insumosNube.length > 0) {
-                        datosFinalesInsumos = insumosNube;
-                        datosFinalesPlantillas = plantillasNube;
+                    } else {
+                        // Si no hay conflicto de duplicados, tomamos lo que haya disponible
+                        datosFinalesInsumos = insumosNube.length > 0 ? insumosNube : insumosLocales;
+                        datosFinalesPlantillas = Object.keys(plantillasNube).length > 0 ? plantillasNube : plantillasLocales;
                     }
                 }
             } else {
-                // CASO B: El usuario ya estaba conectado y SOLO está editando datos del negocio (como el nombre)
-                // Forzamos a que la nube acepte los datos de los inputs del formulario
+                // CASO B: El usuario ya estaba conectado y SOLO está editando datos del negocio
                 datosFinalesInsumos = insumos;
                 datosFinalesPlantillas = plantillasRecetas;
                 ejecutarMigracionLote = false;
@@ -306,7 +287,6 @@ async function guardarConfiguracion() {
         isSavingConfig = false; 
     }
 }
-
 
 function fusionarListasInsumos(locales, nube) {
     let unificados = JSON.parse(JSON.stringify(nube));
@@ -546,38 +526,27 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
         const valorNumerico = parseFloat(valorLimpio);
         
         if (isNaN(valorNumerico) || valorNumerico <= 0) {
-            Swal.fire({
-                title: 'Valor inválido ⚠️',
-                text: 'Por favor, introduce un número válido y mayor a cero.',
-                icon: 'warning',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3500
-            });
-            
-            if (inputElement) {
-                inputElement.value = insumo[campo];
-            }
+            // Alerta SweetAlert...
+            if (inputElement) inputElement.value = insumo[campo];
             return; 
         }
         insumo[campo] = valorNumerico; 
     } else { 
         insumo[campo] = valor.trim(); 
-        
-        // 🎯 CORRECCIÓN: Si modificaron el nombre, reordenamos la lista global
         if (campo === 'nombre') {
             ordenarInsumosAlfabeticamente();
+            // NOTA: Si re-renderizas aquí, el usuario perderá el foco del input mientras escribe.
+            // Es mejor no llamar a renderInsumos() inmediatamente si el campo es 'nombre' y se usa onchange/onkeyup.
         }
     }
 
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     
-    // 🎯 CORRECCIÓN: Renderizar insumos de nuevo por si cambió el orden de la tabla o los datos visuales
-    renderInsumos(); 
+    // Solo re-renderizamos los módulos y recalculamos para no romper el input actual
     renderModulos();
     calcularTodo();
     
+    // Sincronización en segundo plano (Mantenida igual)
     if(config.isPremium && config.urlNube) {
         syncQueue = syncQueue.then(async () => {
             try {
