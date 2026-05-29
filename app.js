@@ -118,117 +118,129 @@ let isSavingConfig = false;
 async function guardarConfiguracion() {
     if (isSavingConfig) return;
 
-    // Capturamos los datos del formulario de inmediato
-    config.nombrePasteleria = document.getElementById('cfg-nombre').value.trim() || "NEXI Bake";
-    config.moneda = document.getElementById('cfg-moneda').value.trim() || "$";
-    config.porcentajeIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
-    config.porcentajeMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
-    config.urlNube = document.getElementById('cfg-url-servidor').value.trim();
-    config.correoUser = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
-    config.tokenUser = document.getElementById('cfg-token-user').value.trim();
+    // 1. Capturamos los datos frescos del formulario
+    const nuevoNombre = document.getElementById('cfg-nombre').value.trim() || "NEXI Bake";
+    const nuevaMoneda = document.getElementById('cfg-moneda').value.trim() || "$";
+    const nuevosIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
+    const nuevaMerma = parseFloat(document.getElementById('cfg-merma').value) || 0;
+    const urlNubeInput = document.getElementById('cfg-url-servidor').value.trim();
+    const correoInput = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
+    const tokenInput = document.getElementById('cfg-token-user').value.trim();
 
-    // Actualización visual express inicial
+    // Comprobamos si las credenciales cambiaron o si ya estábamos logueados de antes
+    const esPrimerLogueo = (!config.isPremium && tokenInput && urlNubeInput) || 
+                           (config.correoUser !== correoInput || config.tokenUser !== tokenInput);
+
+    // Asignamos temporalmente al objeto local para la actualización visual inmediata
+    config.nombrePasteleria = nuevoNombre;
+    config.moneda = nuevaMoneda;
+    config.porcentajeIndirectos = nuevosIndirectos;
+    config.porcentajeMerma = nuevaMerma;
+    config.urlNube = urlNubeInput;
+    config.correoUser = correoInput;
+    config.tokenUser = tokenInput;
+
+    // Actualización visual express instantánea
     document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
     document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
     
     if (config.tokenUser && config.urlNube) {
-        isSavingConfig = true; // Bloqueamos re-clics
+        isSavingConfig = true; 
         config.isPremium = true;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
         
         evaluarEstadoVisualPremium();
         calcularTodo();
 
-        // 🌟 AGREGADO: Loading de SweetAlert2 previo al flujo de la nube
         Swal.fire({
-            title: 'Sincronizando cuenta...',
-            text: 'Por favor, espera un momento mientras validamos tus datos.',
+            title: 'Sincronizando con NEXI Cloud...',
+            text: 'Por favor, espera un momento mientras procesamos los cambios.',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
 
-        cambiarBannerStatus("⏳ Sincronizando y activando cuenta Premium...", null);
+        cambiarBannerStatus("⏳ Sincronizando datos del negocio...", null);
+        
         try {
-            const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
-            const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
-            
-            let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
-            let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
-            
-            const consultaNube = await apiGet(config.urlNube, config.correoUser, config.tokenUser);
-            
-            let datosFinalesInsumos = insumosLocales;
-            let datosFinalesPlantillas = plantillasLocales;
+            let datosFinalesInsumos = insumos;
+            let datosFinalesPlantillas = plantillasRecetas;
+            let ejecutarMigracionLote = false;
 
-            if (consultaNube && consultaNube.status !== "error") {
-                let insumosNube = consultaNube.insumos || [];
-                let plantillasNube = consultaNube.plantillas || {};
+            // CASO A: Es inicio de sesión nuevo o cambio de cuenta (FUSIONAR O DESCARGAR)
+            if (esPrimerLogueo) {
+                const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
+                const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
+                let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
+                let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
 
-                // Si la nube tiene un nombre guardado anterior, se respeta, de lo contrario se usa el del input
-                if (consultaNube.nombrePasteleria) {
-                    config.nombrePasteleria = consultaNube.nombrePasteleria;
-                }
-                if (consultaNube.moneda) config.moneda = consultaNube.moneda;
-                if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
-                if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+                const consultaNube = await apiGet(config.urlNube, config.correoUser, config.tokenUser);
 
-                if (insumosLocales.length > 0 && insumosNube.length > 0) {
-                    // Cerramos el loading temporalmente si requiere interacción del usuario
-                    Swal.close(); 
-                    
-                    const resultadoFusion = await Swal.fire({
-                        title: '⚡ Datos Duplicados Detectados',
-                        text: 'Detectamos insumos tanto en este teléfono como en tu cuenta NEXI Cloud. ¿Deseas unirlos todos de forma inteligente para no perder nada?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3b82f6',
-                        cancelButtonColor: '#64748b',
-                        confirmButtonText: 'Sí, fusionar datos',
-                        cancelButtonText: 'No fusionar'
-                    });
-                    const deseaFusionar = resultadoFusion.isConfirmed;
-                    
-                    if (deseaFusionar) {
-                        datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
-                        datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
-                    } else {
-                        const resultadoNube = await Swal.fire({
-                            title: '¿Cómo deseas proceder?',
-                            text: '¿Prefieres usar SOLAMENTE tus datos guardados en NEXI Cloud? (Se borrarán los insumos actuales de la pantalla).',
-                            icon: 'warning',
+                if (consultaNube && consultaNube.status !== "error") {
+                    let insumosNube = consultaNube.insumos || [];
+                    let plantillasNube = consultaNube.plantillas || {};
+
+                    // Al ser login inicial, la nube manda sobre el formulario
+                    if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
+                    if (consultaNube.moneda) config.moneda = consultaNube.moneda;
+                    if (consultaNube.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = consultaNube.porcentajeIndirectos;
+                    if (consultaNube.porcentajeMerma !== undefined) config.porcentajeMerma = consultaNube.porcentajeMerma;
+                    localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+
+                    if (insumosLocales.length > 0 && insumosNube.length > 0) {
+                        Swal.close(); 
+                        const resultadoFusion = await Swal.fire({
+                            title: '⚡ Datos Duplicados Detectados',
+                            text: 'Detectamos insumos tanto locales como en NEXI Cloud. ¿Deseas unirlos de forma inteligente para no perder nada?',
+                            icon: 'question',
                             showCancelButton: true,
                             confirmButtonColor: '#3b82f6',
-                            cancelButtonColor: '#e57373',
-                            confirmButtonText: 'Usar solo la Nube',
-                            cancelButtonText: 'Mantener locales'
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Sí, fusionar datos',
+                            cancelButtonText: 'No fusionar'
                         });
-                        if (resultadoNube.isConfirmed) {
-                            datosFinalesInsumos = insumosNube;
-                            datosFinalesPlantillas = plantillasNube;
+                        
+                        if (resultadoFusion.isConfirmed) {
+                            datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
+                            datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
+                            ejecutarMigracionLote = true;
+                        } else {
+                            const resultadoNube = await Swal.fire({
+                                title: '¿Cómo deseas proceder?',
+                                text: '¿Prefieres usar SOLAMENTE tus datos guardados en la Nube?',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3b82f6',
+                                cancelButtonColor: '#e57373',
+                                confirmButtonText: 'Usar solo la Nube',
+                                cancelButtonText: 'Mantener locales'
+                            });
+                            if (resultadoNube.isConfirmed) {
+                                datosFinalesInsumos = insumosNube;
+                                datosFinalesPlantillas = plantillasNube;
+                            }
                         }
+                        
+                        Swal.fire({ title: 'Guardando cambios...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    } else if (insumosNube.length > 0) {
+                        datosFinalesInsumos = insumosNube;
+                        datosFinalesPlantillas = plantillasNube;
                     }
-
-                    // Volvemos a poner el loading para la fase de inyección final
-                    Swal.fire({
-                        title: 'Guardando cambios...',
-                        allowOutsideClick: false,
-                        didOpen: () => { Swal.showLoading(); }
-                    });
-                } else if (insumosNube.length > 0) {
-                    datosFinalesInsumos = insumosNube;
-                    datosFinalesPlantillas = plantillasNube;
                 }
+            } else {
+                // CASO B: El usuario ya estaba conectado y SOLO está editando datos del negocio (como el nombre)
+                // Forzamos a que la nube acepte los datos de los inputs del formulario
+                datosFinalesInsumos = insumos;
+                datosFinalesPlantillas = plantillasRecetas;
+                ejecutarMigracionLote = false;
             }
 
             let datosAInyectar = {
-                tieneDatosPrevios: datosFinalesInsumos.length > 0,
+                ejecutarMigracion: ejecutarMigracionLote,
                 insumos: datosFinalesInsumos,
                 plantillas: datosFinalesPlantillas
             };
 
+            // Mandamos la orden de actualización absoluta a la nube
             const respuestaServidor = await apiFetch(config.urlNube, {
                 correo: config.correoUser,
                 token: config.tokenUser,
@@ -240,24 +252,20 @@ async function guardarConfiguracion() {
                 migracion: datosAInyectar
             });
             
-                        if(respuestaServidor.status === "success") {
+            if(respuestaServidor.status === "success") {
                 insumos = datosFinalesInsumos;
                 plantillasRecetas = datosFinalesPlantillas;
 
-                // 🎯 ORDENAR ALFABÉTICAMENTE TRAS LA FUSIÓN/MIGRACIÓN DE DATOS
                 ordenarInsumosAlfabeticamente();
-
                 localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
                 
                 document.getElementById('cfg-nombre').value = config.nombrePasteleria;
                 document.getElementById('cfg-moneda').value = config.moneda;
                 document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
                 document.getElementById('cfg-merma').value = config.porcentajeMerma;
-
-                // 🟢 REFUERZO DE ACTUALIZACIÓN VISUAL POST-SINK
                 document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-                document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
 
                 evaluarEstadoVisualPremium();
                 renderInsumos();
@@ -265,44 +273,27 @@ async function guardarConfiguracion() {
                 rebuildSelectPlantillas();
                 calcularTodo();
 
-                // Aquí sobreescribimos el loading con el éxito 🎉
                 Swal.fire({
-                    title: '¡Conectado exitosamente! 🎉',
-                    text: 'Tu cuenta Premium de NEXI Bake está activa. Datos sincronizados.',
+                    title: '¡Configuración Guardada! ☁️',
+                    text: 'Los cambios de tu negocio se sincronizaron con éxito en NEXI Cloud.',
                     icon: 'success',
                     confirmButtonColor: '#3b82f6'
                 });
             } else {
-                config.isPremium = false;
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                evaluarEstadoVisualPremium();
-                cambiarBannerStatus("❌ Token o Correo Inválido", false);
-                Swal.fire({
-                    title: 'Atención ⚠️',
-                    text: `La nube rechazó el acceso: ${respuestaServidor.message}`,
-                    icon: 'warning',
-                    confirmButtonColor: '#3b82f6'
-                });
+                Swal.fire({ title: 'Atención ⚠️', text: `La nube rechazó la actualización: ${respuestaServidor.message}`, icon: 'warning', confirmButtonColor: '#3b82f6' });
             }
         } catch(e) { 
             console.error(e);
-            cambiarBannerStatus("⚠️ Conectado en modo Local temporal", false);
-            Swal.fire({
-                title: 'Modo Local Activado',
-                text: 'Se guardó localmente, pero hubo un problema al conectar con NEXI Cloud.',
-                icon: 'info',
-                confirmButtonColor: '#3b82f6'
-            });
+            cambiarBannerStatus("⚠️ Error al sincronizar configuración remota", false);
+            Swal.fire({ title: 'Aviso', text: 'Se guardó en el dispositivo, pero falló la sincronización con la nube.', icon: 'info', confirmButtonColor: '#3b82f6' });
         } finally {
             isSavingConfig = false;
         }
         
     } else {
-        // Guardado local normal (instantáneo)
+        // Flujo Local normal para usuarios Free
         config.isPremium = false;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-        
-        // 🟢 Aseguramos actualización local
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
         
         evaluarEstadoVisualPremium();
@@ -310,15 +301,12 @@ async function guardarConfiguracion() {
         renderModulos();
         rebuildSelectPlantillas();
         calcularTodo();
-        Swal.fire({
-            title: '¡Guardado!',
-            text: 'Configuración local actualizada correctamente.',
-            icon: 'success',
-            confirmButtonColor: '#3b82f6'
-        });
+        
+        Swal.fire({ title: '¡Guardado!', text: 'Configuración local actualizada correctamente.', icon: 'success', confirmButtonColor: '#3b82f6' });
         isSavingConfig = false; 
     }
 }
+
 
 function fusionarListasInsumos(locales, nube) {
     let unificados = JSON.parse(JSON.stringify(nube));
