@@ -19,6 +19,12 @@ let config = {
 
 let syncQueue = Promise.resolve();
 
+function ordenarInsumosAlfabeticamente() {
+    insumos.sort((a, b) => {
+        return (a.nombre || "").localeCompare(b.nombre || "", 'es', { sensitivity: 'base' });
+    });
+}
+
 function redondearPrecioComercial(valor) {
     return Math.ceil(valor / 5) * 5; 
 }
@@ -234,9 +240,12 @@ async function guardarConfiguracion() {
                 migracion: datosAInyectar
             });
             
-            if(respuestaServidor.status === "success") {
+                        if(respuestaServidor.status === "success") {
                 insumos = datosFinalesInsumos;
                 plantillasRecetas = datosFinalesPlantillas;
+
+                // 🎯 ORDENAR ALFABÉTICAMENTE TRAS LA FUSIÓN/MIGRACIÓN DE DATOS
+                ordenarInsumosAlfabeticamente();
 
                 localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
                 localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
@@ -369,13 +378,13 @@ function renderInsumos() {
     const m = config.moneda || "$";
 
     const inputBuscar = document.getElementById('buscador-inventario');
-    const textoBusqueda = inputBuscar ? inputBuscar.value.toLowerCase().trim() : '';
+    const textoBusqueda = inputBuscar ? inputBuscar.value.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
 
     const insumosFiltrados = insumos.filter(insumo => {
-        const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase() : '';
-        const marca = insumo.marca ? String(insumo.marca).toLowerCase() : '';
-        return nombre.includes(textoBusqueda) || marca.includes(textoBusqueda);
-    });
+        const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+        const marca = insumo.marca ? String(insumo.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+        return nombre.startsWith(textoBusqueda);
+});
 
     insumosFiltrados.forEach(insumo => {
         const cantidadVal = parseFloat(insumo.cantidad) || 1;
@@ -443,7 +452,8 @@ function agregarInsumoLocal() {
     };
 
     insumos.push(nuevoInsumo);
-    localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+ordenarInsumosAlfabeticamente(); // 🎯 Ordenar al instante
+localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     document.getElementById('form-insumo').reset();
     renderInsumos();
     calcularTodo();
@@ -515,6 +525,10 @@ async function agregarNuevoInsumoNube() {
             };
 
             insumos.push(nuevoInsumoLocal);
+            
+            // 🎯 CORRECCIÓN: Ordenar alfabéticamente el nuevo insumo de la nube de inmediato
+            ordenarInsumosAlfabeticamente(); 
+            
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
             document.getElementById('form-insumo').reset();
             renderInsumos();
@@ -539,13 +553,10 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
     const insumo = insumos.find(i => String(i.id) === String(id));
     if (!insumo) return;
 
-    // 🛡️ FILTRO DE SEGURIDAD AVANZADO PARA CANTIDAD Y PRECIO
     if (campo === 'precio' || campo === 'cantidad') { 
-        // Convertimos a string por seguridad, limpiamos letras/espacios y cambiamos comas por puntos
         let valorLimpio = String(valor).replace(/,/g, '.').replace(/[^0-9.]/g, '');
         const valorNumerico = parseFloat(valorLimpio);
         
-        // Si no es un número real, o es menor/igual a cero, disparamos alerta y restauramos
         if (isNaN(valorNumerico) || valorNumerico <= 0) {
             Swal.fire({
                 title: 'Valor inválido ⚠️',
@@ -557,7 +568,6 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
                 timer: 3500
             });
             
-            // Si tenemos la referencia del input, le regresamos el valor que tenía guardado el objeto
             if (inputElement) {
                 inputElement.value = insumo[campo];
             }
@@ -566,9 +576,17 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
         insumo[campo] = valorNumerico; 
     } else { 
         insumo[campo] = valor.trim(); 
+        
+        // 🎯 CORRECCIÓN: Si modificaron el nombre, reordenamos la lista global
+        if (campo === 'nombre') {
+            ordenarInsumosAlfabeticamente();
+        }
     }
 
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+    
+    // 🎯 CORRECCIÓN: Renderizar insumos de nuevo por si cambió el orden de la tabla o los datos visuales
+    renderInsumos(); 
     renderModulos();
     calcularTodo();
     
@@ -670,11 +688,18 @@ function actualizarSelectReceta() {
 }
 
 function filtrarInsumosReceta(texto) {
-    const t = texto.toLowerCase().trim();
+    // Convertimos a minúsculas y eliminamos acentos de lo que escribe el usuario
+    const t = texto.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const select = document.getElementById('receta-insumo-select');
     select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
     
-    const filtrados = insumos.filter(i => i.nombre.toLowerCase().includes(t) || (i.marca && i.marca.toLowerCase().includes(t)));
+    const filtrados = insumos.filter(i => {
+        // Quitamos acentos al nombre y marca del insumo para comparar limpiamente
+        const nombreInsumo = (i.nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const marcaInsumo = (i.marca || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        return nombreInsumo.includes(t) || marcaInsumo.includes(t);
+    });
     
     if(filtrados.length === 0 && t === "") {
         actualizarSelectReceta();
@@ -851,8 +876,11 @@ function rebuildSelectPlantillas() {
 }
 
 async function guardarPlantillaNube() {
-    const nombre = document.getElementById('nombre-plantilla').value.trim();
-    if (!nombre) {
+    const nombreInput = document.getElementById('nombre-plantilla').value.trim();
+    const selectPlantillas = document.getElementById('select-plantillas');
+    const nombreSeleccionado = selectPlantillas ? selectPlantillas.value : "";
+
+    if (!nombreInput) {
         Swal.fire({ title: 'Falta nombre', text: 'Por favor, ingresa un nombre para guardar la receta.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         return;
     }
@@ -861,23 +889,55 @@ async function guardarPlantillaNube() {
         Swal.fire({ title: 'Receta Vacía', text: 'No puedes guardar una plantilla sin ingredientes. Agrega componentes al pan, relleno o betún primero.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         return;
     }
-    
-    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
+
+    let nombreFinal = nombreInput;
+
+    // 🟢 DETECCIÓN Y EDICIÓN: Si hay una receta cargada/seleccionada y el nombre del input es DIFERENTE, asumimos que quiere RENOMBRARLA
+    if (nombreSeleccionado && nombreSeleccionado !== nombreInput && plantillasRecetas[nombreSeleccionado]) {
+        const confirmarRenombrar = await Swal.fire({
+            title: '¿Renombrar Receta?',
+            text: `¿Deseas cambiar el nombre de "${nombreSeleccionado}" a "${nombreInput}" conservando los ingredientes actuales?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, renombrar',
+            cancelButtonText: 'Guardar como nueva'
+        });
+
+        if (confirmarRenombrar.isConfirmed) {
+            // Si es Premium, primero avisamos a la nube que elimine el nombre viejo para evitar basura remota
+            if (config.isPremium && config.urlNube) {
+                try {
+                    await apiFetch(config.urlNube, {
+                        correo: config.correoUser, token: config.tokenUser,
+                        accion: "eliminarPlantilla", nombreReceta: nombreSeleccionado
+                    });
+                } catch(e) { console.error("Error al limpiar nombre anterior en nube", e); }
+            }
+            // Borramos la clave vieja en el objeto local
+            delete plantillasRecetas[nombreSeleccionado];
+        }
+    }
+
+    // Guardamos la estructura actual con el nuevo nombre
+    plantillasRecetas[nombreFinal] = JSON.parse(JSON.stringify(modulos));
     localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
     rebuildSelectPlantillas();
+    
+    // Dejamos seleccionado el nuevo nombre en el dropdown
+    if(selectPlantillas) selectPlantillas.value = nombreFinal;
     document.getElementById('nombre-plantilla').value = "";
 
+    // Flujo de Sincronización en la Nube
     if (config.isPremium && config.urlNube) {
         cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
 
-        // 🌟 AGREGADO: Pantalla de carga para guardar la receta completa
         Swal.fire({
             title: 'Subiendo receta...',
             text: 'Guardando composición del pastel en tu cuenta remota.',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
 
         try {
@@ -885,13 +945,12 @@ async function guardarPlantillaNube() {
                 correo: config.correoUser,
                 token: config.tokenUser,
                 accion: "guardarPlantilla",
-                nombreReceta: nombre,
+                nombreReceta: nombreFinal,
                 estructuraJson: JSON.stringify(modulos)
             });
             if (resultado.status === "success") {
                 evaluarEstadoVisualPremium();
-                // Éxito reemplaza loading
-                Swal.fire({ title: '¡Guardada!', text: 'Receta guardada y sincronizada en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
+                Swal.fire({ title: '¡Guardada!', text: 'Receta actualizada y sincronizada en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
             } else {
                 Swal.fire({ title: 'Error', text: 'Error de almacenamiento: ' + resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
             }
@@ -899,16 +958,26 @@ async function guardarPlantillaNube() {
             Swal.fire({ title: 'Error de Red', text: 'No hay conexión remota disponible. La receta se mantendrá guardada de forma local.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         }
     } else {
-        // Éxito instantáneo para usuarios locales
-        Swal.fire({ title: '¡Guardada!', text: 'Receta guardada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
+        Swal.fire({ title: '¡Guardada!', text: 'Receta actualizada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
     }
 }
 
+
 function cargarPlantilla(nombre) {
     if(!nombre || !plantillasRecetas[nombre]) return;
+    
+    const inputNombre = document.getElementById('nombre-plantilla');
+    if(inputNombre) inputNombre.value = nombre;
+
     modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
     renderModulos();
     calcularTodo();
+
+    // 🟢 NUEVO: Quita el foco del selector inmediatamente para forzar el cierre limpio
+    const select = document.getElementById('select-plantillas');
+    if (select) {
+        select.blur();
+    }
 }
 
 async function eliminarPlantillaActual() {
@@ -1050,7 +1119,7 @@ async function descargarDeNube() {
         
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
-        if (data.insumos) {
+                if (data.insumos) {
             const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
             let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
             
@@ -1059,6 +1128,9 @@ async function descargarDeNube() {
             } else {
                 insumos = data.insumos.length > 0 ? data.insumos : insumosLocales;
             }
+            
+            // 🎯 ORDENAR ALFABÉTICAMENTE TRAS DESCARGAR DE LA NUBE
+            ordenarInsumosAlfabeticamente();
             
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         }
@@ -1102,6 +1174,9 @@ window.onload = async function() {
     const localPlantillas = localStorage.getItem('respaldo_plantillas');
     if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
 
+    // 🎯 ORDENAR ALFABÉTICAMENTE AL CARGAR LA APP
+    ordenarInsumosAlfabeticamente();
+
     evaluarEstadoVisualPremium();
 
     if (config.isPremium && config.urlNube) {
@@ -1129,5 +1204,20 @@ function toggleAcordeonTotales() {
         // Si estaba en "none", lo mostramos al primer toque.
         cuerpo.style.display = "block";
         if(flecha) flecha.style.transform = 'rotate(180deg)';
+    }
+}
+
+function toggleMostrarToken() {
+    const inputToken = document.getElementById('cfg-token-user');
+    const icono = document.getElementById('ojo-icono');
+    
+    if (!inputToken || !icono) return;
+
+    if (inputToken.type === 'password') {
+        inputToken.type = 'text';
+        icono.textContent = 'visibility_off'; // Nombre del ícono de Google para el ojo tachado
+    } else {
+        inputToken.type = 'password';
+        icono.textContent = 'visibility';     // Vuelve al ojo abierto estándar
     }
 }

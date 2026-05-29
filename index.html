@@ -69,9 +69,16 @@
                         <input type="email" id="cfg-correo-user" placeholder="ejemplo@pasteleria.com">
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <label>Contraseña / Token NEXI:</label>
-                        <input type="password" id="cfg-token-user" placeholder="Introduce tu clave de acceso">
-                    </div>
+    <label>Contraseña / Token NEXI:</label>
+    <div style="position: relative; display: flex; align-items: center;">
+        <input type="password" id="cfg-token-user" placeholder="Introduce tu clave de acceso" style="padding-right: 40px; width: 100%;">
+        
+        <button type="button" id="btn-mostrar-token" onclick="toggleMostrarToken()" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #64748b; padding: 0; display: flex; align-items: center; justify-content: center;">
+            <span class="material-symbols-outlined" id="ojo-icono" style="font-size: 20px;">visibility</span>
+        </button>
+    </div>
+</div>
+
                     <input type="hidden" id="cfg-url-servidor" value="https://script.google.com/macros/s/AKfycbzvO4xDUvoQT213kevfUd1JkDFu9-KFtSokXZQX0QIb_XRwDVQ9ruo5iR53AgKmRuL7/exec">
                 </div>
             </div>
