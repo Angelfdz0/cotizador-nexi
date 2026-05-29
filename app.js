@@ -788,15 +788,26 @@ function calcularTodo() {
     const costoRelleno = calcularCostoModulo('relleno'); 
     const costoBetun = calcularCostoModulo('betun');
     
+    // 1. Costo base solo de los ingredientes consumidos
     const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
+    
+    // 2. Calcular indirectos sobre los insumos
     const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
     const indirectos = subtotalInsumos * porcentajeId; 
     
-    const horasMO = parseFloat(document.getElementById('mo-horas').value) || 0;
+    // Costo de Alimento Total (Food Cost + Indirectos)
+    const costoAlimentoTotal = subtotalInsumos + indirectos;
+
+    // 3. Calcular Mano de Obra por separado
+    const horasMOInput = document.getElementById('mo-horas').value;
+    // 2. Convertimos comas a puntos (por si usan teclados en español "2,5") y pasamos a decimal
+    const horasMO = parseFloat(String(horasMOInput).replace(',', '.')) || 0;
+
     const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
     const totalManoObra = horasMO * precioHoraMO;
 
-    const totalProduc = subtotalInsumos + indirectos + totalManoObra;
+    // El costo real de producción física real
+    const totalProduc = costoAlimentoTotal + totalManoObra;
     const m = config.moneda || "$";
     
     document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
@@ -809,8 +820,12 @@ function calcularTodo() {
     const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
     const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
     
+    // --- 🎯 AJUSTE DE MÁRGENES PROFESIONALES ---
+    // Multiplicamos la materia prima por el factor de diseño (para cubrir desperdicios invisibles, local y utilidad de empresa)
+    // Y le SUMAMOS la mano de obra al final para que no se multiplique exponencialmente.
+    let basePrecioVenta = (costoAlimentoTotal * multiplicador) + totalManoObra;
+    
     let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
-    let basePrecioVenta = totalProduc * multiplicador;
     let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
 
     document.getElementById('res-costo-porcion').textContent = `${m}${baseCostoPorcion.toFixed(2)}`; 
