@@ -6,6 +6,7 @@ let insumos = [];
 let modulos = { pan: [], relleno: [], betun: [] };
 let plantillasRecetas = {};
 let currentModule = 'pan';
+let plantillaSeleccionadaId = null;
 let config = { 
     nombrePasteleria: "NEXI Bake", 
     moneda: "$", 
@@ -369,12 +370,26 @@ function renderInsumos() {
     const m = config.moneda || "$";
 
     const inputBuscar = document.getElementById('buscador-inventario');
-    const textoBusqueda = inputBuscar ? inputBuscar.value.toLowerCase().trim() : '';
+    const textoBusqueda = inputBuscar 
+        ? inputBuscar.value.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+        : '';
 
-    const insumosFiltrados = insumos.filter(insumo => {
-        const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase() : '';
-        const marca = insumo.marca ? String(insumo.marca).toLowerCase() : '';
+    // 🌟 NUEVO: Primero filtramos los insumos según la búsqueda
+    let insumosFiltrados = insumos.filter(insumo => {
+        const nombre = insumo.nombre 
+            ? String(insumo.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+            : '';
+        const marca = insumo.marca 
+            ? String(insumo.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+            : '';
         return nombre.includes(textoBusqueda) || marca.includes(textoBusqueda);
+    });
+
+    // 🌟 NUEVO: Ordenamos alfabéticamente de la A a la Z usando localeCompare (ignora tildes y mayúsculas al ordenar)
+    insumosFiltrados.sort((a, b) => {
+        const nombreA = (a.nombre || "").trim();
+        const nombreB = (b.nombre || "").trim();
+        return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
     });
 
     insumosFiltrados.forEach(insumo => {
@@ -670,16 +685,28 @@ function actualizarSelectReceta() {
 }
 
 function filtrarInsumosReceta(texto) {
-    const t = texto.toLowerCase().trim();
+    const t = texto.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const select = document.getElementById('receta-insumo-select');
     select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
     
-    const filtrados = insumos.filter(i => i.nombre.toLowerCase().includes(t) || (i.marca && i.marca.toLowerCase().includes(t)));
+    let filtrados = insumos.filter(i => {
+        const nombreInsumo = i.nombre ? String(i.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+        const marcaInsumo = i.marca ? String(i.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+        
+        return nombreInsumo.includes(t) || marcaInsumo.includes(t);
+    });
     
     if(filtrados.length === 0 && t === "") {
         actualizarSelectReceta();
         return;
     }
+
+    // 🌟 NUEVO: Ordenamos alfabéticamente las opciones del menú desplegable de la receta
+    filtrados.sort((a, b) => {
+        const nombreA = (a.nombre || "").trim();
+        const nombreB = (b.nombre || "").trim();
+        return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
+    });
     
     filtrados.forEach(i => {
         const opt = document.createElement('option');
@@ -721,9 +748,12 @@ function agregarIngredienteRecetaManejador() {
     if(!id || !cant) return;
 
     modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
-    document.getElementById('buscador-receta').value = "";
-    actualizarSelectReceta();
+    
+    // 🌟 CORRECCIÓN: Reseteamos el formulario y forzamos la actualización del select completo
     document.getElementById('form-receta').reset();
+    document.getElementById('buscador-receta').value = ""; // Vaciamos visiblemente el input
+    actualizarSelectReceta(); // Forzamos a que el selector recupere TODO el inventario disponible
+    
     renderModulos();
     calcularTodo();
 }
@@ -788,14 +818,19 @@ function calcularTodo() {
     const costoRelleno = calcularCostoModulo('relleno'); 
     const costoBetun = calcularCostoModulo('betun');
     
+    // 1. Sumamos la materia prima (Insumos)
     const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
+    
+    // 2. Calculamos los gastos indirectos basados en los insumos
     const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
     const indirectos = subtotalInsumos * porcentajeId; 
     
+    // 3. Calculamos la Mano de Obra (Sueldo base del chef)
     const horasMO = parseFloat(document.getElementById('mo-horas').value) || 0;
     const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
     const totalManoObra = horasMO * precioHoraMO;
 
+    // 4. El Costo Total de Producción sigue siendo la suma de todo
     const totalProduc = subtotalInsumos + indirectos + totalManoObra;
     const m = config.moneda || "$";
     
@@ -809,8 +844,12 @@ function calcularTodo() {
     const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
     const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
     
+    // 🌟 CORRECCIÓN DE MARGEN: 
+    // Multiplicamos únicamente el costo de materiales + indirectos para generar la ganancia del negocio, 
+    // y al final sumamos la mano de obra íntegra (sin triplicarla).
+    let basePrecioVenta = ((subtotalInsumos + indirectos) * multiplicador) + totalManoObra;
+    
     let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
-    let basePrecioVenta = totalProduc * multiplicador;
     let basePrecioPorcion = inputPorciones > 0 ? (basePrecioVenta / inputPorciones) : 0;
 
     document.getElementById('res-costo-porcion').textContent = `${m}${baseCostoPorcion.toFixed(2)}`; 
@@ -830,71 +869,181 @@ function rebuildSelectPlantillas() {
     const select = document.getElementById('select-plantillas');
     if(!select) return;
     select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
-    Object.keys(plantillasRecetas).forEach(k => {
-        const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
+    
+    // Ordenamos alfabéticamente las recetas del selector
+    const nombresOrdenados = Object.keys(plantillasRecetas).sort((a, b) => {
+        return a.localeCompare(b, 'es', { sensitivity: 'base' });
     });
+
+    nombresOrdenados.forEach(k => {
+        const opt = document.createElement('option'); 
+        opt.value = k; 
+        opt.textContent = k; 
+        select.appendChild(opt);
+    });
+
+    // 🌟 NUEVO: Truco de UX para controlar el comportamiento del clic de apertura/cierre
+    // Removemos oyentes previos por si acaso se vuelve a ejecutar la función
+    select.removeEventListener('click', manejarComportamientoCierreSelect);
+    
+    // Reiniciamos el rastreador de estado interno del elemento
+    select.dataset.abierto = "false";
+    
+    // Añadimos el nuevo comportamiento inteligente
+    select.addEventListener('click', manejarComportamientoCierreSelect);
 }
 
-async function guardarPlantillaNube() {
-    const nombre = document.getElementById('nombre-plantilla').value.trim();
-    if (!nombre) {
-        Swal.fire({ title: 'Falta nombre', text: 'Por favor, ingresa un nombre para guardar la receta.', icon: 'warning', confirmButtonColor: '#3b82f6' });
-        return;
-    }
+// Función auxiliar para gestionar el comportamiento del menú desplegable
+function manejarComportamientoCierreSelect(e) {
+    const select = e.currentTarget;
     
-    if (modulos.pan.length === 0 && modulos.relleno.length === 0 && modulos.betun.length === 0) {
-        Swal.fire({ title: 'Receta Vacía', text: 'No puedes guardar una plantilla sin ingredientes. Agrega componentes al pan, relleno o betún primero.', icon: 'warning', confirmButtonColor: '#3b82f6' });
-        return;
-    }
-    
-    plantillasRecetas[nombre] = JSON.parse(JSON.stringify(modulos));
-    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-    rebuildSelectPlantillas();
-    document.getElementById('nombre-plantilla').value = "";
-
-    if (config.isPremium && config.urlNube) {
-        cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
-
-        // 🌟 AGREGADO: Pantalla de carga para guardar la receta completa
-        Swal.fire({
-            title: 'Subiendo receta...',
-            text: 'Guardando composición del pastel en tu cuenta remota.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        try {
-            const resultado = await apiFetch(config.urlNube, {
-                correo: config.correoUser,
-                token: config.tokenUser,
-                accion: "guardarPlantilla",
-                nombreReceta: nombre,
-                estructuraJson: JSON.stringify(modulos)
-            });
-            if (resultado.status === "success") {
-                evaluarEstadoVisualPremium();
-                // Éxito reemplaza loading
-                Swal.fire({ title: '¡Guardada!', text: 'Receta guardada y sincronizada en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
-            } else {
-                Swal.fire({ title: 'Error', text: 'Error de almacenamiento: ' + resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
-            }
-        } catch(e) {
-            Swal.fire({ title: 'Error de Red', text: 'No hay conexión remota disponible. La receta se mantendrá guardada de forma local.', icon: 'warning', confirmButtonColor: '#3b82f6' });
-        }
+    // Si el usuario hace clic pero el menú ya estaba marcado como "abierto",
+    // significa que es el segundo clic en el mismo lugar. ¡Forzamos el cierre quitando el foco!
+    if (select.dataset.abierto === "true") {
+        select.blur(); // Quita el foco del elemento, obligándolo a cerrarse
+        select.dataset.abierto = "false";
     } else {
-        // Éxito instantáneo para usuarios locales
-        Swal.fire({ title: '¡Guardada!', text: 'Receta guardada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
+        // Primer clic: se abre normalmente y guardamos el estado
+        select.dataset.abierto = "true";
     }
 }
 
-function cargarPlantilla(nombre) {
-    if(!nombre || !plantillasRecetas[nombre]) return;
-    modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+// 🌟 ADEMÁS: Si el usuario sí selecciona una receta, debemos reiniciar el estado a "cerrado"
+document.getElementById('select-plantillas')?.addEventListener('change', (e) => {
+    e.currentTarget.dataset.abierto = "false";
+});
+
+
+function cargarPlantilla(nombrePlantilla) {
+    if (!nombrePlantilla || !plantillasRecetas[nombrePlantilla]) {
+        plantillaSeleccionadaId = null;
+        return;
+    }
+    
+    // Guardamos qué receta está seleccionada actualmente basándonos en su nombre
+    plantillaSeleccionadaId = nombrePlantilla;
+    
+    // Extraemos la receta del listado global
+    const receta = plantillasRecetas[nombrePlantilla];
+    
+    // 🟢 REPARADO: Inyectamos los insumos guardados a los módulos de la aplicación
+    modulos.pan = receta.pan ? JSON.parse(JSON.stringify(receta.pan)) : [];
+    modulos.relleno = receta.relleno ? JSON.parse(JSON.stringify(receta.relleno)) : [];
+    modulos.betun = receta.betun ? JSON.parse(JSON.stringify(receta.betun)) : [];
+    
+    // Colocamos el nombre de la receta en el cuadro de texto para que lo pueda editar
+    document.getElementById('nombre-plantilla').value = nombrePlantilla;
+    
+    // Dibujamos las tablas en la interfaz y recalculamos todos los costos de inmediato
     renderModulos();
     calcularTodo();
 }
+
+function guardarPlantillaNube() {
+    const nombreInput = document.getElementById('nombre-plantilla').value.trim();
+    if (!nombreInput) {
+        Swal.fire('¡Atención!', 'Por favor, escribe un nombre para la receta.', 'warning');
+        return;
+    }
+
+    // 🌟 DETECCIÓN DE CAMBIO DE NOMBRE: Si el chef cargó una receta y modificó el texto del input
+    if (plantillaSeleccionadaId && plantillaSeleccionadaId !== nombreInput) {
+        Swal.fire({
+            title: '¿Deseas renombrar esta receta?',
+            text: `Detectamos que cambiaste el nombre de "${plantillaSeleccionadaId}" a "${nombreInput}".`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, renombrar (Borrar antiguo)',
+            cancelButtonText: 'No, guardar como copia nueva',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Opción A: Renombrar. Enviamos el nombre nuevo y le avisamos que borre el antiguo (true)
+                ejecutarGuardadoReceta(nombreInput, plantillaSeleccionadaId, true); 
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // Opción B: Duplicar. Guarda con el nombre nuevo de forma independiente sin tocar el viejo
+                ejecutarGuardadoReceta(nombreInput, null, false);
+            }
+        });
+    } else {
+        // Guardado normal (Receta nueva o sobreescribir la existente sin cambiar su nombre)
+        ejecutarGuardadoReceta(nombreInput, null, false);
+    }
+}
+
+function ejecutarGuardadoReceta(nombreNuevo, nombreAntiguo, esRenombrado) {
+    // Construimos la estructura idéntica que espera tu sistema
+    const datosComposicion = {
+        pan: modulos.pan,
+        relleno: modulos.relleno,
+        betun: modulos.betun
+    };
+
+    Swal.fire({
+        title: 'Guardando receta...',
+        text: 'Sincronizando con NEXI Cloud.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    if (config.isPremium && config.urlNube) {
+        // FLUJO PREMIUM EN LA NUBE
+        apiFetch(config.urlNube, {
+            correo: config.correoUser,
+            token: config.tokenUser,
+            accion: "guardarPlantilla",
+            nombreReceta: nombreNuevo,
+            composicion: datosComposicion
+        }).then(async (resultado) => {
+            if (resultado.status === "success") {
+                
+                // Si el usuario eligió "Renombrar", le pedimos a la nube que elimine la receta con el nombre viejo
+                if (esRenombrado && nombreAntiguo) {
+                    try {
+                        await apiFetch(config.urlNube, {
+                            correo: config.correoUser, token: config.tokenUser,
+                            accion: "eliminarPlantilla", nombreReceta: nombreAntiguo
+                        });
+                        delete plantillasRecetas[nombreAntiguo]; // Eliminamos del listado local
+                    } catch(e) { console.error("Error al remover plantilla vieja:", e); }
+                }
+
+                // Guardamos en memoria el nuevo contenido
+                plantillasRecetas[nombreNuevo] = datosComposicion;
+                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                
+                plantillaSeleccionadaId = nombreNuevo;
+                
+                rebuildSelectPlantillas();
+                // Forzamos al elemento select a marcar la receta guardada actual
+                document.getElementById('select-plantillas').value = nombreNuevo;
+
+                Swal.fire({ title: '¡Éxito! 🎉', text: 'Receta sincronizada correctamente.', icon: 'success', confirmButtonColor: '#3b82f6' });
+            } else {
+                Swal.fire('Error', resultado.message || 'No se pudo guardar de forma remota.', 'error');
+            }
+        }).catch(err => {
+            Swal.fire('Error de red', 'Hubo un problema al conectar con NEXI Cloud.', 'error');
+        });
+    } else {
+        // FLUJO LOCAL (Mismo comportamiento si se trabaja offline)
+        if (esRenombrado && nombreAntiguo) {
+            delete plantillasRecetas[nombreAntiguo];
+        }
+        
+        plantillasRecetas[nombreNuevo] = datosComposicion;
+        localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+        
+        plantillaSeleccionadaId = nombreNuevo;
+        rebuildSelectPlantillas();
+        document.getElementById('select-plantillas').value = nombreNuevo;
+        
+        Swal.fire({ title: '¡Guardado local!', text: 'Receta guardada en el dispositivo.', icon: 'success', confirmButtonColor: '#3b82f6' });
+    }
+}
+
 
 async function eliminarPlantillaActual() {
     const select = document.getElementById('select-plantillas');

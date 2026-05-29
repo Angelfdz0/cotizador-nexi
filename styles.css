@@ -212,98 +212,48 @@ footer a:hover { text-decoration: underline; }
    ========================================================================== */
 
 /* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
+/* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
 @media (max-width: 767px) {
-    body {
-        padding: 10px; /* Menos espacio en los bordes de la pantalla */
-        padding-bottom: 40px;
-    }
+    body { padding: 10px; padding-bottom: 40px; }
 
-    /* 🧼 Ajuste del Header */
-    header {
-        padding: 35px 20px; /* Reducimos el colchón del banner */
-        border-radius: 16px;
-        margin-bottom: 15px;
-    }
-    
-    header h1 {
-        font-size: 28px; /* Título más compacto para que no se corte */
-        letter-spacing: -0.5px;
-    }
+    header { padding: 30px 15px; border-radius: 16px; margin-bottom: 15px; }
+    header h1 { font-size: 26px; }
+    .brand-desc { font-size: 13px; margin-top: 5px; }
 
-    .brand-desc {
-        font-size: 13px;
-        max-width: 100%; /* Que use todo el ancho en el celular */
-    }
-
-    /* 🌙 Reposicionamos el botón del tema oscuro */
-    .theme-toggle-icon {
-        top: 15px;
-        right: 15px;
-        width: 36px;
-        height: 36px;
-    }
-    .theme-toggle-icon span {
-        font-size: 18px;
-    }
-
-    /* 📦 Ajuste de Tarjetas */
-    .card {
-        padding: 16px; /* Más espacio interno libre para el contenido */
-        margin-bottom: 16px;
-    }
-
-    /* 🧱 Formularios Flex-Row en Celular */
-    .flex-row {
-        flex-direction: column; /* Apila los inputs uno abajo del otro */
-        align-items: stretch !important; /* Estira los campos al ancho completo */
-        gap: 12px;
-    }
-
-    .flex-row > div, 
-    .flex-row > input, 
-    .flex-row > select, 
-    .flex-row > button {
-        width: 100% !important; /* Obliga a cada elemento a usar su propio renglón */
-        flex: none !important;  
-    }
-
-    .flex-row .btn, .flex-row button {
-        height: 42px !important; /* Botones más grandes y táctiles para el dedo */
-        margin-top: 5px;
-    }
-
-    /* 📑 Pestañas de Composición */
-    .tabs-container {
+    /* 🧱 Formularios Flex-Row: Solo los que pertenecen a formularios, no tablas */
+    .card form.flex-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+        gap: 10px;
     }
+
+    .card form.flex-row > div {
+        width: 100%;
+        flex: none;
+    }
+
+    /* Corrección de inputs para que luzcan alineados */
+    .card form.flex-row input, 
+    .card form.flex-row select {
+        height: 44px; /* Altura táctil más cómoda */
+    }
+
+    /* 📊 Ajuste de los resultados */
+    .commercial-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* Una columna en móvil */
+        gap: 15px;
+    }
+
+    /* 📑 Pestañas (Evitar desalineación) */
     .tabs {
         width: 100%;
+        display: flex;
+        overflow-x: auto; /* Permite scroll si las pestañas son muchas */
     }
     .tab {
-        flex: 1; /* Distribuye las pestañas equitativamente en el ancho del celular */
-        text-align: center;
-        padding: 10px 5px;
-    }
-    .tabs-container .btn-danger {
-        width: 100%; /* El botón "Limpiar todo" abarca todo el ancho abajo */
-    }
-
-    /* 📊 Zona de Resultados Comerciales */
-    .commercial-grid .main-price {
-        font-size: 22px; /* Evita que el precio gigante rompa la caja */
-    }
-    
-    /* 💾 Zona de guardar recetas en memoria */
-    .memory-zone .flex-row {
-        gap: 8px;
-    }
-
-    /* 🎛️ Config-grids (Panel superior y Cotizador rápido) */
-    .config-grid {
-        grid-template-columns: 1fr; /* Una sola columna perfecta */
-        gap: 12px;
+        flex: 1;
+        white-space: nowrap; /* Evita que el texto de las pestañas se parta */
     }
 }
 
@@ -412,4 +362,39 @@ table {
     .grid {
         grid-template-columns: 1fr 1.25fr; /* Más espacio para armar la receta */
     }
+}
+
+/* Alineación precisa de etiquetas y formularios */
+.form-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12.5px;
+    color: var(--label-color);
+    font-weight: 600;
+}
+
+/* Asegurar que las celdas de la tabla se mantengan alineadas verticalmente */
+td, th {
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+/* Ajuste del botón de WhatsApp para que siempre se vea bien */
+.btn-whatsapp-link {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Corrección de altura para inputs de tabla */
+.table-input {
+    height: 32px;
+    display: flex;
+    align-items: center;
 }
