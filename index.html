@@ -160,33 +160,29 @@
             </div>
 
             <form id="form-receta" class="flex-row" style="margin-bottom: 15px;" autocomplete="off" onsubmit="event.preventDefault(); agregarIngredienteRecetaManejador();">
-    <div style="flex: 1.2; min-width: 130px;">
-        <label>🔍 Buscar ingrediente</label>
-        <input type="text" id="buscador-receta" placeholder="Ej: Harina..." oninput="filtrarInsumosReceta(this.value)">
-    </div>
-    <div style="flex: 1.5; min-width: 150px;">
-        <label>Seleccionar Insumo</label>
-        <select id="receta-insumo-select" onchange="actualizarLabelUnidadReceta()" required>
-            <option value="" disabled selected>🔹 Seleccione un insumo...</option>
-        </select>
-    </div>
-    <div style="flex: 0.8; min-width: 80px;">
-        <label>Cant. Usada</label>
-        <input type="number" id="receta-cantidad" placeholder="200" min="0.01" step="any" required>
-    </div>
-    <div style="flex: 0.6; min-width: 60px;">
-        <label>Unidad</label>
-        <select id="receta-unidad">
-            <option value="g">g</option><option value="ml">ml</option><option value="pza">pza</option>
-        </select>
-    </div>
-    <div style="display: flex; align-items: flex-end; gap: 8px;">
-        <button type="submit" class="btn" style="height: 38px;" title="Agregar Insumo Individual">+</button>
-        <button type="button" class="btn" style="height: 38px; background-color: #6366f1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 12px;" onclick="cargarRecetaBaseComoInsumo()" title="Cargar Receta Completa">
-            <span class="material-symbols-outlined" style="font-size: 20px; color: white;">folder_open</span>
-        </button>
-    </div>
-</form>
+                <div style="flex: 1.2; min-width: 130px;">
+                    <label>🔍 Buscar ingrediente</label>
+                    <input type="text" id="buscador-receta" placeholder="Ej: Harina..." oninput="filtrarInsumosReceta(this.value)">
+                </div>
+                <div style="flex: 1.5; min-width: 150px;">
+                    <label>Seleccionar Insumo</label>
+                    <select id="receta-insumo-select" onchange="actualizarLabelUnidadReceta()" required>
+                        <option value="" disabled selected>🔹 Seleccione un insumo...</option>
+                    </select>
+                </div>
+                <div style="flex: 0.8; min-width: 80px;">
+                    <label>Cant. Usada</label>
+                    <input type="number" id="receta-cantidad" placeholder="200" min="0.01" step="any" required>
+                </div>
+                <div style="flex: 0.6; min-width: 60px;">
+                    <label>Unidad</label>
+                    <select id="receta-unidad">
+                        <option value="g">g</option><option value="ml">ml</option><option value="pza">pza</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="height: 38px;">+</button>
+            </form>
+
             <div id="tab-pan" class="tab-content active"><div class="table-container"><table><thead><tr><th>PAN</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-pan"></tbody></table></div></div>
             <div id="tab-relleno" class="tab-content"><div class="table-container"><table><thead><tr><th>RELLENO</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-relleno"></tbody></table></div></div>
             <div id="tab-betun" class="tab-content"><div class="table-container"><table><thead><tr><th>BETÚN</th><th>Cant</th><th>Costo (+Merma)</th><th></th></tr></thead><tbody id="tabla-betun"></tbody></table></div></div>
