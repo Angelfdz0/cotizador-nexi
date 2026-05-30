@@ -4,7 +4,7 @@
 
 let insumos = [];
 let modulos = { pan: [], relleno: [], betun: [] };
-let plantillasRecetas = {};
+let Recetas = {};
 let currentModule = 'pan';
 let config = { 
     nombrePasteleria: "NEXI Bake", 
@@ -80,12 +80,13 @@ function evaluarEstadoVisualPremium() {
 function togglePanelConfiguracion() {
     const cuerpo = document.getElementById('cuerpo-configuracion');
     const flecha = document.getElementById('btn-flecha-config');
-    if (cuerpo.style.display === 'none') {
+    if (!cuerpo) return;
+    if (cuerpo.style.display === 'none' || cuerpo.style.display === '') {
         cuerpo.style.display = 'block';
-        flecha.style.transform = 'rotate(180deg)';
+        if(flecha) flecha.style.transform = 'rotate(180deg)';
     } else {
         cuerpo.style.display = 'none';
-        flecha.style.transform = 'rotate(0deg)';
+        if(flecha) flecha.style.transform = 'rotate(0deg)';
     }
 }
 
@@ -118,7 +119,6 @@ let isSavingConfig = false;
 async function guardarConfiguracion() {
     if (isSavingConfig) return;
 
-    // 1. Capturamos los datos frescos del formulario
     const nuevoNombre = document.getElementById('cfg-nombre').value.trim() || "NEXI Bake";
     const nuevaMoneda = document.getElementById('cfg-moneda').value.trim() || "$";
     const nuevosIndirectos = parseFloat(document.getElementById('cfg-indirectos').value) || 0;
@@ -127,11 +127,9 @@ async function guardarConfiguracion() {
     const correoInput = document.getElementById('cfg-correo-user').value.trim().toLowerCase();
     const tokenInput = document.getElementById('cfg-token-user').value.trim();
 
-    // Comprobamos si es un cambio de credenciales o una activación de cuenta
     const esPrimerLogueo = (!config.isPremium && tokenInput && urlNubeInput) || 
                            (config.correoUser !== correoInput || config.tokenUser !== tokenInput);
 
-    // Asignamos temporalmente al objeto de configuración local
     config.nombrePasteleria = nuevoNombre;
     config.moneda = nuevaMoneda;
     config.porcentajeIndirectos = nuevosIndirectos;
@@ -140,7 +138,6 @@ async function guardarConfiguracion() {
     config.correoUser = correoInput;
     config.tokenUser = tokenInput;
 
-    // Actualización visual express instantánea
     document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
     document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
     
@@ -163,16 +160,15 @@ async function guardarConfiguracion() {
         
         try {
             let datosFinalesInsumos = JSON.parse(JSON.stringify(insumos));
-            let datosFinalesPlantillas = JSON.parse(JSON.stringify(plantillasRecetas));
+            let datosFinales = JSON.parse(JSON.stringify(Recetas));
             let ejecutarMigracionLote = false;
 
             if (esPrimerLogueo) {
                 const insumosLocalesRaw = localStorage.getItem('respaldo_insumos');
-                const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
+                const LocalesRaw = localStorage.getItem('respaldo_recetas');
                 let insumosLocales = insumosLocalesRaw ? JSON.parse(insumosLocalesRaw) : [];
-                let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
+                let Locales = LocalesRaw ? JSON.parse(LocalesRaw) : {};
 
-                // 🌟 CORRECCIÓN: Usamos apiFetch directamente especificar la acción
                 const consultaNube = await apiFetch(config.urlNube, {
                     correo: config.correoUser,
                     token: config.tokenUser,
@@ -181,7 +177,7 @@ async function guardarConfiguracion() {
 
                 if (consultaNube && consultaNube.status !== "error") {
                     let insumosNube = consultaNube.insumos || [];
-                    let plantillasNube = consultaNube.plantillas || {};
+                    let Nube = consultaNube.recetas || {};
 
                     if (consultaNube.nombrePasteleria) config.nombrePasteleria = consultaNube.nombrePasteleria;
                     if (consultaNube.moneda) config.moneda = consultaNube.moneda;
@@ -203,17 +199,17 @@ async function guardarConfiguracion() {
                         
                         if (resultadoFusion.isConfirmed) {
                             datosFinalesInsumos = fusionarListasInsumos(insumosLocales, insumosNube);
-                            datosFinalesPlantillas = { ...plantillasNube, ...plantillasLocales };
+                            datosFinales = { ...Nube, ...Locales };
                             ejecutarMigracionLote = true; 
                         } else {
                             datosFinalesInsumos = insumosNube;
-                            datosFinalesPlantillas = plantillasNube;
+                            datosFinales = Nube;
                             ejecutarMigracionLote = false;
                         }
                     } else {
                         datosFinalesInsumos = insumosNube.length > 0 ? insumosNube : insumosLocales;
-                        datosFinalesPlantillas = Object.keys(plantillasNube).length > 0 ? plantillasNube : plantillasLocales;
-                        ejecutarMigracionLote = insumosLocales.length > 0 || Object.keys(plantillasLocales).length > 0;
+                        datosFinales = Object.keys(Nube).length > 0 ? Nube : Locales;
+                        ejecutarMigracionLote = insumosLocales.length > 0 || Object.keys(Locales).length > 0;
                     }
                 } else if (consultaNube && consultaNube.status === "error") {
                     throw new Error(consultaNube.message);
@@ -223,7 +219,7 @@ async function guardarConfiguracion() {
             let datosAInyectar = {
                 ejecutarMigracion: ejecutarMigracionLote,
                 insumos: datosFinalesInsumos,
-                plantillas: datosFinalesPlantillas
+                recetas: datosFinales
             };
 
             const respuestaServidor = await apiFetch(config.urlNube, {
@@ -239,11 +235,11 @@ async function guardarConfiguracion() {
             
             if(respuestaServidor.status === "success") {
                 insumos = datosFinalesInsumos;
-                plantillasRecetas = datosFinalesPlantillas;
+                Recetas = datosFinales;
 
                 ordenarInsumosAlfabeticamente();
                 localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-                localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+                localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
                 localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
                 
                 document.getElementById('cfg-nombre').value = config.nombrePasteleria;
@@ -255,13 +251,10 @@ async function guardarConfiguracion() {
                 evaluarEstadoVisualPremium();
                 renderInsumos();
                 renderModulos();
-                rebuildSelectPlantillas();
+                rebuildSelect();
                 calcularTodo();
 
-                // 🎯 ANALYTICS: Configuración exitosa vinculada a la nube
-                gtag('event', 'configuracion_guardada', {
-                    'metodo': 'NEXI_Cloud'
-                });
+                gtag('event', 'configuracion_guardada', { 'metodo': 'NEXI_Cloud' });
 
                 Swal.fire({
                     title: '¡Configuración Guardada! ☁️',
@@ -281,7 +274,6 @@ async function guardarConfiguracion() {
         }
         
     } else {
-        // Flujo Local Modo Free
         config.isPremium = false;
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
@@ -289,13 +281,10 @@ async function guardarConfiguracion() {
         evaluarEstadoVisualPremium();
         renderInsumos();
         renderModulos();
-        rebuildSelectPlantillas();
+        rebuildSelect();
         calcularTodo();
         
-        // 🎯 ANALYTICS: Configuración guardada en modo local
-        gtag('event', 'configuracion_guardada', {
-            'metodo': 'Modo_Local'
-        });
+        gtag('event', 'configuracion_guardada', { 'metodo': 'Modo_Local' });
 
         Swal.fire({ title: '¡Guardado!', text: 'Configuración local actualizada correctamente.', icon: 'success', confirmButtonColor: '#3b82f6' });
         isSavingConfig = false; 
@@ -343,18 +332,16 @@ async function cerrarSesionNexi() {
     config.isPremium = false;
     
     localStorage.removeItem('respaldo_config_pasteleria');
-localStorage.removeItem('respaldo_insumos');
-localStorage.removeItem('respaldo_plantillas');
+    localStorage.removeItem('respaldo_insumos');
+    localStorage.removeItem('respaldo_recetas');
 
-// Limpieza absoluta de referencias en memoria
-insumos = [];
-modulos = { pan: [], relleno: [], betun: [] };
-plantillasRecetas = {};
+    insumos = [];
+    modulos = { pan: [], relleno: [], betun: [] };
+    Recetas = {};
 
-// Pequeña espera para asegurar la escritura del disco en localStorage antes del reload
-setTimeout(() => {
-    window.location.reload();
-}, 100);
+    setTimeout(() => {
+        window.location.reload();
+    }, 100);
 }
 
 function renderInsumos() {
@@ -370,7 +357,7 @@ function renderInsumos() {
         const nombre = insumo.nombre ? String(insumo.nombre).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
         const marca = insumo.marca ? String(insumo.marca).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
         return nombre.includes(textoBusqueda) || marca.includes(textoBusqueda); 
-});
+    });
 
     insumosFiltrados.forEach(insumo => {
         const cantidadVal = parseFloat(insumo.cantidad) || 1;
@@ -438,15 +425,14 @@ function agregarInsumoLocal() {
     };
 
     insumos.push(nuevoInsumo);
-ordenarInsumosAlfabeticamente(); // 🎯 Ordenar al instante
-localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+    ordenarInsumosAlfabeticamente(); 
+    localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
     document.getElementById('form-insumo').reset();
     renderInsumos();
     calcularTodo();
     Swal.fire({ title: '¡Añadido!', text: 'Insumo guardado localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
     
     gtag('event', 'insumo_creado', { 'alojamiento': 'Local' });
-
 }
 
 let isSavingInsumo = false; 
@@ -478,14 +464,11 @@ async function agregarNuevoInsumoNube() {
     const idInsumo = Date.now().toString();
     cambiarBannerStatus("⏳ Sincronizando insumo...", true);
 
-    // 🌟 AGREGADO: Pantalla de carga para guardar ingrediente
     Swal.fire({
         title: 'Guardando ingrediente...',
         text: 'Subiendo datos a NEXI Cloud.',
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
 
     try {
@@ -514,10 +497,7 @@ async function agregarNuevoInsumoNube() {
             };
 
             insumos.push(nuevoInsumoLocal);
-            
             gtag('event', 'insumo_creado', { 'alojamiento': 'NEXI_Cloud' });
-            
-            // 🎯 CORRECCIÓN: Ordenar alfabéticamente el nuevo insumo de la nube de inmediato
             ordenarInsumosAlfabeticamente(); 
             
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
@@ -526,7 +506,6 @@ async function agregarNuevoInsumoNube() {
             calcularTodo();
             evaluarEstadoVisualPremium();
             
-            // Reemplazamos el loading por Éxito
             Swal.fire({ title: '¡Sincronizado!', text: 'Insumo guardado y alojado en NEXI Cloud.', icon: 'success', confirmButtonColor: '#3b82f6' });
         } else {
             Swal.fire({ title: 'Error de servidor', text: resultado.message, icon: 'error', confirmButtonColor: '#3b82f6' });
@@ -549,7 +528,6 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
         const valorNumerico = parseFloat(valorLimpio);
         
         if (isNaN(valorNumerico) || valorNumerico <= 0) {
-            // Alerta SweetAlert...
             if (inputElement) inputElement.value = insumo[campo];
             return; 
         }
@@ -558,18 +536,13 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
         insumo[campo] = valor.trim(); 
         if (campo === 'nombre') {
             ordenarInsumosAlfabeticamente();
-            // NOTA: Si re-renderizas aquí, el usuario perderá el foco del input mientras escribe.
-            // Es mejor no llamar a renderInsumos() inmediatamente si el campo es 'nombre' y se usa onchange/onkeyup.
         }
     }
 
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-    
-    // Solo re-renderizamos los módulos y recalculamos para no romper el input actual
     renderModulos();
     calcularTodo();
     
-    // Sincronización en segundo plano (Mantenida igual)
     if(config.isPremium && config.urlNube) {
         syncQueue = syncQueue.then(async () => {
             try {
@@ -588,7 +561,6 @@ function actualizarDatoInsumo(id, campo, valor, inputElement = null) {
 }
 
 async function eliminarInsumo(id) {
-    // Buscamos el insumo localmente para obtener su nombre y hacerlo más personalizado
     const insumoEncontrado = insumos.find(i => String(i.id) === String(id));
     const nombreInsumo = insumoEncontrado ? insumoEncontrado.nombre : "este insumo";
 
@@ -608,14 +580,11 @@ async function eliminarInsumo(id) {
     if (config.isPremium && config.urlNube) {
         cambiarBannerStatus("⏳ Eliminando insumo de la nube...", true);
 
-        // Pantalla de carga inmediata tras confirmar
         Swal.fire({
             title: 'Eliminando ingrediente...',
             text: 'Removiendo datos de NEXI Cloud. Por favor espera.',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
 
         try {
@@ -637,7 +606,6 @@ async function eliminarInsumo(id) {
         }
     }
 
-    // Código de limpieza local existente
     insumos = insumos.filter(i => String(i.id) !== String(id));
     for(let key in modulos) { modulos[key] = modulos[key].filter(r => String(r.insumoId) !== String(id)); }
     localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
@@ -646,7 +614,6 @@ async function eliminarInsumo(id) {
     calcularTodo();
     evaluarEstadoVisualPremium();
 
-    // ÉXITO: Sobreescribe la carga con el mensaje final
     Swal.fire({ 
         title: 'Eliminado', 
         text: 'El insumo ha sido eliminado correctamente.', 
@@ -668,13 +635,11 @@ function actualizarSelectReceta() {
 }
 
 function filtrarInsumosReceta(texto) {
-    // Convertimos a minúsculas y eliminamos acentos de lo que escribe el usuario
     const t = texto.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const select = document.getElementById('receta-insumo-select');
     select.innerHTML = '<option value="" disabled selected>🔹 Seleccione un insumo...</option>';
     
     const filtrados = insumos.filter(i => {
-        // Quitamos acentos al nombre y marca del insumo para comparar limpiamente
         const nombreInsumo = (i.nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const marcaInsumo = (i.marca || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         
@@ -742,23 +707,35 @@ function renderModulos() {
         if(!tbody) return;
         tbody.innerHTML = '';
         modulos[key].forEach((item, index) => {
-            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
-            const tr = document.createElement('tr');
-            if(!insumo) {
-                tr.innerHTML = `<td>⚠️ Insumo Eliminado</td><td>${item.cantidadUsada}</td><td>${m}0.00</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
-            } else {
-                let cantPaquete = insumo.cantidad;
-                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
-                if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
-                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-                if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
-                
-                const costoBase = (insumo.precio / cantPaquete) * item.cantidadUsada;
-                const costoConMerma = costoBase * factorMerma;
+            if (item.esPlantilla) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>📋 [Receta] ${item.nombrePlantilla}</strong></td>
+                    <td>1 Unidad</td>
+                    <td>${m}${item.costoFijo.toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>
+                `;
+                tbody.appendChild(tr);
+            } 
+            else {
+                const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+                const tr = document.createElement('tr');
+                if(!insumo) {
+                    tr.innerHTML = `<td>⚠️ Insumo Eliminado</td><td>${item.cantidadUsada}</td><td>${m}0.00</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                } else {
+                    let cantPaquete = insumo.cantidad;
+                    if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                    if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
+                    if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                    if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
+                    
+                    const costoBase = (insumo.precio / cantPaquete) * item.cantidadUsada;
+                    const costoConMerma = costoBase * factorMerma;
 
-                tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costoConMerma.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                    tr.innerHTML = `<td>${insumo.nombre}</td><td>${item.cantidadUsada} ${item.unidadUsada}</td><td>${m}${costoConMerma.toFixed(2)}</td><td><button type="button" class="btn btn-danger btn-small" onclick="eliminarDeModulo('${key}', ${index})">×</button></td>`;
+                }
+                tbody.appendChild(tr);
             }
-            tbody.appendChild(tr);
         });
     });
 }
@@ -774,15 +751,20 @@ function calcularCostoModulo(key) {
     const factorMerma = 1 + ((config.porcentajeMerma || 0) / 100);
 
     modulos[key].forEach(item => {
-        const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
-        if (insumo) {
-            let cantPaquete = insumo.cantidad;
-            if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
-            if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
-            if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
-            if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
-            
-            total += ((insumo.precio / cantPaquete) * item.cantidadUsada) * factorMerma;
+        if (item.esPlantilla) {
+            total += item.costoFijo;
+        } 
+        else {
+            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+            if (insumo) {
+                let cantPaquete = insumo.cantidad;
+                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
+                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
+                
+                total += ((insumo.precio / cantPaquete) * item.cantidadUsada) * factorMerma;
+            }
         }
     });
     return total;
@@ -793,25 +775,19 @@ function calcularTodo() {
     const costoRelleno = calcularCostoModulo('relleno'); 
     const costoBetun = calcularCostoModulo('betun');
     
-    // 1. Costo base solo de los ingredientes consumidos
     const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
     
-    // 2. Calcular indirectos sobre los insumos
     const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
     const indirectos = subtotalInsumos * porcentajeId; 
     
-    // Costo de Alimento Total (Food Cost + Indirectos)
     const costoAlimentoTotal = subtotalInsumos + indirectos;
 
-    // 3. Calcular Mano de Obra por separado
     const horasMOInput = document.getElementById('mo-horas').value;
-    // 2. Convertimos comas a puntos (por si usan teclados en español "2,5") y pasamos a decimal
     const horasMO = parseFloat(String(horasMOInput).replace(',', '.')) || 0;
 
     const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
     const totalManoObra = horasMO * precioHoraMO;
 
-    // El costo real de producción física real
     const totalProduc = costoAlimentoTotal + totalManoObra;
     const m = config.moneda || "$";
     
@@ -825,9 +801,6 @@ function calcularTodo() {
     const inputPorciones = parseFloat(document.getElementById('porciones-totales').value) || 0; 
     const multiplicador = parseFloat(document.getElementById('margen-ganancia').value) || 3;
     
-    // --- 🎯 AJUSTE DE MÁRGENES PROFESIONALES ---
-    // Multiplicamos la materia prima por el factor de diseño (para cubrir desperdicios invisibles, local y utilidad de empresa)
-    // Y le SUMAMOS la mano de obra al final para que no se multiplique exponencialmente.
     let basePrecioVenta = (costoAlimentoTotal * multiplicador) + totalManoObra;
     
     let baseCostoPorcion = inputPorciones > 0 ? (totalProduc / inputPorciones) : 0;
@@ -846,19 +819,19 @@ function switchTab(e, moduloId) {
     document.getElementById(`tab-${moduloId}`).classList.add('active');
 }
 
-function rebuildSelectPlantillas() {
-    const select = document.getElementById('select-plantillas');
+function rebuildSelect() {
+    const select = document.getElementById('select-plantillas'); 
     if(!select) return;
     select.innerHTML = '<option value="">-- Cargar Receta Guardada --</option>';
-    Object.keys(plantillasRecetas).forEach(k => {
+    Object.keys(Recetas).forEach(k => {
         const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
     });
 }
 
 async function guardarPlantillaNube() {
     const nombreInput = document.getElementById('nombre-plantilla').value.trim();
-    const selectPlantillas = document.getElementById('select-plantillas');
-    const nombreSeleccionado = selectPlantillas ? selectPlantillas.value : "";
+    const select = document.getElementById('select-plantillas');
+    const nombreSeleccionado = select ? select.value : "";
 
     if (!nombreInput) {
         Swal.fire({ title: 'Falta nombre', text: 'Por favor, ingresa un nombre para guardar la receta.', icon: 'warning', confirmButtonColor: '#3b82f6' });
@@ -872,8 +845,7 @@ async function guardarPlantillaNube() {
 
     let nombreFinal = nombreInput;
 
-    // 🟢 DETECCIÓN Y EDICIÓN: Si hay una receta cargada/seleccionada y el nombre del input es DIFERENTE, asumimos que quiere RENOMBRARLA
-    if (nombreSeleccionado && nombreSeleccionado !== nombreInput && plantillasRecetas[nombreSeleccionado]) {
+    if (nombreSeleccionado && nombreSeleccionado !== nombreInput && Recetas[nombreSeleccionado]) {
         const confirmarRenombrar = await Swal.fire({
             title: '¿Renombrar Receta?',
             text: `¿Deseas cambiar el nombre de "${nombreSeleccionado}" a "${nombreInput}" conservando los ingredientes actuales?`,
@@ -886,7 +858,6 @@ async function guardarPlantillaNube() {
         });
 
         if (confirmarRenombrar.isConfirmed) {
-            // Si es Premium, primero avisamos a la nube que elimine el nombre viejo para evitar basura remota
             if (config.isPremium && config.urlNube) {
                 try {
                     await apiFetch(config.urlNube, {
@@ -895,21 +866,17 @@ async function guardarPlantillaNube() {
                     });
                 } catch(e) { console.error("Error al limpiar nombre anterior en nube", e); }
             }
-            // Borramos la clave vieja en el objeto local
-            delete plantillasRecetas[nombreSeleccionado];
+            delete Recetas[nombreSeleccionado];
         }
     }
 
-    // Guardamos la estructura actual con el nuevo nombre
-    plantillasRecetas[nombreFinal] = JSON.parse(JSON.stringify(modulos));
-    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-    rebuildSelectPlantillas();
+    Recetas[nombreFinal] = JSON.parse(JSON.stringify(modulos));
+    localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
+    rebuildSelect();
     
-    // Dejamos seleccionado el nuevo nombre en el dropdown
-    if(selectPlantillas) selectPlantillas.value = nombreFinal;
+    if(select) select.value = nombreFinal;
     document.getElementById('nombre-plantilla').value = "";
 
-    // Flujo de Sincronización en la Nube
     if (config.isPremium && config.urlNube) {
         cambiarBannerStatus("⏳ Respaldando receta en la nube...", true);
 
@@ -938,28 +905,109 @@ async function guardarPlantillaNube() {
             Swal.fire({ title: 'Error de Red', text: 'No hay conexión remota disponible. La receta se mantendrá guardada de forma local.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         }
     } else {
-      gtag('event', 'receta_guardada', { 'alojamiento': 'Local' });
-
+        gtag('event', 'receta_guardada', { 'alojamiento': 'Local' });
         Swal.fire({ title: '¡Guardada!', text: 'Receta actualizada localmente.', icon: 'success', confirmButtonColor: '#3b82f6' });
     }
 }
 
-
 function cargarPlantilla(nombre) {
-    if(!nombre || !plantillasRecetas[nombre]) return;
+    if(!nombre || !Recetas[nombre]) return;
     
     const inputNombre = document.getElementById('nombre-plantilla');
     if(inputNombre) inputNombre.value = nombre;
 
-    modulos = JSON.parse(JSON.stringify(plantillasRecetas[nombre]));
+    modulos = JSON.parse(JSON.stringify(Recetas[nombre]));
     renderModulos();
     calcularTodo();
 
-    // 🟢 NUEVO: Quita el foco del selector inmediatamente para forzar el cierre limpio
     const select = document.getElementById('select-plantillas');
     if (select) {
         select.blur();
     }
+}
+
+function cargarRecetaBaseComoInsumo() {
+    if (Object.keys(Recetas).length === 0) {
+        Swal.fire({
+            title: 'No hay recetas',
+            text: 'Primero debes guardar recetas base en tu catálogo para poder importarlas.',
+            icon: 'info',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
+    let opcionesHTML = `<select id="swal-select-receta-base" class="table-input" style="width: 100%; padding: 10px; font-size: 16px; background-color: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-card);">
+        <option value="" disabled selected> Selecciona una receta base...</option>`;
+    
+    Object.keys(Recetas).forEach(nombre => {
+        opcionesHTML += `<option value="${nombre}">${nombre}</option>`;
+    });
+    opcionesHTML += `</select>`;
+
+    Swal.fire({
+        title: `📂 Cargar Receta Base en: ${currentModule.toUpperCase()}`,
+        html: opcionesHTML,
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Añadir al módulo',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            const select = document.getElementById('swal-select-receta-base');
+            if (!select.value) {
+                Swal.showValidationMessage('Debes seleccionar una receta base obligatoriamente');
+            }
+            return select.value;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const nombreReceta = result.value;
+            const estructuraReceta = Recetas[nombreReceta];
+
+            let costoTotalReceta = 0;
+            const factorMerma = 1 + ((config.porcentajeMerma || 0) / 100);
+
+            ['pan', 'relleno', 'betun'].forEach(key => {
+                if (estructuraReceta[key]) {
+                    estructuraReceta[key].forEach(item => {
+                        if (item.esPlantilla) {
+                            costoTotalReceta += item.costoFijo;
+                        } else {
+                            const insumo = insumos.find(i => String(i.id) === String(item.insumoId));
+                            if (insumo) {
+                                let cantPaquete = insumo.cantidad;
+                                if(insumo.unidad === 'kg' && item.unidadUsada === 'g') cantPaquete *= 1000;
+                                if(insumo.unidad === 'g' && item.unidadUsada === 'kg') cantPaquete /= 1000;
+                                if(insumo.unidad === 'L' && item.unidadUsada === 'ml') cantPaquete *= 1000;
+                                if(insumo.unidad === 'ml' && item.unidadUsada === 'L') cantPaquete /= 1000;
+                                costoTotalReceta += ((insumo.precio / cantPaquete) * item.cantidadUsada) * factorMerma;
+                            }
+                        }
+                    });
+                }
+            });
+
+            modulos[currentModule].push({
+                esPlantilla: true,
+                nombrePlantilla: nombreReceta,
+                costoFijo: costoTotalReceta
+            });
+
+            renderModulos();
+            calcularTodo();
+
+            gtag('event', 'receta_base_importada', { 'modulo': currentModule });
+
+            Swal.fire({
+                title: '¡Añadida!',
+                text: `"${nombreReceta}" se integró con éxito como componente base.`,
+                icon: 'success',
+                confirmButtonColor: '#3b82f6',
+                timer: 1500
+            });
+        }
+    });
 }
 
 async function eliminarPlantillaActual() {
@@ -986,14 +1034,11 @@ async function eliminarPlantillaActual() {
     if (config.isPremium && config.urlNube) {
         cambiarBannerStatus("⏳ Eliminando receta de la nube...", true);
 
-        // 🌟 AGREGADO: Pantalla de carga para la eliminación de receta
         Swal.fire({
             title: 'Borrando receta...',
             text: 'Eliminando composición de NEXI Cloud. Por favor espera.',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
 
         try {
@@ -1015,14 +1060,12 @@ async function eliminarPlantillaActual() {
         }
     }
 
-    // Código de limpieza local existente
-    delete plantillasRecetas[nombre];
-    localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
-    rebuildSelectPlantillas();
+    delete Recetas[nombre];
+    localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
+    rebuildSelect();
     limpiarComposicionCompleta();
     evaluarEstadoVisualPremium();
 
-    // 🌟 ÉXITO: Quita el loader y avisa al usuario de la eliminación correcta
     Swal.fire({ 
         title: 'Receta Eliminada', 
         text: `La receta "${nombre}" fue eliminada correctamente.`, 
@@ -1077,16 +1120,12 @@ function toggleTheme() {
     }
 }
 
-/**
- * ACCIÓN: DESCARGAR TOTAL DE LA NUBE AL INICIAR LA VENTANA
- */
 async function descargarDeNube() {
     if (!config.urlNube || !config.tokenUser) return;
 
     cambiarBannerStatus("⏳ Validando credenciales en NEXI Cloud...", null);
 
     try {
-        // 🌟 CORRECCIÓN: Reemplazado por apiFetch nativo directo
         const data = await apiFetch(config.urlNube, {
             correo: config.correoUser,
             token: config.tokenUser,
@@ -1124,12 +1163,12 @@ async function descargarDeNube() {
             localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
         }
         
-        if (data.plantillas) {
-            const plantillasLocalesRaw = localStorage.getItem('respaldo_plantillas');
-            let plantillasLocales = plantillasLocalesRaw ? JSON.parse(plantillasLocalesRaw) : {};
+        if (data.recetas) {
+            const LocalesRaw = localStorage.getItem('respaldo_recetas');
+            let Locales = LocalesRaw ? JSON.parse(LocalesRaw) : {};
             
-            plantillasRecetas = { ...data.plantillas, ...plantillasLocales };
-            localStorage.setItem('respaldo_plantillas', JSON.stringify(plantillasRecetas));
+            Recetas = { ...data.recetas, ...Locales };
+            localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
         }
 
         document.getElementById('cfg-nombre').value = config.nombrePasteleria;
@@ -1144,7 +1183,7 @@ async function descargarDeNube() {
         
         renderInsumos();
         renderModulos();
-        rebuildSelectPlantillas();
+        rebuildSelect();
         calcularTodo();
 
         cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
@@ -1153,19 +1192,16 @@ async function descargarDeNube() {
     }
 }
 
-// Inicialización de la App al cargar la ventana
 window.onload = async function() {
     cargarConfiguracion(); 
     
     const localInsumos = localStorage.getItem('respaldo_insumos');
     if(localInsumos) { try { insumos = JSON.parse(localInsumos); } catch(e){} }
     
-    const localPlantillas = localStorage.getItem('respaldo_plantillas');
-    if(localPlantillas) { try { plantillasRecetas = JSON.parse(localPlantillas); } catch(e){} }
+    const local = localStorage.getItem('respaldo_recetas');
+    if(local) { try { Recetas = JSON.parse(local); } catch(e){} }
 
-    // 🎯 ORDENAR ALFABÉTICAMENTE AL CARGAR LA APP
     ordenarInsumosAlfabeticamente();
-
     evaluarEstadoVisualPremium();
 
     if (config.isPremium && config.urlNube) {
@@ -1173,7 +1209,7 @@ window.onload = async function() {
     } else {
         renderInsumos();
         renderModulos();
-        rebuildSelectPlantillas();
+        rebuildSelect();
         calcularTodo();
     }
 };
@@ -1184,7 +1220,6 @@ function toggleAcordeonTotales() {
     
     if (!cuerpo) return;
     
-    // Obtenemos el estilo real (venga de CSS o inline)
     const displayActual = cuerpo.style.display || window.getComputedStyle(cuerpo).display;
     
     if (displayActual === "block") {
@@ -1204,9 +1239,9 @@ function toggleMostrarToken() {
 
     if (inputToken.type === 'password') {
         inputToken.type = 'text';
-        icono.textContent = 'visibility_off'; // Nombre del ícono de Google para el ojo tachado
+        icono.textContent = 'visibility_off'; 
     } else {
         inputToken.type = 'password';
-        icono.textContent = 'visibility';     // Vuelve al ojo abierto estándar
+        icono.textContent = 'visibility';     
     }
 }
