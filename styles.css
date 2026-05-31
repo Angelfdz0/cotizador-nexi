@@ -208,158 +208,186 @@ footer a { color: #3b82f6; text-decoration: none; font-weight: 600; }
 footer a:hover { text-decoration: underline; }
 
 /* ==========================================================================
-   🎯 SECCIÓN RESPONSIVE - OPTIMIZACIÓN PARA CELULARES Y TABLETS
+   🎯 SECCIÓN RESPONSIVE OPTIMIZADA (CELULARES Y TABLETS)
    ========================================================================== */
 
-/* 📱 Pantallas Medianas y Chicas (Celulares y Tablets en vertical) */
 @media (max-width: 767px) {
     body {
-        padding: 10px; /* Menos espacio en los bordes de la pantalla */
-        padding-bottom: 40px;
+        padding: 8px; /* Optimizamos espacio en los bordes físicos del teléfono */
+        padding-bottom: 50px;
     }
 
-    /* 🧼 Ajuste del Header */
+    /* 🧼 Banner de encabezado ultra-compacto */
     header {
-        padding: 35px 20px; /* Reducimos el colchón del banner */
+        padding: 25px 16px; 
         border-radius: 16px;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        gap: 6px;
     }
     
     header h1 {
-        font-size: 28px; /* Título más compacto para que no se corte */
+        font-size: 26px; 
         letter-spacing: -0.5px;
     }
 
-    .brand-desc {
-        font-size: 13px;
-        max-width: 100%; /* Que use todo el ancho en el celular */
+    .brand-sub {
+        font-size: 10px;
+        letter-spacing: 2px;
     }
 
-    /* 🌙 Reposicionamos el botón del tema oscuro */
+    .brand-desc {
+        font-size: 12px;
+        max-width: 100%;
+    }
+
+    /* 🌙 Ajuste del botón del tema para que no estorbe con el título */
     .theme-toggle-icon {
-        top: 15px;
-        right: 15px;
-        width: 36px;
-        height: 36px;
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
     }
     .theme-toggle-icon span {
-        font-size: 18px;
+        font-size: 16px;
     }
 
-    /* 📦 Ajuste de Tarjetas */
+    /* 📦 Tarjetas contenedoras más estilizadas */
     .card {
-        padding: 16px; /* Más espacio interno libre para el contenido */
-        margin-bottom: 16px;
+        padding: 14px; 
+        margin-bottom: 14px;
+        border-radius: 12px;
     }
 
-    /* 🧱 Formularios Flex-Row en Celular */
+    .card-title {
+        font-size: 16px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* 🧱 Rejilla de Formularios (Inventario e Insumos individuales) */
     .flex-row {
-        flex-direction: column; /* Apila los inputs uno abajo del otro */
-        align-items: stretch !important; /* Estira los campos al ancho completo */
-        gap: 12px;
+        flex-direction: column; 
+        align-items: stretch !important; 
+        gap: 10px !important;
     }
 
+    /* Forzamos a que todos los elementos rompan los min-width heredados en PC */
     .flex-row > div, 
     .flex-row > input, 
     .flex-row > select, 
     .flex-row > button {
-        width: 100% !important; /* Obliga a cada elemento a usar su propio renglón */
+        width: 100% !important; 
+        min-width: 0 !important; /* Rompe el bloqueo rígido de píxeles */
         flex: none !important;  
     }
 
-    .flex-row .btn, .flex-row button {
-        height: 42px !important; /* Botones más grandes y táctiles para el dedo */
-        margin-top: 5px;
+    /* inputs y selectores con mejor área táctil en celular */
+    input, select, .table-input {
+        height: 42px !important; 
+        font-size: 14px !important; /* Evita que iOS haga zoom automático molesto al clickear */
+        padding: 8px 12px !important;
     }
 
-    /* 📑 Pestañas de Composición */
+    /* Botones principales en móviles */
+    .flex-row .btn, .flex-row button {
+        height: 44px !important; 
+        width: 100% !important;
+        margin-top: 4px;
+        font-size: 14px;
+    }
+
+    /* Contenedor especial de dos botones juntos en el buscador de la receta (+ y Carpeta) */
+    .flex-row > div style*="display: flex" {
+        width: 100% !important;
+    }
+    .flex-row > div style*="display: flex" .btn {
+        flex: 1 !important;
+        height: 44px !important;
+    }
+
+    /* 📑 Pestañas de la Composición del Pastel */
     .tabs-container {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+        gap: 10px;
     }
     .tabs {
         width: 100%;
+        display: flex;
     }
     .tab {
-        flex: 1; /* Distribuye las pestañas equitativamente en el ancho del celular */
+        flex: 1; 
         text-align: center;
-        padding: 10px 5px;
+        padding: 12px 4px;
+        font-size: 12px;
     }
     .tabs-container .btn-danger {
-        width: 100%; /* El botón "Limpiar todo" abarca todo el ancho abajo */
+        width: 100% !important; 
+        height: 38px;
     }
 
-    /* 📊 Zona de Resultados Comerciales */
-    .commercial-grid .main-price {
-        font-size: 22px; /* Evita que el precio gigante rompa la caja */
+    /* 📊 Tablas Responsivas para Dedos Chicos */
+    th, td {
+        padding: 10px 8px !important;
+        font-size: 12px !important;
     }
     
-    /* 💾 Zona de guardar recetas en memoria */
-    .memory-zone .flex-row {
-        gap: 8px;
+    /* Pequeño truco para que los botones de eliminar en la tabla no rompan la fila */
+    td .btn-danger.btn-small {
+        padding: 6px 10px !important;
+        font-size: 11px;
+        width: auto !important;
+        display: inline-flex;
     }
 
-    /* 🎛️ Config-grids (Panel superior y Cotizador rápido) */
-    .config-grid {
-        grid-template-columns: 1fr; /* Una sola columna perfecta */
+    /* 📈 Zona de Resultados de Venta */
+    .commercial-grid {
+        grid-template-columns: 1fr !important; /* Apilado perfecto en móviles */
         gap: 12px;
     }
+    .commercial-grid > div {
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+    .commercial-grid .main-price {
+        font-size: 24px; 
+    }
+    
+    /* Panel de guardado rápido en memoria */
+    .memory-zone .flex-row {
+        gap: 8px !important;
+    }
 }
 
-/* 📊 Optimización del scroll en tablas para cualquier pantalla que se desborde */
-.table-container {
-    width: 100%;
-    overflow-x: auto; /* Activa el desplazamiento lateral con el dedo si no cabe */
-    -webkit-overflow-scrolling: touch;
-    border-radius: 8px;
-    border: 1px solid var(--td-border);
-}
-
-table {
-    min-width: 550px; /* Forzamos un mínimo para que los datos mantengan su forma de tabla ordenada */
-}
-
-/* 📝 Inputs internos de las tablas más cómodos para edición táctil */
-.table-input {
-    padding: 6px 8px;
-    width: 100%;
-    min-width: 60px;
-}
-
-/* ==========================================================================
-   💻 SECCIÓN PARA TABLETAS Y ORDENADORES
-   ========================================================================== */
-
-/* ➔ 1. DISPOSITIVOS MEDIANOS (Tabletas en vertical/horizontal y Laptops pequeñas) */
+/* ➔ DISPOSITIVOS MEDIANOS (Tabletas como iPad, Laptops pequeñas) */
 @media (min-width: 768px) and (max-width: 1024px) {
     body {
-        padding: 24px;
+        padding: 16px;
     }
 
     header {
-        padding: 40px 30px;
+        padding: 35px 25px;
     }
 
-    header h1 {
-        font-size: 36px;
-    }
-
-    /* En tabletas, las dos tarjetas principales se ponen una abajo de la otra 
-       pero el Panel de Configuración y el Cotizador se abren en 2 columnas */
+    /* Hacemos que la composición y el inventario compartan espacio más inteligentemente */
     .grid {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
+        display: grid;
+        grid-template-columns: 1fr; /* Una sola columna principal pero ordenada */
+        gap: 20px;
     }
 
     .config-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas perfectas */
-        gap: 16px;
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 14px;
     }
 
     .commercial-grid {
-        grid-template-columns: repeat(3, 1fr); /* Distribuye los 3 precios lado a lado */
+        grid-template-columns: repeat(3, 1fr) !important; /* Los 3 precios alineados horizontalmente */
     }
 }
 
@@ -608,4 +636,77 @@ body:not(.modo-premium-activo) .contenido-tarjeta-cotizador {
     border-top: 1px dashed #cbd5e1; 
     padding-top: 8px; 
     margin-top: 5px;
+}
+
+/* ==========================================================================
+   🎯 OPTIMIZACIÓN EXCLUSIVA PARA EL COTIZADOR RÁPIDO
+   ========================================================================== */
+
+.cotizador-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* 1 Sola columna por defecto (Móviles) */
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.cotizador-inputs-grid .form-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.cotizador-inputs-grid label {
+    line-height: 1.4;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+/* 💻 Computadoras y Tabletas (Pantallas desde 650px en adelante) */
+@media (min-width: 650px) {
+    .cotizador-inputs-grid {
+        grid-template-columns: repeat(2, 1fr); /* Pasa a 2 columnas balanceadas */
+    }
+
+    /* Forzamos a que los selectores de método o porcentaje abarquen las dos columnas si se requiere */
+    .cotizador-inputs-grid .full-width-row {
+        grid-column: span 2;
+    }
+}
+
+/* Corrección menor para la visualización del grid en PC de escritorio */
+@media (min-width: 1025px) {
+    #tarjeta-cotizador {
+        /* Desactivamos el comportamiento antiguo que rompía los inputs abajo */
+        display: block !important; 
+    }
+    
+    #tarjeta-cotizador .btn-success {
+        margin-top: 20px;
+    }
+}
+
+/* 💡 BOTONES DE INFORMACIÓN / TOOLTIPS */
+.btn-ayuda-tooltip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Material Symbols Outlined', sans-serif !important;
+    font-size: 14px !important;
+    color: var(--instruction-text);
+    background: var(--th-bg);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.btn-ayuda-tooltip:hover {
+    background-color: var(--btn-main);
+    color: #ffffff !important;
+    transform: scale(1.1);
 }

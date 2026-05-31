@@ -19,32 +19,6 @@ let config = {
 
 let syncQueue = Promise.resolve();
 
-// =========================================================================
-// FUNCIÓN CORREGIDA: Manejador de peticiones AJAX compatible con Google Apps Script JSON
-// =========================================================================
-async function apiFetch(url, datos) {
-    // Rompe la caché agregando un número único de tiempo al final de la URL
-    const urlLimpia = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
-
-    const respuesta = await fetch(urlLimpia, {
-        method: "POST",
-        mode: "cors",
-        headers: { 
-            // Usamos text/plain para evitar pre-peticiones OPTIONS pesadas de CORS en Google
-            "Content-Type": "text/plain;charset=UTF-8" 
-        },
-        body: JSON.stringify(datos) // <-- Enviamos un JSON real estructurado
-    });
-    
-    if (!respuesta.ok) {
-        throw new Error(`Error en el servidor: ${respuesta.status}`);
-    }
-    
-    return await respuesta.json();
-}
-// =========================================================================
-
-
 function ordenarInsumosAlfabeticamente() {
     insumos.sort((a, b) => {
         return (a.nombre || "").localeCompare(b.nombre || "", 'es', { sensitivity: 'base' });
@@ -728,13 +702,31 @@ function actualizarLabelUnidadReceta() {
     
     if(insumo && selectUnidad) { 
         selectUnidad.innerHTML = ''; 
+        
+        // 🌾 Si el insumo original del inventario es Sólido (g o kg)
         if(insumo.unidad === 'kg' || insumo.unidad === 'g') {
-            selectUnidad.innerHTML = '<option value="g">g</option><option value="kg">kg</option>';
+            selectUnidad.innerHTML = `
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="taza_seco">Taza (Secos)</option>
+                <option value="cda">Cucharada (cda)</option>
+                <option value="cdita">Cucharadita (cdita)</option>
+            `;
             selectUnidad.value = "g";
-        } else if(insumo.unidad === 'L' || insumo.unidad === 'ml') {
-            selectUnidad.innerHTML = '<option value="ml">ml</option><option value="L">L</option>';
+        } 
+        // 💧 Si el insumo original del inventario es Líquido (ml o L)
+        else if(insumo.unidad === 'L' || insumo.unidad === 'ml') {
+            selectUnidad.innerHTML = `
+                <option value="ml">ml</option>
+                <option value="L">L</option>
+                <option value="taza_liq">Taza (Líquidos)</option>
+                <option value="cda">Cucharada (cda)</option>
+                <option value="cdita">Cucharadita (cdita)</option>
+            `;
             selectUnidad.value = "ml";
-        } else {
+        } 
+        // 🥚 Para cualquier otra unidad (como piezas, sobres, etc.)
+        else {
             selectUnidad.innerHTML = `<option value="${insumo.unidad}">${insumo.unidad}</option>`;
             selectUnidad.value = insumo.unidad;
         }
@@ -743,13 +735,35 @@ function actualizarLabelUnidadReceta() {
 
 function agregarIngredienteRecetaManejador() {
     const id = document.getElementById('receta-insumo-select').value;
-    const cant = parseFloat(document.getElementById('receta-cantidad').value);
+    let cant = parseFloat(document.getElementById('receta-cantidad').value);
     const uni = document.getElementById('receta-unidad').value;
     if(!id || !cant) return;
 
-    modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: uni });
+    // --- MEJORA: Tabla de conversión rápida para repostería ---
+    const TABLA_CONVERSIONES = {
+        'taza_seco': 125, // gramos promedio (harina/azúcar)
+        'taza_liq': 250,  // ml
+        'cda': 15,        // g o ml
+        'cdita': 5        // g o ml
+    };
+
+    let unidadFinal = uni;
+
+    // Si seleccionó una unidad repostera, convertimos la cantidad
+    if (TABLA_CONVERSIONES[uni]) {
+        const insumo = insumos.find(i => String(i.id) === String(id));
+        cant = cant * TABLA_CONVERSIONES[uni];
+        
+        // Detecta automáticamente si el insumo base del inventario se mide en masa o volumen
+        if (insumo && (insumo.unidad === 'kg' || insumo.unidad === 'g')) {
+            unidadFinal = 'g';
+        } else {
+            unidadFinal = 'ml';
+        }
+    }
+
+    modulos[currentModule].push({ insumoId: id, cantidadUsada: cant, unidadUsada: unidadFinal });
     
-    // CORRECCIÓN 1: Limpia el buscador e inmediatamente regenera el select completo
     document.getElementById('buscador-receta').value = "";
     document.getElementById('form-receta').reset();
     actualizarSelectReceta();
@@ -841,11 +855,20 @@ function calcularTodo() {
     const indirectos = subtotalInsumos * porcentajeId; 
     const costoAlimentoTotal = subtotalInsumos + indirectos;
 
-    const horasMOInput = document.getElementById('mo-horas').value;
-    const horasMO = parseFloat(String(horasMOInput).replace(',', '.')) || 0;
+    // --- MEJORA: Cálculo Dinámico de Mano de Obra ---
+    let totalManoObra = 0;
+    const tipoCalculoInput = document.getElementById('mo-tipo-calculo');
+    const tipoCalculo = tipoCalculoInput ? tipoCalculoInput.value : 'por_hora';
 
-    const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
-    const totalManoObra = horasMO * precioHoraMO;
+    if (tipoCalculo === 'porcentaje') {
+        const porcentajeFijo = parseFloat(document.getElementById('mo-porcentaje-fijo').value) || 0;
+        totalManoObra = (subtotalInsumos * porcentajeFijo) / 100;
+    } else {
+        const horasMOInput = document.getElementById('mo-horas').value;
+        const horasMO = parseFloat(String(horasMOInput).replace(',', '.')) || 0;
+        const precioHoraMO = parseFloat(document.getElementById('mo-precio-hora').value) || 0;
+        totalManoObra = horasMO * precioHoraMO;
+    }
 
     const totalProduc = costoAlimentoTotal + totalManoObra;
     const m = config.moneda || "$";
@@ -854,7 +877,6 @@ function calcularTodo() {
     document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
     document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
     
-    // 💡 SOLUCIÓN: Actualizamos tanto el monto como la etiqueta del porcentaje dinámico
     document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
     const lblIndirectos = document.getElementById('lbl-indirectos-porcentaje');
     if (lblIndirectos) {
@@ -1300,6 +1322,7 @@ window.onload = async function() {
         rebuildSelect();
         calcularTodo();
     }
+    alternarCamposManoObra()
 };
 
 function toggleAcordeonTotales() {
@@ -1329,4 +1352,141 @@ function toggleMostrarToken() {
         inputToken.type = 'password';
         icono.textContent = 'visibility';     
     }
+}
+
+/**
+ * Alterna la visualización de los campos de Mano de Obra en la interfaz
+ */
+function alternarCamposManoObra() {
+    const tipoCalculo = document.getElementById('mo-tipo-calculo').value;
+    const wrapperHoras = document.getElementById('wrapper-mo-horas');
+    const wrapperPorcentaje = document.getElementById('wrapper-mo-porcentaje');
+
+    if (!wrapperHoras || !wrapperPorcentaje) return;
+
+    if (tipoCalculo === 'porcentaje') {
+        wrapperHoras.style.display = 'none';
+        wrapperPorcentaje.classList.remove('hidden');
+    } else {
+        wrapperHoras.style.display = 'contents';
+        wrapperPorcentaje.classList.add('hidden');
+    }
+    
+    calcularTodo();
+}
+
+// 📖 FUNCIÓN DE ASISTENCIA Y GUÍA PARA EL USUARIO
+function mostrarAyuda(tipo) {
+    let titulo = "";
+    let mensaje = "";
+    let htmlContenido = "";
+
+    // Detectamos si la app está en modo oscuro para ajustar el estilo del modal
+    const esModoOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    switch (tipo) {
+        case 'indirectos':
+            titulo = "💧 Gastos Indirectos Adicionales";
+            mensaje = "Son los costos ocultos de tu cocina que no puedes medir ingrediente por ingrediente, como el desgaste del gas por hornear, la luz del refrigerador, el agua para lavar los trastes o las cajas de entrega.";
+            htmlContenido = `<p style="text-align: left; margin: 0; line-height: 1.5;">${mensaje}</p>
+                             <br><div style="background: ${esModoOscuro ? '#334155' : '#f1f5f9'}; padding: 10px; border-radius: 8px; text-align: left; font-size: 13px;">
+                             💡 <b>Consejo NEXI:</b> Te recomendamos asignar entre un <b>20% y 30%</b> para proteger tus ganancias estables.</div>`;
+            break;
+
+        case 'merma':
+            titulo = "🥚 Margen de Merma / Pérdidas";
+            mensaje = "La merma representa todo el material que se desperdicia inevitablemente en el proceso: harina que se vuela, crema que se queda pegada en el tazón, un huevo que se rompe o restos de pan que recortas al nivelar.";
+            htmlContenido = `<p style="text-align: left; margin: 0; line-height: 1.5;">${mensaje}</p>
+                             <br><div style="background: ${esModoOscuro ? '#334155' : '#f1f5f9'}; padding: 10px; border-radius: 8px; text-align: left; font-size: 13px;">
+                             📈 <b>Ejemplo:</b> Si usas un 5%, la app aumentará preventivamente un 5% al costo de tus materiales para que no pierdas dinero por los residuos.</div>`;
+            break;
+
+        case 'margen':
+            titulo = "🎨 Dificultad del Diseño (Multiplicador)";
+            mensaje = "No deberías cobrar lo mismo por un pastel plano alisado en crema que por uno con modelado en fondant o flores artesanales, aunque pesen lo mismo.";
+            htmlContenido = `<p style="text-align: left; margin: 0; line-height: 1.5;">${mensaje}</p>
+                             <br><ul style="text-align: left; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+                                <li><b>Nivel 1 (x3):</b> Diseños sencillos de vitrina. Cubre insumos y te deja ganancia estándar.</li>
+                                <li><b>Nivel 2 (x3.5):</b> Detalles personalizados, toppers impresos o degradados de color.</li>
+                                <li><b>Nivel 3 (x4.5):</b> Alta costura, texturas complejas, pasteles de pisos o figuras moldeadas a mano.</li>
+                             </ul>`;
+            break;
+
+        case 'mano-obra':
+            titulo = "⏱️ Métodos de Mano de Obra";
+            mensaje = "Elige cómo quieres valorar el tiempo invertido en tu arte:";
+            htmlContenido = `<p style="text-align: left; margin: 0; line-height: 1.5;">${mensaje}</p>
+                             <br><ul style="text-align: left; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+                                <li><b>Por horas de trabajo:</b> Ideal si sabes exactamente cuánto tiempo te toma un pedido y tienes una tarifa fija por tu hora (ej. $50 la hora).</li>
+                                <li><b>Porcentaje fijo sobre insumos:</b> Ideal si prefieres cobrar tu mano de obra de forma proporcional al tamaño del pastel (ej. Cobrar un 30% extra del total de los ingredientes).</li>
+                             </ul>`;
+            break;
+    }
+
+    // Renderizado del modal adaptivo con SweetAlert2
+    Swal.fire({
+        title: titulo,
+        html: htmlContenido,
+        icon: "info",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#3b82f6",
+        background: esModoOscuro ? "#1e293b" : "#ffffff",
+        color: esModoOscuro ? "#f8fafc" : "#334155"
+    });
+}
+
+// 📖 GUÍA DE SECCIONES COMPLETAS (CONTENEDORES)
+function mostrarAyudaSeccion(seccion) {
+    let titulo = "";
+    let htmlContenido = "";
+    const esModoOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    switch (seccion) {
+        case 'seccion-config':
+            titulo = "🛠️ Panel de Configuración";
+            htmlContenido = `
+                <div style="text-align: left; font-size: 14px; line-height: 1.5;">
+                    <p><b>¿Para qué sirve?</b><br>Es la base de operaciones de tu negocio. Aquí defines las reglas generales que usará la app para calcular tus presupuestos automáticos.</p>
+                    <p><b>¿Qué debes ingresar?</b><br>El nombre de tu marca, tu moneda local y los porcentajes de gastos fijos (luz, gas) o pérdidas (merma). También puedes iniciar sesión aquí si adquieres tu cuenta Premium.</p>
+                    <div style="background: ${esModoOscuro ? '#334155' : '#f1f5f9'}; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px;">
+                        🎯 <b>¿En qué te ayudará?</b><br>Te asegura que no olvides cobrar los costos ocultos (luz, gas, empaques) en ningún pedido, garantizando que tu negocio siempre sea rentable.
+                    </div>
+                </div>`;
+            break;
+
+        case 'seccion-inventario':
+            titulo = "📦 Inventario de Precios";
+            htmlContenido = `
+                <div style="text-align: left; font-size: 14px; line-height: 1.5;">
+                    <p><b>¿Para qué sirve?</b><br>Es tu despensa digital. Aquí registras cuánto te cuesta cada ingrediente o material tal cual lo compras en el supermercado o proveedor.</p>
+                    <p><b>¿Qué debes ingresar?</b><br>El nombre del producto (ej. Harina), la marca, el tamaño del paquete cerrado (ej. 1000 gramos o 1 kg) y el precio total de esa compra.</p>
+                    <div style="background: ${esModoOscuro ? '#334155' : '#f1f5f9'}; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px;">
+                        🎯 <b>¿En qué te ayudará?</b><br>La app desglosa matemáticamente el costo exacto por <b>gramo (g) o mililitro (ml)</b>. Ya no tendrás que hacer reglas de tres a mano en papel cada vez que suban los precios en la tienda.
+                    </div>
+                </div>`;
+            break;
+
+        case 'seccion-composicion':
+            titulo = "🥣 Composición del Pastel";
+            htmlContenido = `
+                <div style="text-align: left; font-size: 14px; line-height: 1.5;">
+                    <p><b>¿Para qué sirve?</b><br>Aquí diseñas la estructura técnica de tu receta capa por capa, dividida en Pan Base, Relleno y Betún.</p>
+                    <p><b>¿Qué debes ingresar?</b><br>Busca tus ingredientes previamente guardados en el inventario, escribe la cantidad exacta que vas a utilizar (ej. 250g) y el sistema calculará su costo proporcional al instante.</p>
+                    <div style="background: ${esModoOscuro ? '#334155' : '#f1f5f9'}; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px;">
+                        🎯 <b>¿En qué te ayudará?</b><br>Sabrás exactamente cuánto dinero invertiste en materia prima para esa receta específica. Además, puedes medir en tazas o cucharadas si te acomoda más y guardar plantillas para no repetir el proceso.
+                    </div>
+                </div>`;
+            break;
+    }
+
+    // Despliegue del modal adaptado a tu interfaz
+    Swal.fire({
+        title: titulo,
+        html: htmlContenido,
+        icon: "question",
+        confirmButtonText: "¡Entendido, gracias!",
+        confirmButtonColor: "#3b82f6",
+        background: esModoOscuro ? "#1e293b" : "#ffffff",
+        color: esModoOscuro ? "#f8fafc" : "#334155"
+    });
 }

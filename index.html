@@ -36,11 +36,14 @@
 
     <div id="cloud-banner" class="cloud-status">☁️ Modo Local (Sin sincronizar)</div>
 
-    <div class="card" id="tarjeta-configuracion">
-        <div class="card-title card-header-toggle" onclick="togglePanelConfiguracion()">
-            <span>🛠️ Panel de Configuración del Negocio</span>
-            <span class="material-symbols-outlined btn-flecha" id="btn-flecha-config">expand_more</span>
-        </div>
+    <!-- En el panel de configuración, lo ponemos al lado del texto izquierdo dentro del switch de apertura: -->
+<div class="card-title card-header-toggle" onclick="togglePanelConfiguracion()">
+    <span>🛠️ Panel de Configuración del Negocio 
+        <span class="btn-ayuda-tooltip" onclick="event.stopPropagation(); mostrarAyudaSeccion('seccion-config')">info</span>
+    </span>
+    <span class="material-symbols-outlined btn-flecha" id="btn-flecha-config">expand_more</span>
+</div>
+
         
         <div id="cuerpo-configuracion" style="display: none; margin-top: 15px;">
             <div class="config-grid">
@@ -53,13 +56,18 @@
                     <input type="text" id="cfg-moneda" placeholder="$">
                 </div>
                 <div class="form-group">
-                    <label>Gastos Indirectos Adicionales (%):</label>
-                    <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)">
-                </div>
-                <div class="form-group">
-                    <label>Margen de Merma / Pérdidas globales (%):</label>
-                    <input type="number" id="cfg-merma" placeholder="Ej: 5%" min="0" max="50">
-                </div>
+    <label>Gastos Indirectos Adicionales (%) 
+        <span class="btn-ayuda-tooltip" onclick="mostrarAyuda('indirectos')">info</span>
+    </label>
+    <input type="number" id="cfg-indirectos" placeholder="Luz, Gas, Etc. (Recomendado: 20% al 30%)">
+</div>
+<div class="form-group">
+    <label>Margen de Merma / Pérdidas globales (%) 
+        <span class="btn-ayuda-tooltip" onclick="mostrarAyuda('merma')">info</span>
+    </label>
+    <input type="number" id="cfg-merma" placeholder="Ej: 5%" min="0" max="50">
+</div>
+
             </div>
 
             <div id="seccion-bloque-estandar">
@@ -102,7 +110,10 @@
 
     <div class="grid">
         <div class="card">
-            <div class="card-title">1. Inventario de Precios</div>
+            <div class="card-title">
+    1. Inventario de Precios 
+    <span class="btn-ayuda-tooltip" onclick="mostrarAyudaSeccion('seccion-inventario')">info</span>
+</div>
             <form id="form-insumo" class="flex-row" style="margin-bottom: 15px;" onsubmit="event.preventDefault(); agregarInsumoManejador();">
                 <div style="flex: 2; min-width: 130px;">
                     <label>Ingrediente / Material</label>
@@ -148,7 +159,10 @@
         </div>
 
                 <div class="card">
-            <div class="card-title">2. Composición del Pastel</div>
+            <div class="card-title">
+    2. Composición del Pastel 
+    <span class="btn-ayuda-tooltip" onclick="mostrarAyudaSeccion('seccion-composicion')">info</span>
+</div>
             
             <div class="tabs-container">
                 <div class="tabs">
@@ -177,8 +191,14 @@
     <div style="flex: 0.6; min-width: 60px;">
         <label>Unidad</label>
         <select id="receta-unidad">
-            <option value="g">g</option><option value="ml">ml</option><option value="pza">pza</option>
-        </select>
+    <option value="g">g</option>
+    <option value="ml">ml</option>
+    <option value="pza">pza</option>
+    <option value="taza_seco">Taza (Secos)</option>
+    <option value="taza_liq">Taza (Líq.)</option>
+    <option value="cda">Cucharada (Cda)</option>
+    <option value="cdita">Cucharadita (Cdita)</option>
+</select>
     </div>
     <div style="display: flex; align-items: flex-end; gap: 8px;">
         <button type="submit" class="btn" style="height: 38px;" title="Agregar Insumo Individual">+</button>
@@ -243,43 +263,63 @@
             </div>
 
             <div class="card" id="tarjeta-cotizador" style="box-shadow: none; border: 1px solid var(--border-color); margin-top: 0;">
-                <div class="card-title" style="margin-bottom: 15px;">3. Cotizador Rápido y Mano de Obra</div>
-                
-                <div class="config-grid">
-                    <div class="form-group">
-                        <label>¿Para cuántas porciones/rebanadas solicita el cliente?</label>
-                        <input type="number" id="porciones-totales" placeholder="Ej: 20" oninput="calcularTodo()">
-                    </div>
-                    <div class="form-group">
-                        <label>Dificultad del Diseño (Margen)</label>
-                        <select id="margen-ganancia" onchange="calcularTodo()">
-                            <option value="3" selected>Nivel 1: Comercial / Tradicional (Decorado Básico)</option>
-                            <option value="3.5">Nivel 2: Semi-Personalizado (Crema / Detalles sencillos)</option>
-                            <option value="4.5">Nivel 3: Alta Repostería / Laborioso (Fondant / Modelado / Flores)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Horas dedicadas a la preparación:</label>
-                        <input type="number" id="mo-horas" placeholder="Ej: 3.5 horas" min="0" step="any" oninput="calcularTodo()">
-                    </div>
-                    <div class="form-group">
-                        <label>Precio cobrado por hora de trabajo:</label>
-                        <input type="number" id="mo-precio-hora" placeholder="Ej: 50" min="0" step="any" oninput="calcularTodo()">
-                    </div>
-                </div>
-                
-                <div class="result-box commercial-results">
-                    <div class="commercial-grid">
-                        <div><label>Costo Real Rebanada</label><span id="res-costo-porcion">$0.00</span></div>
-                        <div><label style="font-weight: bold;">PRECIO DE VENTA TOTAL RECOMENDADO</label><span id="res-precio-venta" class="main-price">$0.00</span></div>
-                        <div><label>Precio Venta Rebanada</label><span id="res-precio-porcion">$0.00</span></div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-success" id="btn-whatsapp-cotizacion" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 15px;" onclick="enviarCotizacionWhatsApp()">
-                    <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px; margin-right: 4px;">send</span> Enviar Presupuesto Listo a WhatsApp
-                </button>
+    <div class="card-title" style="margin-bottom: 15px;">3. Cotizador Rápido y Mano de Obra</div>
+    
+    <div class="cotizador-inputs-grid">
+        <div class="form-group">
+            <label for="porciones-totales">¿Para cuántas porciones/rebanadas solicita el cliente?</label>
+            <input type="number" id="porciones-totales" placeholder="Ej: 20" oninput="calcularTodo()">
+        </div>
+        <div class="form-group">
+    <label>Dificultad del Diseño (Margen) 
+        <span class="btn-ayuda-tooltip" onclick="mostrarAyuda('margen')">info</span>
+    </label>
+    <select id="margen-ganancia" onchange="calcularTodo()">
+        <option value="3" selected>Nivel 1: Comercial / Tradicional (Decorado Básico)</option>
+        <option value="3.5">Nivel 2: Semi-Personalizado (Crema / Detalles sencillos)</option>
+        <option value="4.5">Nivel 3: Alta Repostería / Laborioso (Fondant / Modelado / Flores)</option>
+    </select>
+</div>
+
+<div class="form-group" style="grid-column: span 2;">
+    <label>Método de cálculo de Mano de Obra: 
+        <span class="btn-ayuda-tooltip" onclick="mostrarAyuda('mano-obra')">info</span>
+    </label>
+    <select id="mo-tipo-calculo" onchange="alternarCamposManoObra()" style="font-weight: 600;">
+        <option value="por_hora" selected>⏱️ Por horas de trabajo dedicadas</option>
+        <option value="porcentaje">🍰 Porcentaje fijo sobre insumos</option>
+    </select>
+</div>
+
+        <div id="wrapper-mo-horas" style="display: contents;">
+            <div class="form-group">
+                <label for="mo-horas">Horas dedicadas a la preparación:</label>
+                <input type="number" id="mo-horas" placeholder="Ej: 3.5 horas" min="0" step="any" oninput="calcularTodo()">
             </div>
+            <div class="form-group">
+                <label for="mo-precio-hora">Precio cobrado por hora de trabajo:</label>
+                <input type="number" id="mo-precio-hora" placeholder="Ej: 50" min="0" step="any" oninput="calcularTodo()">
+            </div>
+        </div>
+
+        <div id="wrapper-mo-porcentaje" class="form-group full-width-row hidden">
+            <label for="mo-porcentaje-fijo">Porcentaje a cobrar por Mano de Obra (% sobre costo de insumos):</label>
+            <input type="number" id="mo-porcentaje-fijo" placeholder="Ej: 30" min="0" value="30" step="any" oninput="calcularTodo()">
+        </div>
+    </div>
+    
+    <div class="result-box commercial-results">
+        <div class="commercial-grid">
+            <div><label>Costo Real Rebanada</label><span id="res-costo-porcion">$0.00</span></div>
+            <div><label style="font-weight: bold;">PRECIO DE VENTA TOTAL RECOMENDADO</label><span id="res-precio-venta" class="main-price">$0.00</span></div>
+            <div><label>Precio Venta Rebanada</label><span id="res-precio-porcion">$0.00</span></div>
+        </div>
+    </div>
+    
+    <button class="btn btn-success" id="btn-whatsapp-cotizacion" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 15px;" onclick="enviarCotizacionWhatsApp()">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px; margin-right: 4px;">send</span> Enviar Presupuesto Listo a WhatsApp
+    </button>
+</div>
 
         </div>
     </div>
