@@ -1,25 +1,19 @@
-/**
- * Capa de Abstracción de Red (API Client) - Optimizado para Google Apps Script
- */
-async function apiFetch(url, payload) {
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            mode: 'cors',           
-            redirect: 'follow',     
-            headers: { 
-                "Content-Type": "text/plain" 
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Error en servidor: ${response.status}`);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error("Error en apiFetch:", error);
-        throw error;
+async function apiFetch(url, datos) {
+    // Añadimos un número aleatorio al final de la URL para obligar al navegador a no usar caché
+    const urlLimpia = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+
+    const respuesta = await fetch(urlLimpia, {
+        method: "POST",
+        mode: "cors", // Forzamos modo CORS explícito
+        headers: { 
+            "Content-Type": "text/plain;charset=UTF-8" 
+        },
+        body: JSON.stringify(datos) // Enviamos JSON puro
+    });
+    
+    if (!respuesta.ok) {
+        throw new Error(`Error en el servidor: ${respuesta.status}`);
     }
+    
+    return await respuesta.json();
 }

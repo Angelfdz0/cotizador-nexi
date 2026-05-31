@@ -413,3 +413,199 @@ table {
         grid-template-columns: 1fr 1.25fr; /* Más espacio para armar la receta */
     }
 }
+
+/* ==========================================================================
+   🔒 CAPAS DE BLOQUEO PREMIUM (EFECTO BORROSO)
+   ========================================================================== */
+
+/* Contenedor relativo especial para los totales pequeños */
+.contenedor-premium-bloqueable {
+    position: relative;
+}
+
+/* La capa borrosa base */
+.capa-bloqueo-premium {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(248, 250, 252, 0.80); /* Se adapta sutilmente al fondo claro */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 20;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Ajuste de fondo para que combine de forma idéntica con el Modo Oscuro */
+[data-theme="dark"] .capa-bloqueo-premium {
+    background: rgba(30, 41, 59, 0.85);
+}
+
+/* Capa de bloqueo grande que cubre toda la tarjeta del cotizador */
+.capa-bloqueo-premium.grande {
+    border-radius: 16px;
+    padding: 20px;
+}
+
+/* Contenido del texto de bloqueo */
+.texto-bloqueo-premium {
+    text-align: center;
+    padding: 15px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    z-index: 21;
+}
+
+.texto-bloqueo-premium span {
+    background: #3b82f6;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.texto-bloqueo-premium p {
+    margin: 0 0 15px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+/* Botón elegante de compra directo a WhatsApp */
+.btn-whatsapp-premium {
+    background-color: #25d366;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-whatsapp-premium:hover {
+    background-color: #128c7e;
+    transform: translateY(-2px);
+}
+
+/* Ocultar las capas cuando el usuario sea Premium */
+.modo-premium-activo .capa-bloqueo-premium {
+    display: none !important;
+}
+
+/* Deshabilitar interacciones debajo del bloqueo para evitar trucos */
+body:not(.modo-premium-activo) .contenedor-premium-bloqueable > div:not(.capa-bloqueo-premium),
+body:not(.modo-premium-activo) .contenido-tarjeta-cotizador {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Contenedor Maestro Premium */
+.bloque-premium-bloqueado {
+    position: relative;
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 16px;
+    overflow: hidden; /* Evita que el blur se salga de las esquinas redondeadas */
+}
+
+/* Capa que difumina el contenido */
+.bloque-premium-bloqueado .contenido-premium-difuminable {
+    transition: filter 0.3s ease;
+    /* Por defecto si es premium se quitan estas dos clases desde JS */
+    filter: blur(3px); 
+    pointer-events: none; /* Bloquea clicks en inputs traseros */
+}
+
+/* Capa de Bloqueo Absoluta */
+.capa-bloqueo-maestra {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.75); /* Fondo blanco traslúcido */
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Caja de diálogo central */
+.contenido-bloqueo-maestro {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 380px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.texto-candado {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.desc-candado {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+/* Botón Premium Estilizado */
+.btn-desbloquear-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #0284c7; /* Azul premium nítido */
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-desbloquear-premium:hover {
+    background: #0369a1;
+    transform: translateY(-1px);
+}
+
+/* Clases de desactivación para cuando el usuario inicie sesión (Control en app.js) */
+.bloque-premium-bloqueado.is-premium .capa-bloqueo-maestra {
+    display: none !important;
+}
+.bloque-premium-bloqueado.is-premium .contenido-premium-difuminable {
+    filter: none !important;
+    pointer-events: auto !important;
+}
+
+/* Estilos complementarios de filas */
+.total-row {
+    font-weight: bold; 
+    border-top: 1px dashed #cbd5e1; 
+    padding-top: 8px; 
+    margin-top: 5px;
+}

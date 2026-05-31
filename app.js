@@ -19,11 +19,38 @@ let config = {
 
 let syncQueue = Promise.resolve();
 
+// =========================================================================
+// FUNCIÓN CORREGIDA: Manejador de peticiones AJAX compatible con Google Apps Script JSON
+// =========================================================================
+async function apiFetch(url, datos) {
+    // Rompe la caché agregando un número único de tiempo al final de la URL
+    const urlLimpia = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+
+    const respuesta = await fetch(urlLimpia, {
+        method: "POST",
+        mode: "cors",
+        headers: { 
+            // Usamos text/plain para evitar pre-peticiones OPTIONS pesadas de CORS en Google
+            "Content-Type": "text/plain;charset=UTF-8" 
+        },
+        body: JSON.stringify(datos) // <-- Enviamos un JSON real estructurado
+    });
+    
+    if (!respuesta.ok) {
+        throw new Error(`Error en el servidor: ${respuesta.status}`);
+    }
+    
+    return await respuesta.json();
+}
+// =========================================================================
+
+
 function ordenarInsumosAlfabeticamente() {
     insumos.sort((a, b) => {
         return (a.nombre || "").localeCompare(b.nombre || "", 'es', { sensitivity: 'base' });
     });
 }
+// El resto de tu código hacia abajo continúa exactamente igual...
 
 function redondearPrecioComercial(valor) {
     return Math.ceil(valor / 5) * 5; 
@@ -54,8 +81,14 @@ function evaluarEstadoVisualPremium() {
     const bloquePremium = document.getElementById('seccion-bloque-premium');
     const bloqueEstandar = document.getElementById('seccion-bloque-estandar');
     const txtBienvenida = document.getElementById('txt-bienvenida-premium');
+    
+    // NUEVO: Referencia al contenedor maestro de cotización
+    const bloqueCotizacion = document.getElementById('bloque-cotizacion-premium');
 
     if (config.isPremium) {
+        // ACTIVAR MODO PREMIUM VISUAL GLOBAL
+        document.body.classList.add('modo-premium-activo');
+
         if(banner) {
             banner.style.backgroundColor = "rgba(16, 185, 129, 0.1)"; 
             banner.style.color = "#10b981";
@@ -65,7 +98,17 @@ function evaluarEstadoVisualPremium() {
         if(txtBienvenida) txtBienvenida.innerHTML = `✓ Conectado exitosamente como: <strong>${config.correoUser}</strong>`;
         if(bloquePremium) bloquePremium.classList.remove('hidden');
         if(bloqueEstandar) bloqueEstandar.classList.add('hidden');
+
+        // ==========================================
+        // NUEVA LÍNEA: Desbloquea el bloque maestro
+        // ==========================================
+        if (bloqueCotizacion) {
+            bloqueCotizacion.classList.add('is-premium');
+        }
     } else {
+        // DESACTIVAR MODO PREMIUM / REGRESAR A ESTÁNDAR
+        document.body.classList.remove('modo-premium-activo');
+
         if(banner) {
             banner.style.backgroundColor = "var(--bg-card)";
             banner.style.color = "var(--text-main)";
@@ -74,6 +117,13 @@ function evaluarEstadoVisualPremium() {
         }
         if(bloquePremium) bloquePremium.classList.add('hidden');
         if(bloqueEstandar) bloqueEstandar.classList.remove('hidden');
+
+        // ==========================================
+        // NUEVA LÍNEA: Vuelve a bloquear si no es premium
+        // ==========================================
+        if (bloqueCotizacion) {
+            bloqueCotizacion.classList.remove('is-premium');
+        }
     }
 }
 
@@ -239,27 +289,29 @@ async function guardarConfiguracion() {
             });
             
             if(respuestaServidor.status === "success") {
-                insumos = datosFinalesInsumos;
-                Recetas = datosFinalesRecetas;
+    insumos = datosFinalesInsumos;
+    Recetas = datosFinalesRecetas;
 
-                ordenarInsumosAlfabeticamente();
-                localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
-                localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
-                localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
-                
-                document.getElementById('cfg-nombre').value = config.nombrePasteleria;
-                document.getElementById('cfg-moneda').value = config.moneda;
-                document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
-                document.getElementById('cfg-merma').value = config.porcentajeMerma;
-                document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
+    ordenarInsumosAlfabeticamente();
+    localStorage.setItem('respaldo_insumos', JSON.stringify(insumos));
+    localStorage.setItem('respaldo_recetas', JSON.stringify(Recetas));
+    localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
+    
+    document.getElementById('cfg-nombre').value = config.nombrePasteleria;
+    document.getElementById('cfg-moneda').value = config.moneda;
+    document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
+    document.getElementById('cfg-merma').value = config.porcentajeMerma;
+    document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
 
-                evaluarEstadoVisualPremium();
-                renderInsumos();
-                renderModulos();
-                rebuildSelect();
-                calcularTodo();
+    // ESTAS CUATRO LÍNEAS DE TU CÓDIGO YA SE ENCARGAN DE REFRESCAR TODO TRAS EL LOGUEO EXCELENTEMENTE:
+    evaluarEstadoVisualPremium(); // <-- Esta llamará a la lógica nueva que añadimos arriba
+    renderInsumos();
+    renderModulos();
+    rebuildSelect();
+    calcularTodo();
 
-                Swal.fire({ title: '¡Sincronizado! ☁️', text: 'Sesión activa y recetas descargadas.', icon: 'success', confirmButtonColor: '#3b82f6' });
+    Swal.fire({ title: '¡Sincronizado! ☁️', text: 'Sesión activa y recetas descargadas.', icon: 'success', confirmButtonColor: '#3b82f6' });
+    
             } else {
                 Swal.fire({ title: 'Atención ⚠️', text: `La nube rechazó la actualización: ${respuestaServidor.message}`, icon: 'warning', confirmButtonColor: '#3b82f6' });
             }
@@ -784,7 +836,8 @@ function calcularTodo() {
     const costoBetun = calcularCostoModulo('betun');
     const subtotalInsumos = costoPan + costoRelleno + costoBetun; 
     
-    const porcentajeId = (config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0) / 100;
+    const porcentajeIdOriginal = config.porcentajeIndirectos !== undefined ? config.porcentajeIndirectos : 0;
+    const porcentajeId = porcentajeIdOriginal / 100;
     const indirectos = subtotalInsumos * porcentajeId; 
     const costoAlimentoTotal = subtotalInsumos + indirectos;
 
@@ -800,7 +853,14 @@ function calcularTodo() {
     document.getElementById('txt-costo-pan').textContent = `${m}${costoPan.toFixed(2)}`; 
     document.getElementById('txt-costo-relleno').textContent = `${m}${costoRelleno.toFixed(2)}`; 
     document.getElementById('txt-costo-betun').textContent = `${m}${costoBetun.toFixed(2)}`; 
+    
+    // 💡 SOLUCIÓN: Actualizamos tanto el monto como la etiqueta del porcentaje dinámico
     document.getElementById('txt-costo-indirectos').textContent = `${m}${indirectos.toFixed(2)}`; 
+    const lblIndirectos = document.getElementById('lbl-indirectos-porcentaje');
+    if (lblIndirectos) {
+        lblIndirectos.textContent = `Gastos Indirectos (${porcentajeIdOriginal}%):`;
+    }
+
     document.getElementById('txt-costo-manodeobra').textContent = `${m}${totalManoObra.toFixed(2)}`; 
     document.getElementById('costo-produccion-total').textContent = `${m}${totalProduc.toFixed(2)}`;
     
@@ -1153,8 +1213,8 @@ async function descargarDeNube() {
         config.isPremium = true;
         if (data.nombrePasteleria) config.nombrePasteleria = data.nombrePasteleria;
         if (data.moneda) config.moneda = data.moneda; 
-        if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = data.porcentajeIndirectos;
-        if (data.porcentajeMerma !== undefined) config.porcentajeMerma = data.porcentajeMerma;
+        if (data.porcentajeIndirectos !== undefined) config.porcentajeIndirectos = parseFloat(data.porcentajeIndirectos) || 0;
+        if (data.porcentajeMerma !== undefined) config.porcentajeMerma = parseFloat(data.porcentajeMerma) || 0;
         
         localStorage.setItem('respaldo_config_pasteleria', JSON.stringify(config));
 
@@ -1190,19 +1250,28 @@ async function descargarDeNube() {
             localStorage.removeItem('respaldo_recetas');
         }
 
+        // Sincronizar valores visuales en los inputs del panel
         document.getElementById('cfg-nombre').value = config.nombrePasteleria;
         document.getElementById('cfg-moneda').value = config.moneda; 
         document.getElementById('cfg-indirectos').value = config.porcentajeIndirectos;
         document.getElementById('cfg-merma').value = config.porcentajeMerma;
         
+        // CORRECCIÓN AQUÍ: Forzar la actualización de las etiquetas de texto del DOM de inmediato
         document.getElementById('lbl-nombre-pasteleria').textContent = config.nombrePasteleria;
-        document.getElementById('lbl-indirectos-porcentaje').textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+        
+        const lblIndirectos = document.getElementById('lbl-indirectos-porcentaje');
+        if (lblIndirectos) {
+            lblIndirectos.textContent = `Gastos Indirectos (${config.porcentajeIndirectos}%):`;
+        }
 
-        evaluarEstadoVisualPremium();
+        // Ejecutar primero el render de los módulos para que la Merma afecte las tablas individuales
         renderInsumos();
-        renderModulos();
+        renderModulos(); // <-- Aplica el factorMerma real descargado en los ingredientes
         rebuildSelect();
-        calcularTodo();
+        
+        // Ejecutar los cálculos globales e interfaz premium
+        evaluarEstadoVisualPremium();
+        calcularTodo(); // <-- Aplica el porcentaje de Indirectos real descargado al subtotal
 
         cambiarBannerStatus(`☁️ Conectado como: ${config.correoUser} (NEXI Cloud Activo)`, true);
     } catch(e) {
